@@ -73,6 +73,14 @@ El sistema automatiza el proceso que normalmente se realiza en hojas de cálculo
 - `recetas.json`: Archivo de datos con todas las recetas, ingredientes, precios y preparaciones.
 - `README.md`: Este archivo de documentación.
 
+## Planificacion y gobierno (Fase 0)
+
+- `ROADMAP.md`: Hoja de ruta oficial del proyecto.
+- `docs/gestion/vision_y_alcance.md`: Vision, propuesta de valor, publico objetivo y alcance.
+- `docs/gestion/gobernanza_tecnica.md`: Estrategia de ramas, politica de PR, commits y Definition of Done.
+- `docs/gestion/backlog_inicial.md`: Backlog inicial priorizado y epicas por valor.
+- `docs/gestion/milestones_y_kanban.md`: Milestones de release, flujo Kanban y limites WIP.
+
 ---
 
 ## Ejemplo de flujo de trabajo
