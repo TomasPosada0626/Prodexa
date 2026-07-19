@@ -1,5 +1,5 @@
 <p align="center">
-  <b>Calculadora profesional de costos y recetas alimenticias</b><br>
+  <b>Prodexa - Calculadora profesional de costos y recetas alimenticias</b><br>
   <i>Python, Tkinter, JSON, Costeo alimenticio, Simulación de precios</i>
 </p>
 
@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/License-MIT-green" />
 </p>
 
-# Calculadora de Insumos para Recetas Alimenticias
+# Prodexa - Calculadora de Insumos para Recetas Alimenticias
 
 **Versión de escritorio en Python + Tkinter**
 
