@@ -81,6 +81,17 @@ El sistema automatiza el proceso que normalmente se realiza en hojas de cálculo
 - `docs/gestion/backlog_inicial.md`: Backlog inicial priorizado y epicas por valor.
 - `docs/gestion/milestones_y_kanban.md`: Milestones de release, flujo Kanban y limites WIP.
 
+## Arquitectura base (Fase 1)
+
+- `docs/architecture/estructura_monorepo.md`: Estructura de monorepo y convenciones.
+- `docs/architecture/clean_architecture_modular.md`: Capas, patrones y flujo de negocio principal.
+- `docs/architecture/modulos_y_contextos.md`: Modulos y limites de contexto DDD.
+- `docs/architecture/politica_errores.md`: Manejo centralizado de errores.
+- `docs/adr/ADR-001-estilo-arquitectonico.md`: Decision de estilo arquitectonico.
+- `docs/adr/ADR-002-stack-tecnologico.md`: Decision de stack tecnologico.
+- `docs/adr/ADR-003-escalabilidad-futura.md`: Decision de estrategia de escalabilidad.
+- `docs/adr/ADR-004-estrategia-testing.md`: Decision de estrategia de pruebas.
+
 ---
 
 ## Ejemplo de flujo de trabajo
