@@ -1,12 +1,19 @@
 <p align="center">
   <b>Prodexa - Calculadora profesional de costos y recetas alimenticias</b><br>
-  <i>Python, Tkinter, JSON, Costeo alimenticio, Simulación de precios</i>
+  <i>Legacy Desktop + Plataforma Fullstack (NestJS, Next.js, PostgreSQL, Prisma, Docker)</i>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.8%2B-blue?logo=python" />
   <img src="https://img.shields.io/badge/Tkinter-GUI-blueviolet" />
   <img src="https://img.shields.io/badge/JSON-Data-lightgrey" />
+  <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white" />
+  <img src="https://img.shields.io/badge/NestJS-Backend-E0234E?logo=nestjs&logoColor=white" />
+  <img src="https://img.shields.io/badge/Next.js-Frontend-000000?logo=nextdotjs&logoColor=white" />
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" />
+  <img src="https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma&logoColor=white" />
+  <img src="https://img.shields.io/badge/Redis-Cache-DC382D?logo=redis&logoColor=white" />
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" />
   <img src="https://img.shields.io/badge/License-MIT-green" />
 </p>
 
