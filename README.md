@@ -14,6 +14,10 @@
 
 **Versión de escritorio en Python + Tkinter**
 
+Estado actual de modernizacion:
+- Version legacy de escritorio operativa (Python/Tkinter).
+- Base fullstack en construccion (NestJS + Next.js + PostgreSQL + Prisma + Docker).
+
 ---
 
 ## Descripción general
@@ -69,8 +73,8 @@ El sistema automatiza el proceso que normalmente se realiza en hojas de cálculo
 
 ## Estructura del proyecto
 
-- `app.py`: Código principal de la aplicación y la interfaz gráfica.
-- `recetas.json`: Archivo de datos con todas las recetas, ingredientes, precios y preparaciones.
+- `legacy/desktop-v1/app.py`: Código principal de la versión legacy de escritorio.
+- `legacy/desktop-v1/recetas.json`: Datos de recetas de la versión legacy.
 - `README.md`: Este archivo de documentación.
 
 ## Planificacion y gobierno (Fase 0)
@@ -91,6 +95,25 @@ El sistema automatiza el proceso que normalmente se realiza en hojas de cálculo
 - `docs/adr/ADR-002-stack-tecnologico.md`: Decision de stack tecnologico.
 - `docs/adr/ADR-003-escalabilidad-futura.md`: Decision de estrategia de escalabilidad.
 - `docs/adr/ADR-004-estrategia-testing.md`: Decision de estrategia de pruebas.
+
+## Setup fullstack (Fase 2)
+
+- `apps/backend`: API NestJS con estructura modular inicial.
+- `apps/frontend`: Cliente web Next.js con rutas base.
+- `apps/backend/prisma/schema.prisma`: Esquema inicial de datos.
+- `docker-compose.yml`: Servicios locales (backend, frontend, postgres, redis).
+- `docs/deployment/setup_local_fase2.md`: Guia de ejecucion local.
+
+Comandos principales:
+
+```bash
+npm run db:up
+npm run prisma:generate
+npm run prisma:migrate
+npm run dev
+```
+
+Nota: el entorno local de Docker publica PostgreSQL en `localhost:55432` para evitar conflictos con servicios locales ya instalados.
 
 ---
 

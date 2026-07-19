@@ -1,0 +1,10 @@
+**/node_modules
+**/.next
+**/dist
+**/coverage
+.git
+.vscode
+.env
+apps/backend/.env
+apps/frontend/.env.local
+**/*.log

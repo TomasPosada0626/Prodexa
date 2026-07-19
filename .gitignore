@@ -1,0 +1,25 @@
+# Python legacy
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+apps/*/node_modules/
+apps/*/.next/
+apps/*/dist/
+
+# Env
+.env
+.env.local
+apps/backend/.env
+
+# Logs
+*.log
+
+# OS / IDE
+.DS_Store
+.vscode/
+
+# Coverage
+coverage/
+apps/backend/coverage/
