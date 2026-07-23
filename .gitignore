@@ -12,6 +12,7 @@ apps/*/dist/
 .env
 .env.local
 apps/backend/.env
+apps/backend/.env.test
 
 # Logs
 *.log
@@ -23,3 +24,11 @@ apps/backend/.env
 # Coverage
 coverage/
 apps/backend/coverage/
+
+# Playwright
+apps/frontend/test-results/
+apps/frontend/playwright-report/
+apps/frontend/blob-report/
+
+# Archivos subidos (imagenes del editor de formulaciones)
+apps/backend/uploads/

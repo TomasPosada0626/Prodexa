@@ -1,0 +1,44 @@
+name: Seguridad
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Corre tambien de forma programada para detectar vulnerabilidades nuevas
+    # en dependencias que ya estaban instaladas (no solo en cada push).
+    - cron: '0 6 * * 1'
+
+jobs:
+  secret-scan:
+    name: Escaneo de secretos (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Ejecutar gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependency-audit:
+    name: Auditoria de dependencias (npm audit)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/${{ matrix.app }}/package-lock.json
+      - name: Instalar dependencias
+        working-directory: apps/${{ matrix.app }}
+        run: npm ci
+      - name: npm audit (falla en vulnerabilidades altas o criticas)
+        working-directory: apps/${{ matrix.app }}
+        run: npm audit --audit-level=high

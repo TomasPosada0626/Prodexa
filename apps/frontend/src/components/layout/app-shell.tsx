@@ -1,35 +1,39 @@
-import Link from 'next/link';
-import { PropsWithChildren } from 'react';
+'use client';
 
-const links = [
-  { href: '/', label: 'Inicio' },
-  { href: '/formulaciones', label: 'Formulaciones' },
-  { href: '/simulador', label: 'Simulador' },
-];
+import { PropsWithChildren, useState } from 'react';
+import { Menu } from 'lucide-react';
+import { Sidebar } from './Sidebar';
+import { ProfileMenu } from './ProfileMenu';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 export function AppShell({ children }: PropsWithChildren) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#e6f4ff,transparent_50%),linear-gradient(#f7fbff,#eef5fb)] text-slate-900">
-      <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600">Prodexa</p>
-            <h1 className="text-lg font-bold sm:text-xl">Gestion de formulaciones y costos</h1>
+    <div className="flex min-h-screen bg-white dark:bg-[#050816]">
+      <Sidebar mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} />
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-slate-200 px-4 sm:px-6 dark:border-white/10">
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Abrir menu"
+            className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden dark:text-zinc-300 dark:hover:bg-white/5"
+          >
+            <Menu className="h-5 w-5" aria-hidden />
+          </button>
+          <div className="flex flex-1 items-center justify-end gap-4">
+            <ThemeToggle />
+            <div className="h-6 w-px bg-slate-200 dark:bg-white/10" aria-hidden />
+            <ProfileMenu />
           </div>
-          <nav className="flex flex-wrap gap-2">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-sky-500 hover:text-sky-700"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      </header>
-      <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        </header>
+
+        <main className="flex-1 overflow-x-hidden px-4 py-6 text-slate-900 sm:px-6 lg:px-8 dark:text-zinc-100">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

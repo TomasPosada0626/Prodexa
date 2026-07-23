@@ -6,14 +6,234 @@ datasource db {
   provider = "postgresql"
 }
 
+// Roles dentro de una organizacion (ver auth/dto): ADMIN y COORDINADOR pueden crear/editar
+// formulaciones; MIEMBRO solo puede ver.
+
+model User {
+  id               String         @id @default(cuid())
+  email            String         @unique
+  passwordHash     String
+  nombre           String?
+  /** Margen (%) que se propone por defecto al crear una formulacion nueva. El IVA no es preferencia: es fijo (19%). */
+  margenPorDefecto Decimal        @default(30) @db.Decimal(5, 2)
+  organizationId   String
+  /** ADMIN | COORDINADOR | MIEMBRO — ver ROLES_ORGANIZACION en el DTO de auth. */
+  rol              String         @default("ADMIN")
+  /** false cuando un ADMIN lo remueve del equipo: no puede iniciar sesion, pero sus formulaciones/ordenes de produccion se conservan (son de la empresa, no solo suyas). */
+  activo           Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  organizacion     Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  formulaciones    Formulation[]
+  refreshTokens    RefreshToken[]
+  auditLogs        AuditLog[]
+  invitacionesCreadas Invitation[]
+
+  @@index([organizationId])
+}
+
+/** La empresa/cuenta compartida: todos los usuarios con el mismo organizationId ven las mismas formulaciones. */
+model Organization {
+  id           String        @id @default(cuid())
+  nombre       String
+  /** Costo por hora de mano de obra propia, usado para calcular automaticamente el costo de
+   * produccion (tiempoProduccionHoras x esta tarifa) cuando una orden NO se marca como maquila.
+   * Es de la empresa (no del usuario): asi el mismo producto cuesta lo mismo sin importar quien
+   * de la organizacion registre el lote. Solo ADMIN/COORDINADOR pueden editarla. */
+  tarifaManoObraHora Decimal    @default(0) @db.Decimal(10, 2)
+  /** Costo por hora de energia/gas (equipos encendidos durante la produccion), mismo mecanismo que tarifaManoObraHora. */
+  tarifaEnergiaHora Decimal     @default(0) @db.Decimal(10, 2)
+  /** Gastos generales/indirectos mensuales de la empresa (arriendo, nomina administrativa,
+   * software, contabilidad, etc.) — costos que existen sin importar cuanto se produzca. */
+  gastoGeneralMensual Decimal  @default(0) @db.Decimal(14, 2)
+  createdAt    DateTime      @default(now())
+  usuarios     User[]
+  formulaciones Formulation[]
+  ordenesProduccion ProductionOrder[]
+  invitaciones Invitation[]
+  proveedores  Supplier[]
+}
+
+/**
+ * Link de invitacion que un ADMIN/COORDINADOR genera para sumar gente a su organizacion
+ * con un rol especifico. Un solo uso; expira a los 7 dias si nadie la usa.
+ */
+model Invitation {
+  id             String       @id @default(cuid())
+  organizationId String
+  rol            String
+  /** Codigo corto (8 caracteres hexadecimales) para poder compartirlo/escribirlo a mano. */
+  token          String       @unique
+  createdByUserId String
+  expiresAt      DateTime
+  usedAt         DateTime?
+  createdAt      DateTime     @default(now())
+  organizacion   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creadaPor      User         @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+/** Eventos de seguridad de la cuenta: login, logout, registro, cambio de contrasena. */
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  evento    String
+  ip        String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  usuario   User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([evento])
+  @@index([createdAt])
+}
+
+model RefreshToken {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  ip         String?
+  userAgent  String?
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 model Formulation {
-  id                String           @id @default(cuid())
-  nombreProducto    String
-  registroSanitario String?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  ingredientes      Ingredient[]
-  pasosPreparacion  PreparationStep[]
+  id                 String       @id @default(cuid())
+  userId             String
+  /** Empresa duena de esta formulacion: todos los usuarios de esa organizacion la ven, no solo quien la creo. */
+  organizationId     String
+  nombreProducto     String
+  categoria          String?
+  registroSanitario  String?
+  registroSanitarioVencimiento DateTime?
+  /** Override manual del estado de cumplimiento (EN_TRAMITE, SUSPENDIDO). Null = calcular a partir de la fecha de vencimiento. */
+  registroSanitarioEstado String?
+  preparacionHtml    String?      @db.Text
+  cantidadBaseKg     Decimal      @default(1) @db.Decimal(14, 4)
+  margenPorcentaje   Decimal      @default(30) @db.Decimal(5, 2)
+  impuestoPorcentaje Decimal      @default(19) @db.Decimal(5, 2)
+  /** Vida util del producto en dias desde que se produce; sugiere la fecha de vencimiento de cada lote. */
+  vidaUtilDias       Int?
+  /** Horas estimadas para producir cantidadBaseKg. Se escala proporcionalmente para cada orden
+   * (igual que los ingredientes) y sirve de base para calcular mano de obra propia y energia. */
+  tiempoProduccionHoras Decimal?  @db.Decimal(8, 2)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  usuario            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizacion       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  ingredientes       Ingredient[]
+  versiones          FormulationVersion[]
+  ordenesProduccion  ProductionOrder[]
+
+  @@index([userId])
+  @@index([organizationId])
+}
+
+/** Registro persistente de cada lote realmente producido, con el costo/utilidad calculado en ese momento. */
+model ProductionOrder {
+  id                   String      @id @default(cuid())
+  formulationId        String
+  userId               String
+  /** Empresa duena de este lote: todos los usuarios de esa organizacion lo ven. */
+  organizationId       String
+  /** Identificador de trazabilidad del lote fisico (para retiros/recall y control de vencimiento). Unico por organizacion. */
+  numeroLote           String
+  cantidadObjetivoKg   Decimal     @db.Decimal(14, 4)
+  costoEscalado        Decimal     @db.Decimal(14, 2)
+  precioVentaSugerido  Decimal     @db.Decimal(14, 2)
+  utilidadEstimada     Decimal     @db.Decimal(14, 2)
+  margenPorcentaje     Decimal     @db.Decimal(5, 2)
+  tamanoPresentacion   Decimal?    @db.Decimal(14, 4)
+  unidadPresentacion   String?
+  fechaVencimiento     DateTime?
+  /** Costos operativos reales del lote, aparte del costo de ingredientes (costoEscalado). */
+  costoEmpaque         Decimal     @default(0) @db.Decimal(14, 2)
+  costoEtiqueta        Decimal     @default(0) @db.Decimal(14, 2)
+  /** true = costoManoObra es lo que cobro un maquilador (monto manual); false = se calculo
+   * solo (tiempoProduccionHoras x tarifaManoObraHora del usuario que la creo). */
+  esMaquila            Boolean     @default(false)
+  costoManoObra        Decimal     @default(0) @db.Decimal(14, 2)
+  /** Calculada (tiempoProduccionHoras x tarifaEnergiaHora) solo si esMaquila es false: si un tercero
+   * maquilo el lote, la energia/gas ya esta incluida en lo que cobro, asi que se deja en 0. */
+  costoEnergia         Decimal     @default(0) @db.Decimal(14, 2)
+  costoTransporte      Decimal     @default(0) @db.Decimal(14, 2)
+  /** Se deja en 0 si esMaquila es true: la merma durante el procesamiento es responsabilidad del
+   * maquilador (o ya esta incluida en su tarifa), no un costo aparte para quien contrata. */
+  costoMermas          Decimal     @default(0) @db.Decimal(14, 2)
+  /** Solo aplica si esMaquila es true: indica si la tarifa del maquilador ya incluye empacar y
+   * etiquetar el producto terminado (entrega "llave en mano") o si el maquilador solo entrega a
+   * granel y el empaque/etiqueta lo sigue asumiendo quien contrata. Si es true, costoEmpaque y
+   * costoEtiqueta se dejan en 0 (ya estan incluidos en costoManoObra). */
+  maquilaIncluyeEmpaque Boolean    @default(false)
+  /** Snapshot de las horas estimadas para este lote (tiempoProduccionHoras de la formulacion,
+   * escalado a cantidadObjetivoKg), para que quede fijo aunque luego cambie la formulacion. */
+  tiempoProduccionHoras Decimal?   @db.Decimal(8, 2)
+  /** Prorrateo de gastos generales de la empresa (arriendo, nomina administrativa, etc.), siempre
+   * calculado (aplica igual si se maquilo o no: el arriendo se paga sin importar quien produjo). */
+  costoGastosGenerales Decimal    @default(0) @db.Decimal(14, 2)
+  /** Precio de venta real cobrado (si se conoce); si es null, los reportes usan precioVentaSugerido como estimado. */
+  precioVentaReal      Decimal?    @db.Decimal(14, 2)
+  /** PENDIENTE (nada abonado), PARCIAL (algo abonado, no todo) o PAGADO (abonos cubren el total).
+   * Se recalcula solo al agregar/quitar un abono (ver Pago); tambien se puede fijar a mano
+   * (ej. marcar PAGADO directo sin registrar abonos, para el caso simple de un solo pago). */
+  estadoPago           String      @default("PENDIENTE")
+  /** Suma de los abonos (Pago) registrados contra este lote. Denormalizado para no tener que
+   * sumar la tabla Pago en cada reporte/listado; se recalcula cada vez que se agrega o borra uno. */
+  montoCobrado         Decimal     @default(0) @db.Decimal(14, 2)
+  fechaPago            DateTime?
+  /** Estado del flujo fisico del lote (no de cobro): PLANIFICADO (recien registrado) ->
+   * EN_PROCESO -> EN_CALIDAD -> TERMINADO, o RECHAZADO si no paso control de calidad.
+   * Un lote RECHAZADO se conserva para trazabilidad pero se excluye de utilidad/ingreso
+   * en Reportes/Dashboard/Analisis: no se vendio, no deberia inflar la rentabilidad real. */
+  estadoProduccion     String      @default("PLANIFICADO")
+  /** Notas de control de calidad (ej. motivo de un rechazo, observaciones de la revision). */
+  notasCalidad         String?     @db.Text
+  createdAt            DateTime    @default(now())
+  formulation          Formulation @relation(fields: [formulationId], references: [id], onDelete: Cascade)
+  organizacion         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  pagos                Pago[]
+
+  @@index([formulationId])
+  @@index([userId])
+  @@index([organizationId])
+  @@unique([organizationId, numeroLote])
+}
+
+/**
+ * Un abono/pago parcial contra un lote de produccion. Un lote se puede cobrar en varias cuotas;
+ * la suma de sus pagos determina si el lote queda PENDIENTE, PARCIAL o PAGADO (ver ProductionOrder).
+ */
+model Pago {
+  id                 String          @id @default(cuid())
+  productionOrderId  String
+  monto              Decimal         @db.Decimal(14, 2)
+  fecha              DateTime        @default(now())
+  createdAt          DateTime        @default(now())
+  ordenProduccion    ProductionOrder @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+
+  @@index([productionOrderId])
+}
+
+/**
+ * Snapshot completo de una formulacion (nombre, preparacion, margenes, ingredientes)
+ * en un momento dado. Se guarda uno al crear y uno mas antes de cada edicion (con el
+ * estado previo a esa edicion), asi el historial siempre tiene el "antes" de cada cambio.
+ */
+model FormulationVersion {
+  id            String      @id @default(cuid())
+  formulationId String
+  snapshot      Json
+  createdAt     DateTime    @default(now())
+  formulation   Formulation @relation(fields: [formulationId], references: [id], onDelete: Cascade)
+
+  @@index([formulationId])
 }
 
 model Ingredient {
@@ -28,18 +248,42 @@ model Ingredient {
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   formulation       Formulation @relation(fields: [formulationId], references: [id], onDelete: Cascade)
+  precios           SupplierPrice[]
 
   @@index([formulationId])
 }
 
-model PreparationStep {
-  id            String      @id @default(cuid())
-  formulationId String
-  orden         Int
-  descripcion   String
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  formulation   Formulation @relation(fields: [formulationId], references: [id], onDelete: Cascade)
+/**
+ * Historial de precios por ingrediente. Ingredient.precioKg sigue siendo el precio
+ * "activo" que usan los calculos; cada cambio queda registrado aqui para trazabilidad.
+ */
+model SupplierPrice {
+  id           String     @id @default(cuid())
+  ingredientId String
+  /** Texto libre para mostrar (se conserva por compatibilidad); supplierId es la referencia
+   * formal usada para comparar proveedores entre si. */
+  proveedor    String?
+  supplierId   String?
+  precioKg     Decimal    @db.Decimal(14, 2)
+  vigenteDesde DateTime   @default(now())
+  createdAt    DateTime   @default(now())
+  ingrediente  Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  proveedorRef Supplier?  @relation(fields: [supplierId], references: [id], onDelete: SetNull)
 
-  @@index([formulationId, orden])
+  @@index([ingredientId])
+  @@index([supplierId])
+}
+
+/** Proveedor formal de la empresa, para poder comparar precios/desempeno entre proveedores
+ * (antes solo existia como texto libre en cada SupplierPrice). */
+model Supplier {
+  id             String          @id @default(cuid())
+  organizationId String
+  nombre         String
+  createdAt      DateTime        @default(now())
+  organizacion   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  precios        SupplierPrice[]
+
+  @@index([organizationId])
+  @@unique([organizationId, nombre])
 }

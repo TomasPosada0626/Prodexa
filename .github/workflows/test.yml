@@ -1,0 +1,114 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend (unit tests + cobertura >= 95%)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/backend/package-lock.json
+      - name: Instalar dependencias
+        working-directory: apps/backend
+        run: npm ci
+      - name: Generar cliente de Prisma
+        working-directory: apps/backend
+        run: npm run prisma:generate
+      - name: Typecheck
+        working-directory: apps/backend
+        run: npx tsc --noEmit
+      - name: Lint
+        working-directory: apps/backend
+        run: npx eslint src
+      - name: Tests con cobertura (falla si baja del umbral en package.json)
+        working-directory: apps/backend
+        run: npm run test:cov
+
+  backend-integration:
+    name: Backend (integration/e2e contra Postgres real)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: prodexa
+          POSTGRES_PASSWORD: prodexa
+          POSTGRES_DB: prodexa_test
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U prodexa -d prodexa_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://prodexa:prodexa@localhost:55432/prodexa_test?schema=public
+      JWT_ACCESS_SECRET: ci-only-access-secret
+      JWT_REFRESH_SECRET: ci-only-refresh-secret
+      JWT_ACCESS_TTL: 15m
+      JWT_REFRESH_TTL_DAYS: 30
+      COOKIE_SECURE: 'false'
+      CORS_ORIGIN: http://localhost:3001
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/backend/package-lock.json
+      - name: Instalar dependencias
+        working-directory: apps/backend
+        run: npm ci
+      - name: Generar cliente de Prisma
+        working-directory: apps/backend
+        run: npm run prisma:generate
+      - name: Aplicar migraciones a la base de datos de test
+        working-directory: apps/backend
+        run: npm run prisma:deploy
+      - name: Escribir .env.test para el setup de jest-e2e
+        working-directory: apps/backend
+        run: |
+          cat > .env.test <<EOF
+          DATABASE_URL=${{ env.DATABASE_URL }}
+          JWT_ACCESS_SECRET=${{ env.JWT_ACCESS_SECRET }}
+          JWT_REFRESH_SECRET=${{ env.JWT_REFRESH_SECRET }}
+          JWT_ACCESS_TTL=${{ env.JWT_ACCESS_TTL }}
+          JWT_REFRESH_TTL_DAYS=${{ env.JWT_REFRESH_TTL_DAYS }}
+          COOKIE_SECURE=${{ env.COOKIE_SECURE }}
+          CORS_ORIGIN=${{ env.CORS_ORIGIN }}
+          EOF
+      - name: Integration/E2E tests
+        working-directory: apps/backend
+        run: npm run test:e2e
+
+  frontend:
+    name: Frontend (typecheck + lint + unit tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/frontend/package-lock.json
+      - name: Instalar dependencias
+        working-directory: apps/frontend
+        run: npm ci
+      - name: Typecheck
+        working-directory: apps/frontend
+        run: npx tsc --noEmit
+      - name: Lint
+        working-directory: apps/frontend
+        run: npx eslint src
+      - name: Unit tests con cobertura (lib/costing, lib/format, lib/export)
+        working-directory: apps/frontend
+        run: npm run test:cov

@@ -1,0 +1,3 @@
+ALTER TABLE "User" ADD COLUMN "margenPorDefecto" DECIMAL(5,2) NOT NULL DEFAULT 30;
+ALTER TABLE "RefreshToken" ADD COLUMN "ip" TEXT;
+ALTER TABLE "RefreshToken" ADD COLUMN "userAgent" TEXT;
