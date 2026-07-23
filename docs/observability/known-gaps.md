@@ -4,28 +4,25 @@ Documentados a propósito — el objetivo es que quien opere esto en guardia sep
 exactamente qué puede y qué no puede inferir de un log o una respuesta, en vez de
 descubrirlo en producción.
 
-## Un 500 no dice cuál fue la causa real
+## Un 500 no decía cuál fue la causa real (RESUELTO)
 
-`HttpExceptionFilter` (ver [`docs/architecture/politica_errores.md`](../architecture/politica_errores.md))
-responde siempre el mismo mensaje genérico para cualquier error que no sea una
-`HttpException` de Nest, y **no loguea el detalle de la excepción real** en ese caso.
+`HttpExceptionFilter` responde siempre el mismo mensaje genérico para cualquier error
+que no sea una `HttpException` de Nest. Hasta esta revisión, tampoco logueaba el
+detalle de la excepción real en ese caso — se descubrió exactamente así: durante una
+fase anterior de trabajo, Docker Desktop se cayó y Postgres quedó inalcanzable; el
+único síntoma visible era un 500 idéntico al de un bug real de la app. Diagnosticarlo
+en su momento requirió agregar temporalmente un `console.error` de depuración en el
+filtro, reproducir el error, encontrar la causa real (`ECONNREFUSED`), y revertirlo.
 
-**Qué significa esto en la práctica, si estás de guardia:** un 500 genérico en los
-logs puede ser cualquier cosa — Postgres caído, un `undefined` inesperado, un timeout
-de red — y el log no te va a decir cuál. Se descubrió exactamente así: durante esta
-misma fase de trabajo, Docker Desktop se cayó y Postgres quedó inalcanzable; el único
-síntoma visible era un 500 idéntico al de un bug real de la app. Diagnosticarlo
-requirió agregar temporalmente un `console.error` de depuración en el filtro,
-reproducir el error, encontrar la causa real (`ECONNREFUSED`), y revertir el cambio.
-
-**Qué hacer mientras tanto:** si ves un 500 sin contexto claro, revisa primero el
-estado de la infraestructura (¿Postgres responde? ¿Docker está arriba?) antes de
-asumir que es un bug de la aplicación.
-
-**Arreglo recomendado, no hecho todavía:** loguear `exception` completo (mensaje +
-stack) del lado del servidor cuando no es una `HttpException`, sin cambiar nada de lo
-que se expone al cliente — el cliente sigue recibiendo el mismo mensaje genérico, pero
-el log deja de estar vacío de información.
+**Arreglo aplicado:** `HttpExceptionFilter` ahora loguea `{ err: exception }` vía
+`request.log` (el logger de pino-http de esa request especifica, con su mismo
+`requestId`) cuando la excepción no es HTTP — con un serializer de error propio
+(`stdSerializers.err` de `pino-http` en `pino.config.ts`, ya que `message`/`stack` de
+un `Error` no son propiedades enumerables y se perderían en un `JSON.stringify` sin
+serializer explícito). El cliente sigue recibiendo exactamente el mismo mensaje
+genérico — el detalle solo queda en el log del servidor. Verificado con test
+(`http-exception.filter.spec.ts`: loguea para errores no-HTTP, no loguea para
+`HttpException`, no revienta si la request no tiene logger adjunto).
 
 ## Sin métricas técnicas ni alertas automáticas
 

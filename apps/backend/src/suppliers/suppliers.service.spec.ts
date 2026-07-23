@@ -115,6 +115,15 @@ describe('SuppliersService', () => {
         BadRequestException,
       );
     });
+
+    it('relanza el error tal cual si no es un conflicto de nombre duplicado (ej. Postgres caido)', async () => {
+      const errorInesperado = new Error('Connection terminated unexpectedly');
+      prisma.supplier.create.mockRejectedValue(errorInesperado);
+
+      await expect(service.create('org-1', 'Proveedor Nuevo')).rejects.toBe(
+        errorInesperado,
+      );
+    });
   });
 
   describe('rename', () => {

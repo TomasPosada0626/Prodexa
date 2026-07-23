@@ -50,4 +50,36 @@ describe('HttpExceptionFilter', () => {
       }),
     );
   });
+
+  it('loguea el detalle real de un error no controlado (aunque el cliente solo vea el mensaje generico)', () => {
+    const log = { error: jest.fn() };
+    const { host, response } = mockHost({ url: '/api/v1/x', id: 'req-3', log });
+    const errorReal = new Error('ECONNREFUSED: Postgres inalcanzable');
+
+    filter.catch(errorReal, host);
+
+    expect(log.error).toHaveBeenCalledWith(
+      { err: errorReal },
+      'Excepcion no controlada',
+    );
+    // El cliente sigue sin ver el detalle, solo el servidor lo logueo:
+    expect(response.json).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Error interno del servidor' }),
+    );
+  });
+
+  it('no loguea nada extra para una HttpException (no es una excepcion "no controlada")', () => {
+    const log = { error: jest.fn() };
+    const { host } = mockHost({ url: '/api/v1/x', id: 'req-4', log });
+
+    filter.catch(new BadRequestException('Datos invalidos'), host);
+
+    expect(log.error).not.toHaveBeenCalled();
+  });
+
+  it('no revienta si la request no tiene logger adjunto (compatibilidad hacia atras)', () => {
+    const { host } = mockHost({ url: '/api/v1/x', id: 'req-5' });
+
+    expect(() => filter.catch(new Error('sin logger'), host)).not.toThrow();
+  });
 });

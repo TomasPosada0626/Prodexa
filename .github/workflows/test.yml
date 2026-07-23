@@ -32,6 +32,9 @@ jobs:
       - name: Tests con cobertura (falla si baja del umbral en package.json)
         working-directory: apps/backend
         run: npm run test:cov
+      - name: Matriz de permisos actualizada (docs/api/endpoints.md derivado del codigo)
+        working-directory: apps/backend
+        run: npm run docs:api:check
 
   backend-integration:
     name: Backend (integration/e2e contra Postgres real)

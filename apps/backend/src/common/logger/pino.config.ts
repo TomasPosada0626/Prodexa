@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import type { IncomingMessage, ServerResponse } from 'http';
 import type { Options } from 'pino-http';
+import { stdSerializers } from 'pino-http';
 
 type RequestWithId = IncomingMessage & { id?: string };
 
@@ -31,5 +32,9 @@ export const pinoHttpOptions: Options = {
       id: req.id,
     }),
     res: (res: ServerResponse) => ({ statusCode: res.statusCode }),
+    // Serializa message/stack de un Error de forma explicita: no son propiedades
+    // enumerables, asi que un log.error({ err }) sin este serializer los pierde
+    // silenciosamente. Usado por HttpExceptionFilter para el hueco de los 500 sin detalle.
+    err: stdSerializers.err,
   },
 };

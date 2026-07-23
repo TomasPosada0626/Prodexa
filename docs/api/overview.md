@@ -28,6 +28,11 @@ request con `fetch(..., { credentials: 'include' })`. Mecánica completa en
 'COORDINADOR')` restringe además los endpoints de mutación que lo requieren — el
 detalle rol por rol está en la tabla de [`docs/api/endpoints.md`](endpoints.md).
 
+**Esa tabla no se mantiene a mano: se genera directo de los decoradores reales**
+(`apps/backend/scripts/generate-endpoints-doc.mjs`, `npm run docs:api:generate`) y CI
+falla (`npm run docs:api:check`) si queda desactualizada respecto al código — no puede
+existir un endpoint cuyo rol real no coincida con lo documentado.
+
 ## Errores
 
 Sobre de error único, con `X-Request-Id` de correlación. Detalle en

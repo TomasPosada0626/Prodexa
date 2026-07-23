@@ -23,12 +23,20 @@ import {
 } from './uploads.constants';
 
 const imagesDir = join(UPLOADS_DIR, UPLOADS_IMAGES_SUBDIR);
-if (!existsSync(imagesDir)) {
-  mkdirSync(imagesDir, { recursive: true });
+
+/** Crea la carpeta de imagenes si todavia no existe (idempotente). Extraida como
+ * funcion propia (en vez de codigo suelto a nivel de modulo) para poder probarla
+ * directo con fs mockeado, sin depender de mockear el import completo. */
+export function asegurarDirectorioDeImagenes(dir: string): void {
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
 }
 
+asegurarDirectorioDeImagenes(imagesDir);
+
 /** Rechaza el archivo ANTES de escribirlo a disco si el mimetype no es una imagen soportada. */
-function imageFileFilter(
+export function imageFileFilter(
   _req: unknown,
   file: Express.Multer.File,
   callback: (error: Error | null, acceptFile: boolean) => void,
@@ -37,6 +45,13 @@ function imageFileFilter(
     ALLOWED_IMAGE_MIME_TYPES as readonly string[]
   ).includes(file.mimetype);
   callback(null, esImagenPermitida);
+}
+
+/** Nombre unico y seguro para el archivo guardado en disco: nunca el nombre original
+ * del usuario (evita path traversal / colisiones), extension derivada del mimetype real. */
+export function generarNombreArchivo(mimetype: string): string {
+  const extension = MIME_TO_EXTENSION[mimetype] ?? '.bin';
+  return `${randomUUID()}${extension}`;
 }
 
 @ApiTags('uploads')
@@ -54,8 +69,7 @@ export class UploadsController {
       storage: diskStorage({
         destination: imagesDir,
         filename: (_req, file, callback) => {
-          const extension = MIME_TO_EXTENSION[file.mimetype] ?? '.bin';
-          callback(null, `${randomUUID()}${extension}`);
+          callback(null, generarNombreArchivo(file.mimetype));
         },
       }),
       fileFilter: imageFileFilter,

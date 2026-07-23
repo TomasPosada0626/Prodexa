@@ -26,19 +26,13 @@
   estructurados, así un reporte de bug se puede rastrear exactamente sin adivinar.
 - No hay campo `details`: el `message` de la excepción es la única información
   adicional que se expone al cliente.
-
-## Hueco conocido: los errores no-HTTP (500) no loguean su causa real
-
-Cuando `exception` no es una `HttpException` (ej. una excepción de Prisma, un error de
-red, un `undefined` inesperado), el filtro responde siempre el mismo mensaje genérico
-("Error interno del servidor") **sin loguear en ningún lado cuál fue la excepción
-real**. Esto se descubrió de la peor forma posible durante esta misma fase de trabajo:
-Docker Desktop se cayó, Postgres quedó inalcanzable, y el único síntoma visible era un
-500 genérico e indistinguible de un bug real de la aplicación — hubo que agregar
-temporalmente un `console.error` de depuración para encontrar la causa real
-(`ECONNREFUSED`), y luego revertirlo. Detalle completo, con la recomendación de qué
-hacer al respecto, en
-[`docs/observability/known-gaps.md`](../observability/known-gaps.md).
+- Cuando `exception` no es una `HttpException` (ej. una excepción de Prisma, un error
+  de red, un `undefined` inesperado), el filtro además loguea el detalle completo
+  (`message` + `stack`) vía `request.log.error({ err: exception }, ...)` — el cliente
+  sigue recibiendo el mismo mensaje genérico, pero el detalle real queda en el log del
+  servidor, correlacionado por `requestId`. Historia completa de por qué esto importa
+  (y cómo se diagnosticó antes de existir este logueo) en
+  [`docs/observability/known-gaps.md`](../observability/known-gaps.md).
 
 ## Reglas que sí se cumplen
 
