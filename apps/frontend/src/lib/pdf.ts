@@ -2,6 +2,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { Formulation } from './api';
 import { formatCosto, formatKg } from './format';
+import { sanitizeHtml } from './sanitize-html';
 
 const BLOCK_TAGS = new Set(['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE']);
 
@@ -12,7 +13,10 @@ const BLOCK_TAGS = new Set(['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLO
  */
 function htmlToPlainText(html: string): string {
   const container = document.createElement('div');
-  container.innerHTML = html;
+  // Sanitizar antes de asignar innerHTML: un <img onerror="..."> se dispara al parsear el
+  // src aunque el div nunca se adjunte al documento visible — no es "innerHTML es seguro
+  // porque no se muestra", ver docs/security/owasp-top10.md (A03).
+  container.innerHTML = sanitizeHtml(html);
 
   const listCounters: number[] = [];
 

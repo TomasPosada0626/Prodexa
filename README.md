@@ -23,14 +23,14 @@
   <img src="https://img.shields.io/badge/Playwright-E2E-2EAD33?logo=playwright&logoColor=white" />
   <img src="https://img.shields.io/badge/ESLint-4B32C3?logo=eslint&logoColor=white" />
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" />
-  <img src="https://img.shields.io/badge/tests-255%20passing-brightgreen" />
+  <img src="https://img.shields.io/badge/tests-292%20passing-brightgreen" />
 </p>
 
 <div align="center">
 
 | Statements                  | Branches                | Functions                 | Lines             |
 | :---------------------------: | :----------------------: | :-------------------------: | :------------------: |
-| ![Statements](https://img.shields.io/badge/statements-98.97%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-87.5%25-yellow.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-98.63%25-brightgreen.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-98.88%25-brightgreen.svg?style=flat) |
+| ![Statements](https://img.shields.io/badge/statements-99.7%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-88.39%25-yellow.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-99.32%25-brightgreen.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-99.68%25-brightgreen.svg?style=flat) |
 
 </div>
 
@@ -182,10 +182,10 @@ Scripts del monorepo (`package.json` raíz):
 Pirámide de testing completa, cada nivel corriendo contra algo real (nunca solo mocks):
 
 ```bash
-npm run test:backend           # backend: 196 unit tests, Jest, contra Prisma mockeado
+npm run test:backend           # backend: 217 unit tests, Jest, contra Prisma mockeado
 npm run test:backend:e2e       # backend: 27 tests de integración contra Postgres real (prodexa_test)
-npm run test:frontend          # frontend: 27 unit tests, Vitest (lib/costing, lib/format, lib/export, lib/api)
-npm run test:frontend:e2e      # frontend: 5 flujos E2E con Playwright + axe-core
+npm run test:frontend          # frontend: 42 unit tests, Vitest (lib/costing, lib/format, lib/export, lib/api, lib/calidad, lib/sanitize-html)
+npm run test:frontend:e2e      # frontend: 6 flujos E2E con Playwright + axe-core
 npm run test:coverage          # backend con reporte de cobertura (falla si baja de los umbrales, ver abajo)
 ```
 

@@ -22,11 +22,11 @@ múltiples — solo se da seguimiento a la última versión de `main`. Ver
 ## Revisión de seguridad propia
 
 El proyecto mantiene una autoevaluación honesta contra el OWASP Top 10 en
-[`docs/security/owasp-top10.md`](docs/security/owasp-top10.md), con sus hallazgos
-pendientes explícitos — incluido al menos un riesgo real conocido (XSS almacenado en
-el campo de preparación de una formulación, sin mitigar todavía). Reportar cualquiera
-de esos hallazgos ya documentados no hace falta hacerlo por este canal — ya están en
-seguimiento; sí es bienvenido reportar algo que ese documento no haya cubierto.
+[`docs/security/owasp-top10.md`](docs/security/owasp-top10.md), con sus hallazgos y
+su resolución documentados explícitamente — por ejemplo, el XSS almacenado en el
+campo de preparación de una formulación, encontrado y luego sanitizado con DOMPurify
+(ver `CHANGELOG.md` 0.2.1). Reportar algo que ese documento ya cubre no hace falta
+hacerlo por este canal; sí es bienvenido reportar algo que no haya cubierto.
 
 ## Automatización de seguridad ya activa
 

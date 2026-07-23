@@ -14,8 +14,8 @@ flowchart LR
     end
     subgraph "Futuro (planeado, Fase 8)"
         V["Vercel<br/>(frontend Next.js)"]
-        R["Railway o Render<br/>(backend NestJS)"]
-        N["Neon o Railway Postgres<br/>(base de datos gestionada)"]
+        R["Render<br/>(backend NestJS, desde el Dockerfile existente)"]
+        N["Render Postgres<br/>(base de datos gestionada)"]
     end
 
     L -. "no construido todavia" .-> V
@@ -23,12 +23,16 @@ flowchart LR
     R --> N
 ```
 
+Decisión tomada (no una opción abierta): **Vercel + Render**, reutilizando experiencia
+operativa ya probada en otro proyecto, en vez de introducir una plataforma nueva sin
+una razón concreta que lo justifique.
+
 - **Frontend → Vercel**: encaja naturalmente con Next.js (App Router), build/deploy
   automático por push.
-- **Backend → Railway o Render**: contenedor de `apps/backend/Dockerfile`, sin
-  necesidad de gestionar servidores.
-- **Base de datos → Neon o el Postgres gestionado de Railway**: para no operar
-  Postgres a mano en producción.
+- **Backend → Render**: despliega directo desde `apps/backend/Dockerfile`, sin
+  necesidad de gestionar servidores ni de adaptar nada del build existente.
+- **Base de datos → Postgres gestionado de Render**: backups automáticos, sin un
+  tercer proveedor (Neon) solo para la base de datos.
 
 ## Qué falta de verdad antes de que esto sea real
 

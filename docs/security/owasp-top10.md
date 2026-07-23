@@ -49,17 +49,19 @@ Donde algo no esta cubierto, se dice explicitamente y se deja como pendiente.
   (`main.ts`) — cualquier campo no declarado en el DTO se rechaza, no se cuela a la capa
   de datos.
 - El contenido enriquecido de "Preparacion" se guarda como HTML (Tiptap) y se
-  renderiza con `dangerouslySetInnerHTML` en `formulacion-card.tsx`. **Riesgo real de
-  XSS almacenado, actualizado desde la revision anterior:** con RBAC y organizaciones
-  multiusuario ya implementados (ver A01, ADR-005), las formulaciones **si** se
-  comparten dentro de una organizacion — un `ADMIN`/`COORDINADOR` que guarde un
-  payload malicioso en este campo lo ejecutaria en el navegador de cualquier otro
-  miembro que abra esa formulacion. No hay ninguna libreria de sanitizacion
-  (DOMPurify, sanitize-html o similar) en las dependencias del proyecto hoy — se
-  confirmo revisando `package.json` de ambas apps. **Siguiente paso concreto:**
-  sanitizar el HTML con DOMPurify antes de guardarlo (o, como minimo, antes de
-  renderizarlo) en `formulacion-card.tsx` y en el editor
-  (`components/shared/rich-text-editor.tsx`).
+  renderiza con `dangerouslySetInnerHTML` en `formulacion-card.tsx`. **XSS
+  almacenado — RESUELTO.** Con RBAC y organizaciones multiusuario implementados
+  (ver A01, ADR-005), las formulaciones se comparten dentro de una organizacion: un
+  `ADMIN`/`COORDINADOR` que guardara un payload malicioso en este campo lo habria
+  ejecutado en el navegador de cualquier otro miembro que abriera esa formulacion.
+  Se sanitiza con `isomorphic-dompurify` (`lib/sanitize-html.ts`, allowlist explicita
+  de tags/atributos, bloquea `javascript:`) en **dos** puntos — no solo el visible:
+  `formulacion-card.tsx` (`dangerouslySetInnerHTML`) y `lib/pdf.ts` (`htmlToPlainText`,
+  un vector menos obvio: un `<img onerror>` se dispara al asignar `innerHTML` aunque
+  el elemento nunca se adjunte al DOM visible, así que la exportación a PDF también
+  era explotable). Verificado con test unitario (`sanitize-html.test.ts`: bloquea
+  `<script>`, `onerror`, `onclick`, `javascript:`; conserva negrita/listas/imágenes
+  propias) y con el flujo real end-to-end (`verificaciones-permanentes.spec.ts`).
 
 ## A04:2021 — Insecure Design
 
@@ -147,7 +149,7 @@ de nuevo si se agrega una funcionalidad de ese tipo.
 |---|---|
 | A01 Broken Access Control | Cubierto (multi-tenant por organizacion, con RBAC) |
 | A02 Cryptographic Failures | Cubierto |
-| A03 Injection | Cubierto, con **riesgo XSS real y accionable** (formulaciones compartidas, sin sanitizacion todavia) |
+| A03 Injection | Cubierto — XSS almacenado resuelto (DOMPurify en los 2 puntos de renderizado/parseo) |
 | A04 Insecure Design | Cubierto |
 | A05 Security Misconfiguration | Cubierto, con nota sobre Swagger en produccion |
 | A06 Vulnerable and Outdated Components | Cubierto (Dependabot + npm audit en CI) |
@@ -156,6 +158,4 @@ de nuevo si se agrega una funcionalidad de ese tipo.
 | A09 Security Logging and Monitoring Failures | Cubierto, 12 tipos de evento; sin notificacion proactiva |
 | A10 SSRF | No aplica hoy |
 
-**Proxima revision recomendada:** cuando se sanitice el HTML de "Preparacion" (A03,
-el hallazgo con mayor prioridad de esta revision), y antes de habilitar CD real a
-produccion (Fase 8).
+**Proxima revision recomendada:** antes de habilitar CD real a produccion (Fase 8).

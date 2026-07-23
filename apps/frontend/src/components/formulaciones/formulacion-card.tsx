@@ -7,6 +7,7 @@ import { Collapsible } from '@/components/shared/collapsible';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/context/toast-context';
 import { exportFichaTecnicaPdf } from '@/lib/pdf';
+import { sanitizeHtml } from '@/lib/sanitize-html';
 import { FormulacionForm } from './formulacion-form';
 import { IngredientPriceRow } from './ingredient-price-row';
 
@@ -204,7 +205,7 @@ export function FormulacionCard({ formulacion, onDeleted, onUpdated }: Props) {
         <Collapsible title="Preparacion">
           <div
             className="prose prose-sm max-w-none text-slate-600 dark:text-zinc-400 dark:prose-invert"
-            dangerouslySetInnerHTML={{ __html: formulacion.preparacionHtml }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(formulacion.preparacionHtml) }}
           />
         </Collapsible>
       )}

@@ -17,7 +17,7 @@ de verdad, no cuando "ya se ve bien".
 | 4 | Seguridad empresarial (incluye RBAC) | ✅ Cerrada — RBAC se descartó y luego se construyó, ver [ADR-005](docs/adr/ADR-005-rbac-organizaciones-multiusuario.md) |
 | 5 | UX/UI y dashboard profesional | ✅ Cerrada |
 | 6 | Observabilidad y operaciones | ✅ Cerrada en el alcance decidido (métricas técnicas fuera de alcance, ver [`docs/observability/`](docs/observability/)) |
-| 7 | Testing total y cobertura ≥85% | ✅ Cerrada (196+27 backend, 27+5 frontend, ≥95% cobertura backend) |
+| 7 | Testing total y cobertura ≥85% | ✅ Cerrada (217+27 backend, 42+6 frontend, ≥95% cobertura backend) |
 | 8 | DevOps, CI/CD y despliegue real | ⬜ No iniciada |
 | 9 | Integración IA (Groq Cloud) | ⬜ Decisión tomada (se descartó Ollama), no construida |
 | 10 | Documentación 100% completa | ✅ Esta entrega |
@@ -27,21 +27,30 @@ de verdad, no cuando "ya se ve bien".
 
 ## Próximos pasos reales (no aspiracionales)
 
-1. **Sanitizar el HTML de "Preparación"** (DOMPurify) — el hallazgo de mayor prioridad
-   de la revisión de seguridad actual, ver
-   [`docs/security/owasp-top10.md`](docs/security/owasp-top10.md).
-2. **Activar branch protection en GitHub** ("Require status checks to pass") para que
+1. **Activar branch protection en GitHub** ("Require status checks to pass") para que
    el CI existente bloquee merges de verdad — paso de configuración, no de código.
-3. **Fase 8**: elegir y construir el pipeline de despliegue real (Vercel + Railway/Neon
-   es el destino previsto, ver
-   [`docs/deployment/roadmap-despliegue.md`](docs/deployment/roadmap-despliegue.md)).
-4. **Labels y milestones de GitHub**: aplicar `.github/labels.yml` (requiere `gh` CLI
+2. **Fase 8**: construir el pipeline de despliegue real — **Vercel (frontend) +
+   Render (backend + Postgres gestionado)**, reutilizando el `Dockerfile` ya existente
+   del backend. Ver [`docs/deployment/roadmap-despliegue.md`](docs/deployment/roadmap-despliegue.md).
+3. **Labels y milestones de GitHub**: aplicar `.github/labels.yml` (requiere `gh` CLI
    autenticado o hacerlo manual una vez, no había acceso a la API en el entorno donde
    se escribió este archivo).
 
+## Cerrado recientemente (ya no son "próximos pasos")
+
+- ~~Sanitizar el HTML de "Preparación"~~ — hecho con DOMPurify en los dos puntos
+  reales de renderizado/parseo, ver [ADR-005](docs/adr/ADR-005-rbac-organizaciones-multiusuario.md).
+- ~~Matriz de permisos mantenida a mano~~ — ahora se genera del código
+  (`apps/backend/scripts/generate-endpoints-doc.mjs`), CI falla si queda desactualizada.
+- ~~Cobertura floja en Suppliers/Uploads~~ — cerrada con tests reales, no artificiales.
+- ~~500 sin detalle logueado~~ — `HttpExceptionFilter` ahora loguea la causa real del
+  lado del servidor sin cambiar lo que ve el cliente.
+- ~~Análisis/Reportes/Proveedores/Configuración/Auditoría sin regresión E2E
+  permanente~~ — `modulos-avanzados.spec.ts` los cubre a los 5.
+
 ## Milestones sugeridos (a crear manualmente en GitHub)
 
-- **v0.2.0 — Documentación y gobernanza** (esta entrega): Fases 10-11.
-- **v0.3.0 — Endurecimiento de seguridad**: sanitización XSS, branch protection.
-- **v0.4.0 — Despliegue real**: Fase 8.
+- **v0.2.0 — Documentación, gobernanza y calidad a 9+** (esta entrega): Fases 10-11 +
+  cierre de los hallazgos de seguridad/cobertura/testing pendientes.
+- **v0.3.0 — Despliegue real**: Fase 8 (Vercel + Render), branch protection.
 - **v1.0.0**: cierre formal, Fase 12.

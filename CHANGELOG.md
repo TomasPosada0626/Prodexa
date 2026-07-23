@@ -10,6 +10,37 @@ inicial real; `[0.2.0]` es una retrospectiva honesta de todo lo construido desde
 entonces hasta esta entrega, agrupado por tipo de cambio, no una lista de 9 versiones
 inventadas. De aquí en adelante, cada tag corresponde a un release real.
 
+## [0.2.1] - 2026-07-23
+
+### Security
+
+- **XSS almacenado en `preparacionHtml` — resuelto.** El hallazgo abierto de la
+  revisión OWASP anterior (0.2.0) se sanitiza ahora con `isomorphic-dompurify`
+  (`lib/sanitize-html.ts`) en los dos puntos reales de renderizado/parseo:
+  `formulacion-card.tsx` (`dangerouslySetInnerHTML`) y `lib/pdf.ts`
+  (`htmlToPlainText` — un vector menos obvio, un `<img onerror>` se dispara al
+  asignar `innerHTML` aunque el elemento nunca se adjunte al DOM visible). Verificado
+  con test unitario y con el flujo real end-to-end.
+
+### Added
+
+- **Matriz de permisos de la API generada del código.** `docs/api/endpoints.md` ya
+  no se mantiene a mano: se deriva de los decoradores reales (`@Roles`,
+  `@UseGuards`, `@ApiOperation`) vía `apps/backend/scripts/generate-endpoints-doc.mjs`,
+  y CI falla si queda desactualizada respecto al código.
+- **Cobertura de test real donde había huecos genuinos**, no relleno artificial:
+  `uploads.controller.ts` (78%→96%, `imageFileFilter`/generador de nombre de archivo
+  extraídos como funciones testeables), `suppliers.service.ts` (el branch de "error
+  no relacionado con nombre duplicado" nunca se probaba), `calidad.ts`
+  (`calcularEstadoRegistro`, 7 estados, sin ningún test hasta ahora).
+- **`HttpExceptionFilter` ahora loguea el detalle real de un error no-HTTP** (mensaje +
+  stack, vía `request.log` con el serializer de pino-http) sin cambiar lo que ve el
+  cliente — cierra el hueco de observabilidad documentado en 0.2.0.
+- **`modulos-avanzados.spec.ts`**: cobertura E2E permanente nueva para Análisis
+  (tasa de rechazo), Reportes (cartera por cobrar), Proveedores (CRUD), Configuración
+  (tarifas/sesiones/equipo) y Auditoría (detalle de eventos) — los 5 solo se habían
+  verificado antes con specs temporales, ya borradas.
+
 ## [0.2.0] - 2026-07-23
 
 ### Added

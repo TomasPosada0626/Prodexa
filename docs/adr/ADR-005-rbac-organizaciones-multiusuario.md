@@ -42,20 +42,20 @@ Se construyó:
 - El aislamiento por organización es más simple de razonar que un modelo de
   permisos compartidos ad-hoc entre usuarios individuales.
 
-**Negativas / a vigilar:**
-- **El riesgo de XSS en `preparacionHtml` pasó de hipotético a real.** Antes de este
-  cambio, `docs/security/owasp-top10.md` (A03) documentaba que el HTML enriquecido de
-  la preparación de una formulación solo lo veía su propio dueño — "un usuario solo
-  podría atacarse a sí mismo". Ahora que las formulaciones se comparten dentro de una
-  organización, un ADMIN o COORDINADOR que guarde un payload malicioso en ese campo lo
-  ejecutaría en el navegador de cualquier otro miembro que abra esa formulación. No hay
-  ninguna librería de sanitización (DOMPurify o similar) en el código hoy. Esto queda
-  re-calificado y con un siguiente paso concreto en
+**Negativas / a vigilar (y cómo se resolvieron después):**
+- **El riesgo de XSS en `preparacionHtml` pasó de hipotético a real — y ya se
+  mitigó.** Antes de este cambio, `docs/security/owasp-top10.md` (A03) documentaba
+  que el HTML enriquecido de la preparación de una formulación solo lo veía su
+  propio dueño — "un usuario solo podría atacarse a sí mismo". Al compartirse las
+  formulaciones dentro de una organización, un ADMIN o COORDINADOR que guardara un
+  payload malicioso en ese campo lo habría ejecutado en el navegador de cualquier
+  otro miembro. Se sanitiza con DOMPurify en los dos puntos reales de
+  renderizado/parseo (`lib/sanitize-html.ts`) — detalle completo en
   [`docs/security/owasp-top10.md`](../security/owasp-top10.md#a032021--injection).
-- La matriz de permisos (qué rol puede hacer qué, endpoint por endpoint) necesita
-  mantenerse actualizada a mano cada vez que se agrega un endpoint de mutación nuevo —
-  no hay un mecanismo automático que la derive del código. Ver
-  [`docs/api/endpoints.md`](../api/endpoints.md) para la matriz actual.
+- **La matriz de permisos ya no se mantiene a mano.** `docs/api/endpoints.md` se
+  genera de los decoradores reales del código
+  (`apps/backend/scripts/generate-endpoints-doc.mjs`) y CI falla si queda
+  desactualizada — no puede haber drift entre lo documentado y lo real.
 
 ## Lección
 

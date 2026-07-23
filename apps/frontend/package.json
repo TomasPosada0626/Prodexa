@@ -22,6 +22,7 @@
     "@tiptap/starter-kit": "^3.28.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.42.2",
+    "isomorphic-dompurify": "^3.19.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "lucide-react": "^1.25.0",
