@@ -5,22 +5,34 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white" />
-  <img src="https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs&logoColor=white" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" />
   <img src="https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white" />
+  <img src="https://img.shields.io/badge/Framer_Motion-black?logo=framer&logoColor=white" />
+  <img src="https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs&logoColor=white" />
   <img src="https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma&logoColor=white" />
   <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white" />
+  <img src="https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white" />
+  <br/>
+  <img src="https://img.shields.io/badge/JWT-black?logo=jsonwebtokens&logoColor=white" />
+  <img src="https://img.shields.io/badge/Argon2-password_hashing-black" />
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" />
+  <img src="https://img.shields.io/badge/GitHub_Actions-CI%2FCD-2088FF?logo=githubactions&logoColor=white" />
+  <img src="https://img.shields.io/badge/Jest-unit_tests-C21325?logo=jest&logoColor=white" />
+  <img src="https://img.shields.io/badge/Vitest-unit_tests-6E9F18?logo=vitest&logoColor=white" />
+  <img src="https://img.shields.io/badge/Playwright-E2E-2EAD33?logo=playwright&logoColor=white" />
+  <img src="https://img.shields.io/badge/ESLint-4B32C3?logo=eslint&logoColor=white" />
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" />
   <img src="https://img.shields.io/badge/tests-255%20passing-brightgreen" />
 </p>
 
-<p align="center">
+<div align="center">
 
 | Statements                  | Branches                | Functions                 | Lines             |
-| ---------------------------- | ----------------------- | ------------------------- | ------------------ |
+| :---------------------------: | :----------------------: | :-------------------------: | :------------------: |
 | ![Statements](https://img.shields.io/badge/statements-98.97%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-87.5%25-yellow.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-98.63%25-brightgreen.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-98.88%25-brightgreen.svg?style=flat) |
 
-</p>
+</div>
 
 ---
 
