@@ -1,0 +1,47 @@
+# Set base de labels de Prodexa.
+#
+# Formato compatible con EndBug/label-sync (https://github.com/EndBug/label-sync).
+# No se aplicó automáticamente: este entorno de desarrollo no tenía `gh` CLI ni un
+# token de GitHub disponible. Para aplicarlo:
+#   1. Correr una vez la acción EndBug/label-sync apuntando a este archivo, o
+#   2. Crear cada label manualmente en Settings → Labels, con el mismo nombre/color.
+
+- name: bug
+  color: d73a4a
+  description: Algo no funciona como debería
+
+- name: feature
+  color: a2eeef
+  description: Funcionalidad nueva
+
+- name: docs
+  color: 0075ca
+  description: Cambios de documentación
+
+- name: chore
+  color: fef2c0
+  description: Mantenimiento técnico (dependencias, config, CI)
+
+- name: security
+  color: b60205
+  description: Relacionado con seguridad
+
+- name: p0
+  color: b60205
+  description: Prioridad crítica
+
+- name: p1
+  color: d93f0b
+  description: Prioridad alta
+
+- name: p2
+  color: fbca04
+  description: Prioridad normal
+
+- name: needs-triage
+  color: ededed
+  description: Sin revisar todavía
+
+- name: blocked
+  color: 000000
+  description: Bloqueado por otra tarea o decisión
