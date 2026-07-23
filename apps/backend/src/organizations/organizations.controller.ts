@@ -46,7 +46,11 @@ export class OrganizationsController {
     @CurrentUser() user: RequestUser,
     @Body() dto: UpdateOrganizationSettingsDto,
   ) {
-    return this.organizationsService.updateSettings(user.organizationId, dto);
+    return this.organizationsService.updateSettings(
+      user.organizationId,
+      dto,
+      user.id,
+    );
   }
 
   @Patch('members/:id/role')

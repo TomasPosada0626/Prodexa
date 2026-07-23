@@ -1,9 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SimulationService } from '../simulation/simulation.service';
 import { AuditService } from '../audit/audit.service';
 import { AuditEvent } from '../audit/audit.types';
-import { CreateProductionOrderDto } from './dto/create-production-order.dto';
+import {
+  CreateProductionOrderDto,
+  EstadoProduccion,
+  TRANSICIONES_ESTADO_PRODUCCION,
+} from './dto/create-production-order.dto';
 import { UpdateProductionOrderDto } from './dto/update-production-order.dto';
 import { CreatePagoDto } from './dto/create-pago.dto';
 
@@ -138,6 +146,24 @@ export class ProductionOrdersService {
     dto: UpdateProductionOrderDto,
   ) {
     const orden = await this.findOwned(organizationId, id);
+
+    if (
+      dto.estadoProduccion !== undefined &&
+      dto.estadoProduccion !== orden.estadoProduccion
+    ) {
+      const permitidos =
+        TRANSICIONES_ESTADO_PRODUCCION[
+          orden.estadoProduccion as EstadoProduccion
+        ] ?? [];
+      if (!permitidos.includes(dto.estadoProduccion)) {
+        throw new BadRequestException(
+          permitidos.length > 0
+            ? `No se puede pasar de ${orden.estadoProduccion} a ${dto.estadoProduccion}. Desde ${orden.estadoProduccion} solo se puede pasar a: ${permitidos.join(', ')}.`
+            : `${orden.estadoProduccion} es un estado final: este lote ya no puede cambiar de estado.`,
+        );
+      }
+    }
+
     const formulation = await this.prisma.formulation.findFirst({
       where: { id: orden.formulationId, organizationId },
       include: { ingredientes: true },

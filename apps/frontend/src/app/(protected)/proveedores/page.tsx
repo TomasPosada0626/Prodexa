@@ -1,10 +1,20 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ApiError, Supplier, getSuppliers } from '@/lib/api';
+import {
+  ApiError,
+  Supplier,
+  createSupplier,
+  deleteSupplier,
+  getSuppliers,
+  renameSupplier,
+} from '@/lib/api';
 import { formatCosto } from '@/lib/format';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
+import { ConfirmDialog } from '@/components/shared/confirm-dialog';
+import { useAuth } from '@/context/auth-context';
+import { useToast } from '@/context/toast-context';
 
 const selectClasses =
   'rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200';
@@ -46,12 +56,22 @@ function preciosVigentesPorIngrediente(proveedores: Supplier[]): PrecioPorIngred
 }
 
 export default function ProveedoresPage() {
+  const { user } = useAuth();
+  const { showToast } = useToast();
+  const puedeGestionar = user?.rol === 'ADMIN' || user?.rol === 'COORDINADOR';
   const [proveedores, setProveedores] = useState<Supplier[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [formulacionSeleccionada, setFormulacionSeleccionada] = useState<string>('todas');
   const [ingredienteSeleccionado, setIngredienteSeleccionado] = useState<string>('');
+  const [nuevoNombre, setNuevoNombre] = useState('');
+  const [creando, setCreando] = useState(false);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [nombreEdicion, setNombreEdicion] = useState('');
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
+  const [proveedorAEliminar, setProveedorAEliminar] = useState<Supplier | null>(null);
+  const [eliminando, setEliminando] = useState(false);
 
-  useEffect(() => {
+  function cargar() {
     let cancelled = false;
     getSuppliers()
       .then((data) => {
@@ -63,7 +83,65 @@ export default function ProveedoresPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }
+
+  useEffect(cargar, []);
+
+  async function handleCrear(event: React.FormEvent) {
+    event.preventDefault();
+    if (!nuevoNombre.trim()) return;
+    setCreando(true);
+    try {
+      const creado = await createSupplier(nuevoNombre.trim());
+      setProveedores((prev) => [...(prev ?? []), { ...creado, precios: [] }]);
+      setNuevoNombre('');
+      showToast(`Proveedor "${creado.nombre}" creado.`);
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'No se pudo crear el proveedor.', 'error');
+    } finally {
+      setCreando(false);
+    }
+  }
+
+  function iniciarEdicion(id: string, nombreActual: string) {
+    setEditandoId(id);
+    setNombreEdicion(nombreActual);
+  }
+
+  async function guardarEdicion(id: string) {
+    if (!nombreEdicion.trim()) {
+      showToast('El nombre no puede quedar vacio.', 'error');
+      return;
+    }
+    setGuardandoEdicion(true);
+    try {
+      const actualizado = await renameSupplier(id, nombreEdicion.trim());
+      setProveedores(
+        (prev) => prev?.map((p) => (p.id === id ? { ...p, nombre: actualizado.nombre } : p)) ?? null,
+      );
+      setEditandoId(null);
+      showToast('Proveedor renombrado.');
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'No se pudo renombrar el proveedor.', 'error');
+    } finally {
+      setGuardandoEdicion(false);
+    }
+  }
+
+  async function confirmarEliminar() {
+    if (!proveedorAEliminar) return;
+    setEliminando(true);
+    try {
+      await deleteSupplier(proveedorAEliminar.id);
+      setProveedores((prev) => prev?.filter((p) => p.id !== proveedorAEliminar.id) ?? null);
+      setProveedorAEliminar(null);
+      showToast('Proveedor eliminado.');
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'No se pudo eliminar el proveedor.', 'error');
+    } finally {
+      setEliminando(false);
+    }
+  }
 
   const preciosVigentes = useMemo(() => preciosVigentesPorIngrediente(proveedores ?? []), [proveedores]);
 
@@ -156,6 +234,31 @@ export default function ProveedoresPage() {
           al registrar un precio de ingrediente en Formulaciones.
         </p>
       </div>
+
+      {puedeGestionar && (
+        <form
+          onSubmit={(e) => void handleCrear(e)}
+          className="flex flex-wrap items-end gap-2 rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3"
+        >
+          <label className="grid flex-1 gap-1 text-sm text-slate-700 dark:text-zinc-300">
+            Nuevo proveedor
+            <input
+              type="text"
+              placeholder="Nombre del proveedor"
+              value={nuevoNombre}
+              onChange={(e) => setNuevoNombre(e.target.value)}
+              className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={creando || !nuevoNombre.trim()}
+            className="rounded-full bg-sky-700 px-4 py-1.5 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-60 dark:bg-[#8B5CF6] dark:hover:bg-[#7c3aed]"
+          >
+            {creando ? 'Creando...' : 'Crear proveedor'}
+          </button>
+        </form>
+      )}
 
       {loading && (
         <div className="grid gap-4">
@@ -301,21 +404,75 @@ export default function ProveedoresPage() {
                   <th className="py-2">Ingredientes cotizados</th>
                   <th className="py-2">Precio promedio/kg</th>
                   <th className="py-2">Ultimo registro</th>
+                  {puedeGestionar && <th className="py-2">Acciones</th>}
                 </tr>
               </thead>
               <tbody>
-                {resumenPorProveedor.map((p) => (
-                  <tr key={p.id} className="border-b border-slate-100 dark:border-white/5">
-                    <td className="py-2 font-medium text-slate-800 dark:text-zinc-200">{p.nombre}</td>
-                    <td className="py-2 text-slate-600 dark:text-zinc-400">{p.ingredientesCotizados}</td>
-                    <td className="py-2 text-slate-600 dark:text-zinc-400">
-                      {p.ingredientesCotizados > 0 ? formatCosto(p.precioPromedio) : '—'}
-                    </td>
-                    <td className="py-2 text-slate-600 dark:text-zinc-400">
-                      {p.ultimoRegistro ? new Date(p.ultimoRegistro).toLocaleDateString() : '—'}
-                    </td>
-                  </tr>
-                ))}
+                {resumenPorProveedor.map((p) => {
+                  const proveedorCompleto = proveedores?.find((prov) => prov.id === p.id);
+                  return editandoId === p.id ? (
+                    <tr key={p.id} className="border-b border-slate-100 dark:border-white/5">
+                      <td colSpan={puedeGestionar ? 5 : 4} className="py-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <input
+                            type="text"
+                            autoFocus
+                            value={nombreEdicion}
+                            onChange={(e) => setNombreEdicion(e.target.value)}
+                            className="rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => void guardarEdicion(p.id)}
+                            disabled={guardandoEdicion}
+                            className="rounded-full bg-sky-700 px-3 py-1 text-xs font-semibold text-white disabled:opacity-60 dark:bg-[#8B5CF6]"
+                          >
+                            {guardandoEdicion ? 'Guardando...' : 'Guardar'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditandoId(null)}
+                            disabled={guardandoEdicion}
+                            className="rounded-full border border-slate-300 px-3 py-1 text-xs text-slate-600 disabled:opacity-60 dark:border-white/10 dark:text-zinc-400"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr key={p.id} className="border-b border-slate-100 dark:border-white/5">
+                      <td className="py-2 font-medium text-slate-800 dark:text-zinc-200">{p.nombre}</td>
+                      <td className="py-2 text-slate-600 dark:text-zinc-400">{p.ingredientesCotizados}</td>
+                      <td className="py-2 text-slate-600 dark:text-zinc-400">
+                        {p.ingredientesCotizados > 0 ? formatCosto(p.precioPromedio) : '—'}
+                      </td>
+                      <td className="py-2 text-slate-600 dark:text-zinc-400">
+                        {p.ultimoRegistro ? new Date(p.ultimoRegistro).toLocaleDateString() : '—'}
+                      </td>
+                      {puedeGestionar && (
+                        <td className="py-2">
+                          <div className="flex items-center gap-1 whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => iniciarEdicion(p.id, p.nombre)}
+                              className="rounded-full border border-slate-300 px-2 py-0.5 text-xs text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-zinc-400 dark:hover:bg-white/5"
+                            >
+                              Renombrar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => proveedorCompleto && setProveedorAEliminar(proveedorCompleto)}
+                              className="rounded-full border border-red-300 px-2 py-0.5 text-xs text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
+                            >
+                              Eliminar
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             {proveedoresHuerfanos > 0 && (
@@ -329,6 +486,21 @@ export default function ProveedoresPage() {
           </div>
         </>
       )}
+
+      <ConfirmDialog
+        open={proveedorAEliminar !== null}
+        title="Eliminar proveedor"
+        description={
+          proveedorAEliminar
+            ? `Vas a eliminar "${proveedorAEliminar.nombre}". Su historial de precios se conserva (solo pierde el enlace formal); esta accion no se puede deshacer.`
+            : ''
+        }
+        confirmLabel="Eliminar"
+        danger
+        loading={eliminando}
+        onConfirm={() => void confirmarEliminar()}
+        onCancel={() => setProveedorAEliminar(null)}
+      />
     </section>
   );
 }

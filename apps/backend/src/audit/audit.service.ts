@@ -55,6 +55,7 @@ export class AuditService {
         evento: true,
         ip: true,
         userAgent: true,
+        metadata: true,
         createdAt: true,
         usuario: { select: { id: true, nombre: true, email: true } },
       },

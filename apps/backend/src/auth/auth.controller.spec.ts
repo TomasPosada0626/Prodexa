@@ -18,6 +18,7 @@ describe('AuthController', () => {
     changePassword: jest.fn(),
     listSessions: jest.fn(),
     revokeSession: jest.fn(),
+    findUserIdByEmail: jest.fn(),
   };
   const auditService = { log: jest.fn() };
   const user = {
@@ -86,8 +87,9 @@ describe('AuthController', () => {
     );
   });
 
-  it('login fallido audita LOGIN_FAILED y relanza el error', async () => {
+  it('login fallido contra un correo real audita LOGIN_FAILED con el userId de esa cuenta', async () => {
     authService.login.mockRejectedValue(new UnauthorizedException());
+    authService.findUserIdByEmail.mockResolvedValue('user-1');
     const res = mockResponse();
 
     await expect(
@@ -97,9 +99,34 @@ describe('AuthController', () => {
         res as never,
       ),
     ).rejects.toThrow(UnauthorizedException);
+    expect(authService.findUserIdByEmail).toHaveBeenCalledWith('a@a.com');
     expect(auditService.log).toHaveBeenCalledWith(
       AuditEvent.LOGIN_FAILED,
-      expect.objectContaining({ metadata: { email: 'a@a.com' } }),
+      expect.objectContaining({
+        userId: 'user-1',
+        metadata: { email: 'a@a.com' },
+      }),
+    );
+  });
+
+  it('login fallido contra un correo que no existe audita LOGIN_FAILED sin userId', async () => {
+    authService.login.mockRejectedValue(new UnauthorizedException());
+    authService.findUserIdByEmail.mockResolvedValue(undefined);
+    const res = mockResponse();
+
+    await expect(
+      controller.login(
+        { email: 'no-existe@a.com', password: 'x' },
+        mockRequest(),
+        res as never,
+      ),
+    ).rejects.toThrow(UnauthorizedException);
+    expect(auditService.log).toHaveBeenCalledWith(
+      AuditEvent.LOGIN_FAILED,
+      expect.objectContaining({
+        userId: undefined,
+        metadata: { email: 'no-existe@a.com' },
+      }),
     );
   });
 
@@ -173,9 +200,20 @@ describe('AuthController', () => {
     );
   });
 
-  it('listSessions delega en el servicio con el userId', async () => {
-    await controller.listSessions(user);
-    expect(authService.listSessions).toHaveBeenCalledWith('user-1');
+  it('listSessions delega en el servicio con el userId y el refresh token actual', async () => {
+    await controller.listSessions(
+      user,
+      mockRequest({ [REFRESH_TOKEN_COOKIE]: 'token-actual' }),
+    );
+    expect(authService.listSessions).toHaveBeenCalledWith(
+      'user-1',
+      'token-actual',
+    );
+  });
+
+  it('listSessions funciona sin cookie de refresh token (ninguna sesion queda marcada como actual)', async () => {
+    await controller.listSessions(user, mockRequest());
+    expect(authService.listSessions).toHaveBeenCalledWith('user-1', undefined);
   });
 
   it('revokeSession delega en el servicio con el userId y el id de sesion', async () => {

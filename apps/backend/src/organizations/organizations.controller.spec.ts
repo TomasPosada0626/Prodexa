@@ -38,7 +38,11 @@ describe('OrganizationsController', () => {
   it('updateSettings delega en el servicio con el organizationId y el dto', async () => {
     const dto = { tarifaManoObraHora: 15000, tarifaEnergiaHora: 5000 };
     await controller.updateSettings(user, dto);
-    expect(service.updateSettings).toHaveBeenCalledWith('org-1', dto);
+    expect(service.updateSettings).toHaveBeenCalledWith(
+      'org-1',
+      dto,
+      'admin-1',
+    );
   });
 
   it('updateMemberRole delega con organizationId, id del miembro, quien pide el cambio y el dto', async () => {

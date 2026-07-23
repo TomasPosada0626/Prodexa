@@ -26,6 +26,9 @@ export interface Formulation {
   impuestoPorcentaje: string;
   vidaUtilDias: number | null;
   tiempoProduccionHoras: string | null;
+  /** Archivada (false) deja de ofrecerse en Preparar/Costos pero conserva todo su historial;
+   * es la alternativa segura a eliminar cuando ya tiene lotes de produccion registrados. */
+  activa: boolean;
   createdAt: string;
   ingredientes: Ingredient[];
 }
@@ -67,6 +70,7 @@ export interface UpdateFormulationInput {
   vidaUtilDias?: number;
   tiempoProduccionHoras?: number;
   ingredientes?: IngredientInput[];
+  activa?: boolean;
 }
 
 export interface UpdateIngredientPriceInput {
@@ -269,6 +273,8 @@ export interface Session {
   userAgent: string | null;
   createdAt: string;
   expiresAt: string;
+  /** true si es la sesion con la que se hizo esta misma peticion (el navegador/pestaña actual). */
+  actual: boolean;
 }
 
 export interface RegisterInput {
@@ -333,10 +339,13 @@ async function request<T>(path: string, init?: RequestInit, isRetry = false): Pr
   const response = await rawFetch(path, init);
 
   // /auth/refresh nunca se reintenta a si mismo (evita recursion infinita si el refresh token
-  // tambien es invalido). Todo lo demas, incluido /auth/me, si debe reintentar: es el chequeo de
-  // sesion al cargar la app y es exactamente el caso donde el access token corto ya expiro pero
-  // el refresh token (persistente) sigue siendo valido.
-  if (response.status === 401 && !isRetry && path !== '/auth/refresh') {
+  // tambien es invalido). /auth/login tampoco: su 401 significa "credenciales invalidas", no
+  // "el access token corto expiro" — reintentarlo repetia la contrasena incorrecta contra el
+  // backend una segunda vez si el navegador ya tenia un refresh token valido de otra sesion,
+  // duplicando el evento LOGIN_FAILED en la auditoria. Todo lo demas, incluido /auth/me, si debe
+  // reintentar: es el chequeo de sesion al cargar la app y es exactamente el caso donde el access
+  // token corto ya expiro pero el refresh token (persistente) sigue siendo valido.
+  if (response.status === 401 && !isRetry && path !== '/auth/refresh' && path !== '/auth/login') {
     const refreshed = await rawFetch('/auth/refresh', { method: 'POST' });
     if (refreshed.ok) {
       return request<T>(path, init, true);
@@ -402,8 +411,8 @@ export function revokeSession(id: string): Promise<void> {
   return request<void>(`/auth/sessions/${id}`, { method: 'DELETE' });
 }
 
-export function getFormulations(): Promise<Formulation[]> {
-  return request<Formulation[]>('/formulations');
+export function getFormulations(incluirArchivadas = false): Promise<Formulation[]> {
+  return request<Formulation[]>(`/formulations${incluirArchivadas ? '?incluirArchivadas=true' : ''}`);
 }
 
 export function getFormulation(id: string): Promise<Formulation> {
@@ -536,11 +545,35 @@ export function getSuppliers(): Promise<Supplier[]> {
   return request<Supplier[]>('/suppliers');
 }
 
+/** Crea un proveedor manualmente (antes de tener un precio registrado con el). */
+export function createSupplier(nombre: string): Promise<Supplier> {
+  return request<Supplier>('/suppliers', {
+    method: 'POST',
+    body: JSON.stringify({ nombre }),
+  });
+}
+
+/** Renombra un proveedor (ej. para corregir un duplicado por may/minusculas). */
+export function renameSupplier(id: string, nombre: string): Promise<Supplier> {
+  return request<Supplier>(`/suppliers/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ nombre }),
+  });
+}
+
+/** Elimina un proveedor. Su historial de precios se conserva (solo pierde el enlace formal). */
+export function deleteSupplier(id: string): Promise<void> {
+  return request<void>(`/suppliers/${id}`, { method: 'DELETE' });
+}
+
 export interface AuditLogEntry {
   id: string;
   evento: string;
   ip: string | null;
   userAgent: string | null;
+  /** Detalle especifico del evento (ej. precio anterior/nuevo, rol anterior/nuevo) — su forma
+   * varia segun `evento`, por eso queda como un objeto libre en vez de un tipo por campo. */
+  metadata: Record<string, unknown> | null;
   createdAt: string;
   usuario: { id: string; nombre: string | null; email: string } | null;
 }

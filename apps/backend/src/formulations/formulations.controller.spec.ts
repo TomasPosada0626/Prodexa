@@ -40,9 +40,14 @@ describe('FormulationsController', () => {
     expect(service.create).toHaveBeenCalledWith('user-1', 'org-1', dto);
   });
 
-  it('findAll delega en el servicio con el organizationId', async () => {
+  it('findAll delega en el servicio con el organizationId, sin archivadas por defecto', async () => {
     await controller.findAll(user);
-    expect(service.findAll).toHaveBeenCalledWith('org-1');
+    expect(service.findAll).toHaveBeenCalledWith('org-1', false);
+  });
+
+  it('findAll incluye archivadas cuando se envia incluirArchivadas=true', async () => {
+    await controller.findAll(user, 'true');
+    expect(service.findAll).toHaveBeenCalledWith('org-1', true);
   });
 
   it('findOne delega en el servicio con el organizationId y el id', async () => {
@@ -53,7 +58,7 @@ describe('FormulationsController', () => {
   it('update delega en el servicio con el organizationId, el id y el dto', async () => {
     const dto = { nombreProducto: 'Nuevo' };
     await controller.update(user, 'f-1', dto);
-    expect(service.update).toHaveBeenCalledWith('org-1', 'f-1', dto);
+    expect(service.update).toHaveBeenCalledWith('org-1', 'f-1', dto, 'user-1');
   });
 
   it('remove delega en el servicio con el organizationId y el id', async () => {
@@ -69,6 +74,7 @@ describe('FormulationsController', () => {
       'f-1',
       'i-1',
       dto,
+      'user-1',
     );
   });
 

@@ -1,11 +1,13 @@
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
 import { FormulationsService } from './formulations.service';
 import { CreateFormulationDto } from './dto/create-formulation.dto';
 
 describe('FormulationsService', () => {
   let service: FormulationsService;
+  const auditService = { log: jest.fn() };
   const USER_ID = 'user-1';
   const ORG_ID = 'org-1';
   const prisma = {
@@ -29,6 +31,9 @@ describe('FormulationsService', () => {
     },
     ingredient: {
       update: jest.fn(),
+    },
+    productionOrder: {
+      count: jest.fn(),
     },
   };
 
@@ -62,6 +67,7 @@ describe('FormulationsService', () => {
       providers: [
         FormulationsService,
         { provide: PrismaService, useValue: prisma },
+        { provide: AuditService, useValue: auditService },
       ],
     }).compile();
 
@@ -168,10 +174,22 @@ describe('FormulationsService', () => {
     );
   });
 
-  it('findAll devuelve las formulaciones de la empresa ordenadas por mas reciente', async () => {
+  it('findAll devuelve las formulaciones activas de la empresa ordenadas por mas reciente', async () => {
     prisma.formulation.findMany.mockResolvedValue([]);
 
     await service.findAll(ORG_ID);
+
+    expect(prisma.formulation.findMany).toHaveBeenCalledWith({
+      where: { organizationId: ORG_ID, activa: true },
+      include: { ingredientes: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  });
+
+  it('findAll incluye tambien las archivadas cuando incluirArchivadas es true', async () => {
+    prisma.formulation.findMany.mockResolvedValue([]);
+
+    await service.findAll(ORG_ID, true);
 
     expect(prisma.formulation.findMany).toHaveBeenCalledWith({
       where: { organizationId: ORG_ID },
@@ -213,9 +231,12 @@ describe('FormulationsService', () => {
         margenPorcentaje: 45,
       });
 
-      const result = await service.update(ORG_ID, '1', {
-        margenPorcentaje: 45,
-      });
+      const result = await service.update(
+        ORG_ID,
+        '1',
+        { margenPorcentaje: 45 },
+        USER_ID,
+      );
 
       expect(prisma.formulationVersion.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -229,6 +250,14 @@ describe('FormulationsService', () => {
         include: { ingredientes: true },
       });
       expect(result).toEqual({ id: '1', margenPorcentaje: 45 });
+      expect(auditService.log).toHaveBeenCalledWith(
+        'FORMULATION_UPDATED',
+        expect.objectContaining({
+          userId: USER_ID,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          metadata: expect.objectContaining({ formulationId: '1' }),
+        }),
+      );
     });
 
     it('convierte la fecha de vencimiento cuando se envia', async () => {
@@ -236,9 +265,12 @@ describe('FormulationsService', () => {
       prisma.formulationVersion.create.mockResolvedValue({});
       prisma.formulation.update.mockResolvedValue({});
 
-      await service.update(ORG_ID, '1', {
-        registroSanitarioVencimiento: '2027-06-30',
-      });
+      await service.update(
+        ORG_ID,
+        '1',
+        { registroSanitarioVencimiento: '2027-06-30' },
+        USER_ID,
+      );
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const updateArgs = prisma.formulation.update.mock.calls[0][0] as {
@@ -252,9 +284,12 @@ describe('FormulationsService', () => {
       prisma.formulationVersion.create.mockResolvedValue({});
       prisma.formulation.update.mockResolvedValue({});
 
-      await service.update(ORG_ID, '1', {
-        registroSanitarioVencimiento: '',
-      });
+      await service.update(
+        ORG_ID,
+        '1',
+        { registroSanitarioVencimiento: '' },
+        USER_ID,
+      );
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const updateArgs = prisma.formulation.update.mock.calls[0][0] as {
@@ -268,18 +303,23 @@ describe('FormulationsService', () => {
       prisma.formulationVersion.create.mockResolvedValue({});
       prisma.formulation.update.mockResolvedValue({});
 
-      await service.update(ORG_ID, '1', {
-        ingredientes: [
-          {
-            nombre: 'Aceite',
-            porcentaje: 20,
-            cantidadGramosBase: 200,
-            cantidadKg: 0.2,
-            precioKg: 5,
-            precioTotal: 1,
-          },
-        ],
-      });
+      await service.update(
+        ORG_ID,
+        '1',
+        {
+          ingredientes: [
+            {
+              nombre: 'Aceite',
+              porcentaje: 20,
+              cantidadGramosBase: 200,
+              cantidadKg: 0.2,
+              precioKg: 5,
+              precioTotal: 1,
+            },
+          ],
+        },
+        USER_ID,
+      );
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const updateArgs = prisma.formulation.update.mock.calls[0][0] as {
@@ -290,11 +330,12 @@ describe('FormulationsService', () => {
     });
   });
 
-  it('elimina una formulacion existente de la empresa', async () => {
+  it('elimina una formulacion existente sin lotes de produccion', async () => {
     prisma.formulation.findFirst.mockResolvedValue({
       id: '1',
       organizationId: ORG_ID,
     });
+    prisma.productionOrder.count.mockResolvedValue(0);
     prisma.formulation.delete.mockResolvedValue({ id: '1' });
 
     await service.remove(ORG_ID, '1');
@@ -304,15 +345,31 @@ describe('FormulationsService', () => {
     });
   });
 
+  it('bloquea el borrado si la formulacion ya tiene lotes de produccion registrados', async () => {
+    prisma.formulation.findFirst.mockResolvedValue({
+      id: '1',
+      organizationId: ORG_ID,
+    });
+    prisma.productionOrder.count.mockResolvedValue(3);
+
+    await expect(service.remove(ORG_ID, '1')).rejects.toThrow(
+      /3 lotes de produccion registrados/,
+    );
+    expect(prisma.formulation.delete).not.toHaveBeenCalled();
+  });
+
   describe('updateIngredientPrice', () => {
     it('lanza NotFoundException si el ingrediente no existe en la formulacion', async () => {
       prisma.formulation.findFirst.mockResolvedValue(formulacionCompleta);
 
       await expect(
-        service.updateIngredientPrice(ORG_ID, '1', 'inexistente', {
-          precioKg: 12,
-          proveedor: 'Proveedor Test',
-        }),
+        service.updateIngredientPrice(
+          ORG_ID,
+          '1',
+          'inexistente',
+          { precioKg: 12, proveedor: 'Proveedor Test' },
+          USER_ID,
+        ),
       ).rejects.toThrow(NotFoundException);
       expect(prisma.supplierPrice.create).not.toHaveBeenCalled();
     });
@@ -323,10 +380,13 @@ describe('FormulationsService', () => {
       prisma.supplierPrice.create.mockResolvedValue({});
       prisma.ingredient.update.mockResolvedValue({ id: 'ing-1' });
 
-      await service.updateIngredientPrice(ORG_ID, '1', 'ing-1', {
-        precioKg: 12,
-        proveedor: 'Proveedor X',
-      });
+      await service.updateIngredientPrice(
+        ORG_ID,
+        '1',
+        'ing-1',
+        { precioKg: 12, proveedor: 'Proveedor X' },
+        USER_ID,
+      );
 
       expect(prisma.supplier.upsert).toHaveBeenCalledWith({
         where: {
@@ -350,6 +410,18 @@ describe('FormulationsService', () => {
         where: { id: 'ing-1' },
         data: { precioKg: 12, precioTotal: 9.6 },
       });
+      expect(auditService.log).toHaveBeenCalledWith(
+        'INGREDIENT_PRICE_UPDATED',
+        expect.objectContaining({
+          userId: USER_ID,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          metadata: expect.objectContaining({
+            ingredienteNombre: 'Agua',
+            precioNuevo: 12,
+            proveedor: 'Proveedor X',
+          }),
+        }),
+      );
     });
   });
 

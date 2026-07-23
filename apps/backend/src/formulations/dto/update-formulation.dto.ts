@@ -1,4 +1,5 @@
-import { PartialType, PickType } from '@nestjs/swagger';
+import { ApiPropertyOptional, PartialType, PickType } from '@nestjs/swagger';
+import { IsBoolean, IsOptional } from 'class-validator';
 import { CreateFormulationDto } from './create-formulation.dto';
 
 export class UpdateFormulationDto extends PartialType(
@@ -16,4 +17,13 @@ export class UpdateFormulationDto extends PartialType(
     'tiempoProduccionHoras',
     'ingredientes',
   ] as const),
-) {}
+) {
+  @ApiPropertyOptional({
+    description:
+      'Archivar (false) deja de ofrecer la formulacion en Preparar/Costos sin borrar nada; activar (true) la vuelve a mostrar',
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  activa?: boolean;
+}

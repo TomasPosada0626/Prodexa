@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/auth-context';
-import { ApiError, changePassword } from '@/lib/api';
+import { ApiError, Session, changePassword, getSessions, revokeSession } from '@/lib/api';
 import { useToast } from '@/context/toast-context';
 import { PasswordRequirements, passwordMeetsRequirements } from '@/components/ui/PasswordRequirements';
 import { Equipo } from '@/components/organizations/equipo';
@@ -344,6 +344,100 @@ function CambiarContrasenaForm() {
   );
 }
 
+/** Los dispositivos/navegadores donde tu cuenta tiene una sesion iniciada (refresh token vigente).
+ * Cerrar una sesion aca revoca ese refresh token: en su proximo intento de renovacion silenciosa
+ * quedara desconectada, sin tener que saber ni cambiar la contrasena. */
+function SesionesActivasForm() {
+  const { showToast } = useToast();
+  const [sesiones, setSesiones] = useState<Session[] | null>(null);
+  const [revocando, setRevocando] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getSessions()
+      .then((data) => {
+        if (!cancelled) setSesiones(data);
+      })
+      .catch(() => {
+        if (!cancelled) setSesiones([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function handleRevoke(id: string) {
+    setRevocando(id);
+    try {
+      await revokeSession(id);
+      setSesiones((prev) => prev?.filter((s) => s.id !== id) ?? null);
+      showToast('Sesion cerrada.');
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'No se pudo cerrar la sesion.', 'error');
+    } finally {
+      setRevocando(null);
+    }
+  }
+
+  return (
+    <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+        Sesiones activas
+      </h3>
+      <p className="-mt-2 text-xs text-slate-500 dark:text-zinc-500">
+        Cierra las sesiones que no reconozcas — cada una es un dispositivo o navegador donde tu cuenta sigue con la
+        sesion iniciada.
+      </p>
+
+      {sesiones === null && <p className="text-sm text-slate-500 dark:text-zinc-500">Cargando...</p>}
+
+      {sesiones !== null && sesiones.length === 0 && (
+        <p className="text-sm text-slate-500 dark:text-zinc-500">No hay sesiones activas.</p>
+      )}
+
+      {sesiones !== null && sesiones.length > 0 && (
+        <ul className="grid gap-2">
+          {sesiones.map((sesion) => (
+            <li
+              key={sesion.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm dark:border-white/5 dark:bg-white/3"
+            >
+              <div className="min-w-0">
+                <p className="flex items-center gap-2 font-medium text-slate-800 dark:text-zinc-200">
+                  {sesion.ip ?? 'IP desconocida'}
+                  {sesion.actual && (
+                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                      Esta sesion
+                    </span>
+                  )}
+                </p>
+                <p
+                  className="max-w-xs truncate text-xs text-slate-500 dark:text-zinc-500"
+                  title={sesion.userAgent ?? undefined}
+                >
+                  {sesion.userAgent ?? 'Dispositivo desconocido'}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-zinc-500">
+                  Iniciada el {new Date(sesion.createdAt).toLocaleString()} · expira el{' '}
+                  {new Date(sesion.expiresAt).toLocaleDateString()}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void handleRevoke(sesion.id)}
+                disabled={revocando === sesion.id}
+                className="rounded-full border border-red-300 px-3 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-60 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
+              >
+                {revocando === sesion.id ? 'Cerrando...' : 'Cerrar sesion'}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function ConfiguracionPage() {
   return (
     <section className="grid gap-6">
@@ -355,6 +449,7 @@ export default function ConfiguracionPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <PerfilForm />
         <CambiarContrasenaForm />
+        <SesionesActivasForm />
         <TarifasOrganizacionForm />
       </div>
 

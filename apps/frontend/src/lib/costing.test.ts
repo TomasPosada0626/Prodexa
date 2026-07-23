@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { ProductionOrder } from './api';
-import { calculateCost, diasPendiente, nivelCartera } from './costing';
+import { calculateCost, diasPendiente, nivelCartera, tasaRechazo } from './costing';
 
-function ordenDeHace(dias: number, estadoPago: ProductionOrder['estadoPago'] = 'PENDIENTE'): ProductionOrder {
+function ordenDeHace(
+  dias: number,
+  estadoPago: ProductionOrder['estadoPago'] = 'PENDIENTE',
+  estadoProduccion: ProductionOrder['estadoProduccion'] = 'TERMINADO',
+): ProductionOrder {
   const createdAt = new Date(Date.now() - dias * 24 * 60 * 60 * 1000).toISOString();
   return {
     id: 'po-1',
@@ -30,7 +34,7 @@ function ordenDeHace(dias: number, estadoPago: ProductionOrder['estadoPago'] = '
     estadoPago,
     montoCobrado: '0',
     fechaPago: null,
-    estadoProduccion: 'TERMINADO',
+    estadoProduccion,
     notasCalidad: null,
     createdAt,
   };
@@ -148,5 +152,45 @@ describe('nivelCartera', () => {
 
   it('vencida pasando 30 dias', () => {
     expect(nivelCartera(31)).toBe('vencida');
+  });
+});
+
+describe('tasaRechazo', () => {
+  it('calcula el porcentaje solo sobre lotes finalizados (TERMINADO o RECHAZADO)', () => {
+    const ordenes = [
+      ordenDeHace(1, 'PENDIENTE', 'TERMINADO'),
+      ordenDeHace(2, 'PENDIENTE', 'TERMINADO'),
+      ordenDeHace(3, 'PENDIENTE', 'RECHAZADO'),
+      ordenDeHace(4, 'PENDIENTE', 'EN_PROCESO'),
+      ordenDeHace(5, 'PENDIENTE', 'EN_CALIDAD'),
+    ];
+
+    const resultado = tasaRechazo(ordenes);
+
+    expect(resultado.finalizados).toBe(3);
+    expect(resultado.rechazados).toBe(1);
+    expect(resultado.porcentaje).toBeCloseTo(33.333, 2);
+  });
+
+  it('devuelve porcentaje null si aun no hay ningun lote finalizado', () => {
+    const ordenes = [ordenDeHace(1, 'PENDIENTE', 'PLANIFICADO'), ordenDeHace(2, 'PENDIENTE', 'EN_CALIDAD')];
+
+    const resultado = tasaRechazo(ordenes);
+
+    expect(resultado.finalizados).toBe(0);
+    expect(resultado.rechazados).toBe(0);
+    expect(resultado.porcentaje).toBeNull();
+  });
+
+  it('es 0% cuando todos los lotes finalizados fueron aceptados', () => {
+    const ordenes = [ordenDeHace(1, 'PENDIENTE', 'TERMINADO'), ordenDeHace(2, 'PENDIENTE', 'TERMINADO')];
+
+    expect(tasaRechazo(ordenes).porcentaje).toBe(0);
+  });
+
+  it('es 100% cuando todos los lotes finalizados fueron rechazados', () => {
+    const ordenes = [ordenDeHace(1, 'PENDIENTE', 'RECHAZADO')];
+
+    expect(tasaRechazo(ordenes).porcentaje).toBe(100);
   });
 });

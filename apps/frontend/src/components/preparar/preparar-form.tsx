@@ -22,6 +22,7 @@ import {
   ingresoRealDeOrden,
   montoPendienteDeOrden,
   nivelCartera,
+  opcionesEstadoProduccion,
 } from '@/lib/costing';
 import { useToast } from '@/context/toast-context';
 import { useAuth } from '@/context/auth-context';
@@ -30,13 +31,6 @@ import { Collapsible } from '@/components/shared/collapsible';
 import { LoteDetalleModal } from '@/components/preparar/lote-detalle-modal';
 
 const UNIDADES_PRESENTACION: UnidadPresentacion[] = ['ml', 'L', 'g', 'kg'];
-const ESTADOS_PRODUCCION: EstadoProduccion[] = [
-  'PLANIFICADO',
-  'EN_PROCESO',
-  'EN_CALIDAD',
-  'TERMINADO',
-  'RECHAZADO',
-];
 
 const inputClasses =
   'rounded-lg border border-slate-300 px-3 py-2 dark:border-white/10 dark:bg-white/5 dark:text-white';
@@ -56,8 +50,22 @@ function envasesDeOrden(orden: ProductionOrder): number | null {
   return (Number(orden.cantidadObjetivoKg) * 1000) / gramosPresentacion;
 }
 
+export interface PrepararInitialValues {
+  formulationId?: string;
+  cantidadObjetivoKg?: string;
+  tamanoPresentacion?: string;
+  unidadPresentacion?: UnidadPresentacion;
+  costoEmpaque?: string;
+  costoEtiqueta?: string;
+  costoTransporte?: string;
+  costoMermas?: string;
+}
+
 interface Props {
   formulaciones: Formulation[];
+  /** Viene de Costos ("Registrar como orden de produccion"): pre-llena el formulario con el
+   * analisis ya hecho, para no tener que retipear todo si el analisis convencio. */
+  initial?: PrepararInitialValues;
 }
 
 interface EscaladoRow {
@@ -572,7 +580,7 @@ function HistorialProduccion({ formulationId, formulacion }: HistorialProduccion
                             onChange={(e) => actualizarCampoEdicion('estadoProduccion', e.target.value as EstadoProduccion)}
                             className={inputEdicionClasses}
                           >
-                            {ESTADOS_PRODUCCION.map((estado) => (
+                            {opcionesEstadoProduccion(orden.estadoProduccion).map((estado) => (
                               <option key={estado} value={estado} className="text-slate-900">
                                 {ESTADO_PRODUCCION_INFO[estado].label}
                               </option>
@@ -715,22 +723,28 @@ function HistorialProduccion({ formulationId, formulacion }: HistorialProduccion
   );
 }
 
-export function PrepararForm({ formulaciones }: Props) {
+export function PrepararForm({ formulaciones, initial }: Props) {
   const { showToast } = useToast();
   const { user } = useAuth();
-  const [formulationId, setFormulationId] = useState(formulaciones[0]?.id ?? '');
-  const [cantidadObjetivoKg, setCantidadObjetivoKg] = useState('1');
-  const [tamanoPresentacion, setTamanoPresentacion] = useState('');
-  const [unidadPresentacion, setUnidadPresentacion] = useState<UnidadPresentacion>('g');
+  const formulationIdInicial =
+    initial?.formulationId && formulaciones.some((f) => f.id === initial.formulationId)
+      ? initial.formulationId
+      : (formulaciones[0]?.id ?? '');
+  const [formulationId, setFormulationId] = useState(formulationIdInicial);
+  const [cantidadObjetivoKg, setCantidadObjetivoKg] = useState(initial?.cantidadObjetivoKg ?? '1');
+  const [tamanoPresentacion, setTamanoPresentacion] = useState(initial?.tamanoPresentacion ?? '');
+  const [unidadPresentacion, setUnidadPresentacion] = useState<UnidadPresentacion>(
+    initial?.unidadPresentacion ?? 'g',
+  );
   const [numeroLote, setNumeroLote] = useState('');
   const [fechaVencimiento, setFechaVencimiento] = useState('');
-  const [costoEmpaque, setCostoEmpaque] = useState('');
-  const [costoEtiqueta, setCostoEtiqueta] = useState('');
+  const [costoEmpaque, setCostoEmpaque] = useState(initial?.costoEmpaque ?? '');
+  const [costoEtiqueta, setCostoEtiqueta] = useState(initial?.costoEtiqueta ?? '');
   const [esMaquila, setEsMaquila] = useState(false);
   const [maquilaIncluyeEmpaque, setMaquilaIncluyeEmpaque] = useState(false);
   const [costoManoObra, setCostoManoObra] = useState('');
-  const [costoTransporte, setCostoTransporte] = useState('');
-  const [costoMermas, setCostoMermas] = useState('');
+  const [costoTransporte, setCostoTransporte] = useState(initial?.costoTransporte ?? '');
+  const [costoMermas, setCostoMermas] = useState(initial?.costoMermas ?? '');
   const [precioVentaReal, setPrecioVentaReal] = useState('');
   const [estadoPago, setEstadoPago] = useState<EstadoPago>('PENDIENTE');
   const [fechaPago, setFechaPago] = useState('');
@@ -931,6 +945,12 @@ export function PrepararForm({ formulaciones }: Props) {
         </div>
       )}
 
+      {initial && (
+        <div className="rounded-2xl border border-sky-200 bg-sky-50 p-3 text-sm text-sky-800 dark:border-[#8B5CF6]/30 dark:bg-[#8B5CF6]/10 dark:text-[#a78bfa]">
+          Datos cargados desde tu analisis de Costos: revisalos y confirma para guardar el lote.
+        </div>
+      )}
+
       <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
         <label className="flex flex-wrap items-center gap-3 text-sm text-slate-700 dark:text-zinc-300">
           <span className="font-medium">Formulacion</span>
@@ -996,7 +1016,12 @@ export function PrepararForm({ formulaciones }: Props) {
           )}
         </div>
 
-        <Collapsible title="Lote, costos y venta (opcional)">
+        <Collapsible
+          title="Lote, costos y venta (opcional)"
+          defaultOpen={Boolean(
+            initial?.costoEmpaque || initial?.costoEtiqueta || initial?.costoTransporte || initial?.costoMermas,
+          )}
+        >
           <div className="grid gap-3 text-sm text-slate-700 dark:text-zinc-300">
             <label className="grid gap-1">
               Numero de lote

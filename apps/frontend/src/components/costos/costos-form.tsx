@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ApiError,
   CostSimulationResult,
@@ -116,6 +117,7 @@ function MargenImpuestoCard({ formulacion, onSaved }: MargenImpuestoCardProps) {
 
 export function CostosForm({ formulaciones, onFormulationUpdated }: Props) {
   const { user } = useAuth();
+  const router = useRouter();
   const [formulationId, setFormulationId] = useState(formulaciones[0]?.id ?? '');
   const [cantidadObjetivoKg, setCantidadObjetivoKg] = useState('1');
   const [tamanoPresentacion, setTamanoPresentacion] = useState('');
@@ -207,6 +209,19 @@ export function CostosForm({ formulaciones, onFormulationUpdated }: Props) {
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleRegistrarComoOrden() {
+    const params = new URLSearchParams({ formulationId, cantidadObjetivoKg });
+    if (tamanoPresentacion) {
+      params.set('tamanoPresentacion', tamanoPresentacion);
+      params.set('unidadPresentacion', unidadPresentacion);
+    }
+    if (costoEmpaque) params.set('costoEmpaque', costoEmpaque);
+    if (costoEtiqueta) params.set('costoEtiqueta', costoEtiqueta);
+    if (costoTransporte) params.set('costoTransporte', costoTransporte);
+    if (costoMermas) params.set('costoMermas', costoMermas);
+    router.push(`/preparar?${params.toString()}`);
   }
 
   if (formulaciones.length === 0) {
@@ -464,6 +479,20 @@ export function CostosForm({ formulaciones, onFormulationUpdated }: Props) {
             descuento que activaste arriba se aplica despues, sobre ese precio con IVA, y se refleja en &quot;Precio
             final con descuento&quot; (si no marcaste descuento, es igual al precio con IVA).
           </p>
+        )}
+        {resultado && (
+          <>
+            <button
+              type="button"
+              onClick={handleRegistrarComoOrden}
+              className="mt-4 w-fit rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 dark:bg-[#8B5CF6] dark:hover:bg-[#7c3aed]"
+            >
+              Registrar como orden de produccion
+            </button>
+            <p className="mt-2 text-xs text-slate-500 dark:text-zinc-500">
+              Te lleva a Preparar con estos mismos datos ya cargados, listos para confirmar el lote.
+            </p>
+          </>
         )}
       </div>
     </div>

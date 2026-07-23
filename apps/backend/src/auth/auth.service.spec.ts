@@ -7,8 +7,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import * as argon2 from 'argon2';
+import { createHash } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from './auth.service';
+
+/** Espejo del hashToken privado de AuthService (mismo algoritmo), solo para armar fixtures de test. */
+function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -378,6 +384,28 @@ describe('AuthService', () => {
     });
   });
 
+  describe('findUserIdByEmail', () => {
+    it('devuelve el id si el correo pertenece a un usuario', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-1' });
+
+      const result = await service.findUserIdByEmail('a@a.com');
+
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { email: 'a@a.com' },
+        select: { id: true },
+      });
+      expect(result).toBe('user-1');
+    });
+
+    it('devuelve undefined si el correo no existe', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      const result = await service.findUserIdByEmail('no-existe@a.com');
+
+      expect(result).toBeUndefined();
+    });
+  });
+
   describe('me', () => {
     it('lanza UnauthorizedException si el usuario no existe', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
@@ -608,6 +636,32 @@ describe('AuthService', () => {
           orderBy: { createdAt: 'desc' },
         }),
       );
+    });
+
+    it('marca actual:true solo en la sesion cuyo hash coincide con el refresh token de la peticion, y nunca expone tokenHash', async () => {
+      prisma.refreshToken.findMany.mockResolvedValue([
+        { id: 'sesion-1', ip: '1.1.1.1', tokenHash: 'hash-de-otra-sesion' },
+        { id: 'sesion-2', ip: '2.2.2.2', tokenHash: hashToken('token-actual') },
+      ]);
+
+      const result = await service.listSessions('user-1', 'token-actual');
+
+      expect(result).toEqual([
+        { id: 'sesion-1', ip: '1.1.1.1', actual: false },
+        { id: 'sesion-2', ip: '2.2.2.2', actual: true },
+      ]);
+    });
+
+    it('ninguna sesion queda como actual si no se envia el refresh token de la peticion', async () => {
+      prisma.refreshToken.findMany.mockResolvedValue([
+        { id: 'sesion-1', ip: '1.1.1.1', tokenHash: 'hash-1' },
+      ]);
+
+      const result = await service.listSessions('user-1');
+
+      expect(result).toEqual([
+        { id: 'sesion-1', ip: '1.1.1.1', actual: false },
+      ]);
     });
   });
 

@@ -9,7 +9,8 @@ import { useFormulations } from '@/lib/use-formulations';
 import { useAuth } from '@/context/auth-context';
 
 export default function FormulacionesPage() {
-  const { formulaciones, loading, error, refetch } = useFormulations();
+  const [mostrarArchivadas, setMostrarArchivadas] = useState(false);
+  const { formulaciones, loading, error, refetch } = useFormulations(mostrarArchivadas);
   const { user } = useAuth();
   const puedeEditar = user?.rol === 'ADMIN' || user?.rol === 'COORDINADOR';
   const [busqueda, setBusqueda] = useState('');
@@ -83,16 +84,26 @@ export default function FormulacionesPage() {
             Formulaciones registradas ({formulacionesFiltradas.length}
             {termino ? ` de ${formulaciones.length}` : ''})
           </h3>
-          {formulaciones.length > 0 && (
-            <input
-              type="search"
-              placeholder="Buscar por nombre o categoria..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full max-w-xs rounded-lg border border-slate-300 px-3 py-1.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-zinc-500"
-              aria-label="Buscar formulaciones"
-            />
-          )}
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-400">
+              <input
+                type="checkbox"
+                checked={mostrarArchivadas}
+                onChange={(e) => setMostrarArchivadas(e.target.checked)}
+              />
+              Mostrar archivadas
+            </label>
+            {formulaciones.length > 0 && (
+              <input
+                type="search"
+                placeholder="Buscar por nombre o categoria..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                className="w-full max-w-xs rounded-lg border border-slate-300 px-3 py-1.5 text-sm dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-zinc-500"
+                aria-label="Buscar formulaciones"
+              />
+            )}
+          </div>
         </div>
 
         {loading && (

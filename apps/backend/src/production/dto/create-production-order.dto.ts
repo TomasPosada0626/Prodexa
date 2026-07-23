@@ -26,6 +26,24 @@ export const ESTADOS_PRODUCCION = [
 ] as const;
 export type EstadoProduccion = (typeof ESTADOS_PRODUCCION)[number];
 
+/**
+ * Transiciones validas del flujo de produccion. TERMINADO solo se alcanza desde EN_CALIDAD
+ * (el control de calidad es obligatorio, no un paso que se pueda saltar); se permite retroceder
+ * un paso (reprocesar) pero no de dos en dos; RECHAZADO se puede marcar desde cualquier estado
+ * no final (un lote se puede danar o contaminar antes de llegar a calidad). TERMINADO y
+ * RECHAZADO son finales: ninguna orden vuelve a cambiar de estado despues.
+ */
+export const TRANSICIONES_ESTADO_PRODUCCION: Record<
+  EstadoProduccion,
+  EstadoProduccion[]
+> = {
+  PLANIFICADO: ['EN_PROCESO', 'RECHAZADO'],
+  EN_PROCESO: ['EN_CALIDAD', 'PLANIFICADO', 'RECHAZADO'],
+  EN_CALIDAD: ['TERMINADO', 'EN_PROCESO', 'RECHAZADO'],
+  TERMINADO: [],
+  RECHAZADO: [],
+};
+
 export class CreateProductionOrderDto {
   @ApiProperty({ description: 'Id de la formulacion producida' })
   @IsString()

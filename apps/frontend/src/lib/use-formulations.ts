@@ -10,7 +10,10 @@ interface UseFormulationsResult {
   refetch: () => void;
 }
 
-export function useFormulations(): UseFormulationsResult {
+/** Por defecto solo trae formulaciones activas (igual que hace el backend): Preparar, Costos,
+ * Dashboard, etc. nunca ofrecen una archivada sin tener que filtrarla ellos mismos. Solo la
+ * pagina de Formulaciones pide incluirArchivadas=true, para poder verlas y reactivarlas. */
+export function useFormulations(incluirArchivadas = false): UseFormulationsResult {
   const [formulaciones, setFormulaciones] = useState<Formulation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +30,7 @@ export function useFormulations(): UseFormulationsResult {
   useEffect(() => {
     let cancelled = false;
 
-    getFormulations()
+    getFormulations(incluirArchivadas)
       .then((data) => {
         if (!cancelled) setFormulaciones(data);
       })
@@ -46,7 +49,7 @@ export function useFormulations(): UseFormulationsResult {
     return () => {
       cancelled = true;
     };
-  }, [version]);
+  }, [version, incluirArchivadas]);
 
   return { formulaciones, loading, error, refetch };
 }

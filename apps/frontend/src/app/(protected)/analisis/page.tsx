@@ -17,6 +17,7 @@ import {
   ingresoRealDeOrden,
   montoPendienteDeOrden,
   ordenesParaRentabilidad,
+  tasaRechazo,
 } from '@/lib/costing';
 import { formatCosto, formatKg, utilidadClassName } from '@/lib/format';
 import { ProyeccionMensual, proyeccionProximoMes, serieMensual } from '@/lib/forecast';
@@ -151,6 +152,7 @@ function AnalisisDetalle({ formulacion, todasLasFormulaciones }: AnalisisDetalle
         }
       : null;
   const utilidadRealAcumulada = produccionReal?.utilidadReal ?? null;
+  const rechazo = ordenes ? tasaRechazo(ordenes) : null;
   // Proyeccion mensual y tendencia de volumen de ESTE producto especifico (no agregada con las
   // demas formulaciones), para planeacion comercial: cuanto vas a producir/facturar/ganar el
   // proximo mes con este producto si sigue la tendencia, y si esta creciendo o cayendo.
@@ -272,6 +274,27 @@ function AnalisisDetalle({ formulacion, todasLasFormulaciones }: AnalisisDetalle
           </p>
         </div>
       </div>
+
+      {rechazo && rechazo.finalizados > 0 && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+              Tasa de rechazo en calidad
+            </h3>
+            <span className="text-xs text-slate-500 dark:text-zinc-500">
+              {rechazo.rechazados} de {rechazo.finalizados} lote{rechazo.finalizados === 1 ? '' : 's'} finalizado
+              {rechazo.finalizados === 1 ? '' : 's'}
+            </span>
+          </div>
+          <p
+            className={`mt-1 text-2xl font-bold ${
+              (rechazo.porcentaje ?? 0) > 10 ? 'text-red-600 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'
+            }`}
+          >
+            {rechazo.porcentaje?.toFixed(0)}%
+          </p>
+        </div>
+      )}
 
       {produccionReal && (
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/30 dark:bg-emerald-500/10">

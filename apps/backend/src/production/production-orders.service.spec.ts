@@ -608,6 +608,7 @@ describe('ProductionOrdersService', () => {
         margenPorcentaje: 30,
         costoGastosGenerales: 0,
         precioVentaReal: null,
+        estadoProduccion: 'EN_CALIDAD',
       });
       prisma.formulation.findFirst.mockResolvedValue({
         id: 'f-1',
@@ -632,6 +633,115 @@ describe('ProductionOrdersService', () => {
           }),
         }),
       );
+    });
+
+    describe('maquina de estados de estadoProduccion', () => {
+      const FORMULACION_BASE = {
+        id: 'f-1',
+        cantidadBaseKg: 1,
+        margenPorcentaje: 30,
+        impuestoPorcentaje: 19,
+        ingredientes: [{ precioTotal: 100 }],
+      };
+
+      function ordenEn(estadoProduccion: string) {
+        return {
+          id: 'po-1',
+          formulationId: 'f-1',
+          cantidadObjetivoKg: 2,
+          margenPorcentaje: 30,
+          costoGastosGenerales: 0,
+          precioVentaReal: null,
+          estadoProduccion,
+        };
+      }
+
+      it('rechaza saltar de PLANIFICADO directo a TERMINADO (calidad es obligatoria)', async () => {
+        prisma.productionOrder.findFirst.mockResolvedValue(
+          ordenEn('PLANIFICADO'),
+        );
+
+        await expect(
+          service.update('org-1', 'po-1', { estadoProduccion: 'TERMINADO' }),
+        ).rejects.toThrow(/No se puede pasar de PLANIFICADO a TERMINADO/);
+        expect(prisma.productionOrder.update).not.toHaveBeenCalled();
+      });
+
+      it('permite PLANIFICADO -> EN_PROCESO', async () => {
+        prisma.productionOrder.findFirst.mockResolvedValue(
+          ordenEn('PLANIFICADO'),
+        );
+        prisma.formulation.findFirst.mockResolvedValue(FORMULACION_BASE);
+        prisma.productionOrder.update.mockResolvedValue({ id: 'po-1' });
+
+        await service.update('org-1', 'po-1', {
+          estadoProduccion: 'EN_PROCESO',
+        });
+
+        expect(prisma.productionOrder.update).toHaveBeenCalled();
+      });
+
+      it('permite retroceder un paso: EN_CALIDAD -> EN_PROCESO', async () => {
+        prisma.productionOrder.findFirst.mockResolvedValue(
+          ordenEn('EN_CALIDAD'),
+        );
+        prisma.formulation.findFirst.mockResolvedValue(FORMULACION_BASE);
+        prisma.productionOrder.update.mockResolvedValue({ id: 'po-1' });
+
+        await service.update('org-1', 'po-1', {
+          estadoProduccion: 'EN_PROCESO',
+        });
+
+        expect(prisma.productionOrder.update).toHaveBeenCalled();
+      });
+
+      it('rechaza retroceder dos pasos: EN_CALIDAD -> PLANIFICADO', async () => {
+        prisma.productionOrder.findFirst.mockResolvedValue(
+          ordenEn('EN_CALIDAD'),
+        );
+
+        await expect(
+          service.update('org-1', 'po-1', { estadoProduccion: 'PLANIFICADO' }),
+        ).rejects.toThrow(/No se puede pasar de EN_CALIDAD a PLANIFICADO/);
+      });
+
+      it('permite RECHAZADO desde EN_PROCESO (un lote se puede danar antes de llegar a calidad)', async () => {
+        prisma.productionOrder.findFirst.mockResolvedValue(
+          ordenEn('EN_PROCESO'),
+        );
+        prisma.formulation.findFirst.mockResolvedValue(FORMULACION_BASE);
+        prisma.productionOrder.update.mockResolvedValue({ id: 'po-1' });
+
+        await service.update('org-1', 'po-1', {
+          estadoProduccion: 'RECHAZADO',
+        });
+
+        expect(prisma.productionOrder.update).toHaveBeenCalled();
+      });
+
+      it('rechaza cualquier cambio de estado si la orden ya esta en un estado final (TERMINADO)', async () => {
+        prisma.productionOrder.findFirst.mockResolvedValue(
+          ordenEn('TERMINADO'),
+        );
+
+        await expect(
+          service.update('org-1', 'po-1', { estadoProduccion: 'EN_PROCESO' }),
+        ).rejects.toThrow(/es un estado final/);
+      });
+
+      it('no valida nada si estadoProduccion no cambia', async () => {
+        prisma.productionOrder.findFirst.mockResolvedValue(
+          ordenEn('TERMINADO'),
+        );
+        prisma.formulation.findFirst.mockResolvedValue(FORMULACION_BASE);
+        prisma.productionOrder.update.mockResolvedValue({ id: 'po-1' });
+
+        await service.update('org-1', 'po-1', {
+          estadoProduccion: 'TERMINADO',
+        });
+
+        expect(prisma.productionOrder.update).toHaveBeenCalled();
+      });
     });
   });
 

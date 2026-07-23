@@ -5,11 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
 import { OrganizationsService } from './organizations.service';
 
 describe('OrganizationsService', () => {
   let service: OrganizationsService;
+  const auditService = { log: jest.fn() };
   const ORG_ID = 'org-1';
+  const USER_ID = 'user-1';
   const prisma = {
     user: {
       findMany: jest.fn(),
@@ -43,6 +46,7 @@ describe('OrganizationsService', () => {
       providers: [
         OrganizationsService,
         { provide: PrismaService, useValue: prisma },
+        { provide: AuditService, useValue: auditService },
       ],
     }).compile();
 
@@ -56,10 +60,11 @@ describe('OrganizationsService', () => {
         tarifaEnergiaHora: 5000,
       });
 
-      const result = await service.updateSettings(ORG_ID, {
-        tarifaManoObraHora: 15000,
-        tarifaEnergiaHora: 5000,
-      });
+      const result = await service.updateSettings(
+        ORG_ID,
+        { tarifaManoObraHora: 15000, tarifaEnergiaHora: 5000 },
+        USER_ID,
+      );
 
       expect(prisma.organization.update).toHaveBeenCalledWith({
         where: { id: ORG_ID },
@@ -74,12 +79,20 @@ describe('OrganizationsService', () => {
         tarifaManoObraHora: 15000,
         tarifaEnergiaHora: 5000,
       });
+      expect(auditService.log).toHaveBeenCalledWith(
+        'ORGANIZATION_SETTINGS_UPDATED',
+        expect.objectContaining({ userId: USER_ID }),
+      );
     });
 
     it('no incluye tarifas que no se envian', async () => {
       prisma.organization.update.mockResolvedValue({});
 
-      await service.updateSettings(ORG_ID, { tarifaManoObraHora: 20000 });
+      await service.updateSettings(
+        ORG_ID,
+        { tarifaManoObraHora: 20000 },
+        USER_ID,
+      );
 
       expect(prisma.organization.update).toHaveBeenCalledWith({
         where: { id: ORG_ID },
@@ -95,9 +108,11 @@ describe('OrganizationsService', () => {
     it('actualiza gastos generales', async () => {
       prisma.organization.update.mockResolvedValue({});
 
-      await service.updateSettings(ORG_ID, {
-        gastoGeneralMensual: 2000000,
-      });
+      await service.updateSettings(
+        ORG_ID,
+        { gastoGeneralMensual: 2000000 },
+        USER_ID,
+      );
 
       expect(prisma.organization.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -154,10 +169,11 @@ describe('OrganizationsService', () => {
       expect(prisma.user.update).not.toHaveBeenCalled();
     });
 
-    it('actualiza el rol cuando no queda la empresa sin administradores', async () => {
+    it('actualiza el rol cuando no queda la empresa sin administradores y lo audita', async () => {
       prisma.user.findFirst.mockResolvedValue({
         id: 'miembro-1',
         rol: 'MIEMBRO',
+        email: 'miembro@a.com',
       });
       prisma.user.update.mockResolvedValue({
         id: 'miembro-1',
@@ -180,6 +196,18 @@ describe('OrganizationsService', () => {
         }),
       );
       expect(result).toEqual({ id: 'miembro-1', rol: 'COORDINADOR' });
+      expect(auditService.log).toHaveBeenCalledWith(
+        'MEMBER_ROLE_CHANGED',
+        expect.objectContaining({
+          userId: 'admin-1',
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          metadata: expect.objectContaining({
+            memberId: 'miembro-1',
+            rolAnterior: 'MIEMBRO',
+            rolNuevo: 'COORDINADOR',
+          }),
+        }),
+      );
     });
   });
 
@@ -209,10 +237,11 @@ describe('OrganizationsService', () => {
       expect(prisma.$transaction).not.toHaveBeenCalled();
     });
 
-    it('desactiva al miembro y revoca sus sesiones activas (no borra la fila)', async () => {
+    it('desactiva al miembro, revoca sus sesiones activas (no borra la fila) y lo audita', async () => {
       prisma.user.findFirst.mockResolvedValue({
         id: 'miembro-1',
         rol: 'MIEMBRO',
+        email: 'miembro@a.com',
       });
       prisma.user.update.mockResolvedValue({});
       prisma.refreshToken.updateMany.mockResolvedValue({});
@@ -227,6 +256,14 @@ describe('OrganizationsService', () => {
       expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { userId: 'miembro-1', revokedAt: null },
+        }),
+      );
+      expect(auditService.log).toHaveBeenCalledWith(
+        'MEMBER_REMOVED',
+        expect.objectContaining({
+          userId: 'admin-1',
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          metadata: expect.objectContaining({ memberId: 'miembro-1' }),
         }),
       );
     });

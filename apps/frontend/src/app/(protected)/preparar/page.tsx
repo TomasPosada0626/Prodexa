@@ -1,11 +1,35 @@
 'use client';
 
-import { PrepararForm } from '@/components/preparar/preparar-form';
+import { Suspense, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { PrepararForm, type PrepararInitialValues } from '@/components/preparar/preparar-form';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { UnidadPresentacion } from '@/lib/api';
 import { useFormulations } from '@/lib/use-formulations';
 
-export default function PrepararPage() {
+const UNIDADES_VALIDAS: UnidadPresentacion[] = ['ml', 'L', 'g', 'kg'];
+
+function initialValuesFromParams(searchParams: URLSearchParams): PrepararInitialValues | undefined {
+  const formulationId = searchParams.get('formulationId');
+  if (!formulationId) return undefined;
+
+  const unidad = searchParams.get('unidadPresentacion');
+  return {
+    formulationId,
+    cantidadObjetivoKg: searchParams.get('cantidadObjetivoKg') ?? undefined,
+    tamanoPresentacion: searchParams.get('tamanoPresentacion') ?? undefined,
+    unidadPresentacion: UNIDADES_VALIDAS.find((u) => u === unidad),
+    costoEmpaque: searchParams.get('costoEmpaque') ?? undefined,
+    costoEtiqueta: searchParams.get('costoEtiqueta') ?? undefined,
+    costoTransporte: searchParams.get('costoTransporte') ?? undefined,
+    costoMermas: searchParams.get('costoMermas') ?? undefined,
+  };
+}
+
+function PrepararContent() {
   const { formulaciones, loading, error } = useFormulations();
+  const searchParams = useSearchParams();
+  const initial = useMemo(() => initialValuesFromParams(searchParams), [searchParams]);
 
   return (
     <section className="grid gap-6">
@@ -30,7 +54,15 @@ export default function PrepararPage() {
         </p>
       )}
 
-      {!loading && !error && <PrepararForm formulaciones={formulaciones} />}
+      {!loading && !error && <PrepararForm formulaciones={formulaciones} initial={initial} />}
     </section>
+  );
+}
+
+export default function PrepararPage() {
+  return (
+    <Suspense fallback={null}>
+      <PrepararContent />
+    </Suspense>
   );
 }

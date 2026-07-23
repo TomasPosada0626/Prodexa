@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RolOrganizacion } from '../auth/types';
+import { AuditService } from '../audit/audit.service';
+import { AuditEvent } from '../audit/audit.types';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 import { UpdateOrganizationSettingsDto } from './dto/update-organization-settings.dto';
@@ -34,7 +36,10 @@ const MEMBER_SELECT = {
  */
 @Injectable()
 export class OrganizationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
+  ) {}
 
   listMembers(organizationId: string) {
     return this.prisma.user.findMany({
@@ -51,8 +56,9 @@ export class OrganizationsService {
   async updateSettings(
     organizationId: string,
     dto: UpdateOrganizationSettingsDto,
+    userId: string,
   ) {
-    return this.prisma.organization.update({
+    const resultado = await this.prisma.organization.update({
       where: { id: organizationId },
       data: {
         ...(dto.tarifaManoObraHora !== undefined && {
@@ -71,6 +77,13 @@ export class OrganizationsService {
         gastoGeneralMensual: true,
       },
     });
+
+    void this.auditService.log(AuditEvent.ORGANIZATION_SETTINGS_UPDATED, {
+      userId,
+      metadata: { campos: Object.keys(dto) },
+    });
+
+    return resultado;
   }
 
   async updateMemberRole(
@@ -89,11 +102,23 @@ export class OrganizationsService {
       await this.assertNoEsElUltimoAdmin(organizationId, memberId);
     }
 
-    return this.prisma.user.update({
+    const actualizado = await this.prisma.user.update({
       where: { id: memberId },
       data: { rol: dto.rol },
       select: MEMBER_SELECT,
     });
+
+    void this.auditService.log(AuditEvent.MEMBER_ROLE_CHANGED, {
+      userId: requestingUserId,
+      metadata: {
+        memberId,
+        memberEmail: member.email,
+        rolAnterior: member.rol,
+        rolNuevo: dto.rol,
+      },
+    });
+
+    return actualizado;
   }
 
   async removeMember(
@@ -123,6 +148,15 @@ export class OrganizationsService {
         data: { revokedAt: new Date() },
       }),
     ]);
+
+    void this.auditService.log(AuditEvent.MEMBER_REMOVED, {
+      userId: requestingUserId,
+      metadata: {
+        memberId,
+        memberEmail: member.email,
+        memberNombre: member.nombre,
+      },
+    });
   }
 
   async createInvitation(

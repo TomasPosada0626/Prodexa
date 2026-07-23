@@ -155,6 +155,30 @@ export function capacidadUtilizadaMesActual(ordenes: ProductionOrder[], capacida
   };
 }
 
+export interface TasaRechazo {
+  rechazados: number;
+  finalizados: number;
+  /** null si aun no hay ningun lote finalizado (TERMINADO o RECHAZADO) para calcular sobre que. */
+  porcentaje: number | null;
+}
+
+/**
+ * De los lotes que ya pasaron por control de calidad y llegaron a un estado final (TERMINADO o
+ * RECHAZADO), que porcentaje se rechazo. Los que siguen PLANIFICADO/EN_PROCESO/EN_CALIDAD aun no
+ * tienen un veredicto y se excluyen del calculo para no diluir la tasa con lotes en curso.
+ */
+export function tasaRechazo(ordenes: ProductionOrder[]): TasaRechazo {
+  const finalizados = ordenes.filter(
+    (o) => o.estadoProduccion === 'TERMINADO' || o.estadoProduccion === 'RECHAZADO',
+  );
+  const rechazados = finalizados.filter((o) => o.estadoProduccion === 'RECHAZADO').length;
+  return {
+    rechazados,
+    finalizados: finalizados.length,
+    porcentaje: finalizados.length > 0 ? (rechazados / finalizados.length) * 100 : null,
+  };
+}
+
 export const ESTADO_PRODUCCION_INFO: Record<
   ProductionOrder['estadoProduccion'],
   { label: string; className: string }
@@ -180,3 +204,23 @@ export const ESTADO_PRODUCCION_INFO: Record<
     className: 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400',
   },
 };
+
+/**
+ * Espejo, en el cliente, de TRANSICIONES_ESTADO_PRODUCCION del backend
+ * (production/dto/create-production-order.dto.ts): mismas reglas, para que el dropdown de
+ * edicion solo ofrezca transiciones que el backend de verdad va a aceptar. TERMINADO solo se
+ * alcanza desde EN_CALIDAD (calidad es obligatoria); se permite retroceder un paso; RECHAZADO
+ * se puede marcar desde cualquier estado no final; TERMINADO/RECHAZADO son finales.
+ */
+export const TRANSICIONES_ESTADO_PRODUCCION: Record<ProductionOrder['estadoProduccion'], ProductionOrder['estadoProduccion'][]> = {
+  PLANIFICADO: ['EN_PROCESO', 'RECHAZADO'],
+  EN_PROCESO: ['EN_CALIDAD', 'PLANIFICADO', 'RECHAZADO'],
+  EN_CALIDAD: ['TERMINADO', 'EN_PROCESO', 'RECHAZADO'],
+  TERMINADO: [],
+  RECHAZADO: [],
+};
+
+/** El estado actual siempre se incluye (dejarlo sin cambios es valido), mas las transiciones permitidas desde ahi. */
+export function opcionesEstadoProduccion(actual: ProductionOrder['estadoProduccion']): ProductionOrder['estadoProduccion'][] {
+  return [actual, ...TRANSICIONES_ESTADO_PRODUCCION[actual]];
+}

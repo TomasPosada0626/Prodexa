@@ -20,7 +20,7 @@ import { SugerenciasPanel } from '@/components/dashboard/sugerencias-panel';
 import { sugerenciasProduccion } from '@/lib/sugerencias';
 import { calcularEstadoRegistro } from '@/lib/calidad';
 import { formatCosto } from '@/lib/format';
-import { getProductionOrders, ProductionOrder } from '@/lib/api';
+import { AuditLogEntry, getAuditLog, getProductionOrders, ProductionOrder } from '@/lib/api';
 import { EmptyState } from '@/components/shared/empty-state';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { MargenChart } from '@/components/dashboard/margen-chart';
@@ -80,6 +80,7 @@ export default function DashboardPage() {
   // para no llamar Date.now() de forma impura dentro de un useMemo.
   const [corteTimestamp, setCorteTimestamp] = useState<number | null>(null);
   const [ordenes, setOrdenes] = useState<ProductionOrder[]>([]);
+  const [loginsFallidos, setLoginsFallidos] = useState<AuditLogEntry[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -94,6 +95,23 @@ export default function DashboardPage() {
       cancelled = true;
     };
   }, []);
+
+  // Solo ADMIN puede ver la bitacora de seguridad (audit-log es @Roles('ADMIN') en el backend):
+  // ni siquiera se pide si el usuario no es ADMIN, para no generar un 403 innecesario.
+  useEffect(() => {
+    if (user?.rol !== 'ADMIN') return;
+    let cancelled = false;
+    getAuditLog()
+      .then((data) => {
+        if (!cancelled) setLoginsFallidos(data.filter((e) => e.evento === 'LOGIN_FAILED').slice(0, 5));
+      })
+      .catch(() => {
+        if (!cancelled) setLoginsFallidos([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.rol]);
 
   function handlePeriodoChange(nuevoPeriodo: Periodo) {
     setPeriodo(nuevoPeriodo);
@@ -223,6 +241,8 @@ export default function DashboardPage() {
 
   const nombrePorFormulacionId = new Map(formulaciones.map((f) => [f.id, f.nombreProducto]));
   const totalAlertas = registrosPorVencer.length + lotesPorVencer.length;
+
+  const lotesEnCalidad = ordenes.filter((orden) => orden.estadoProduccion === 'EN_CALIDAD');
 
   // Mismos filtros de periodo/formulacion/categoria que las formulaciones, pero aplicados a las
   // ordenes de produccion reales: son los unicos numeros de este panel que vienen de lo que de
@@ -376,6 +396,46 @@ export default function DashboardPage() {
               );
             })}
           </ul>
+        </div>
+      )}
+
+      {!loading && !error && lotesEnCalidad.length > 0 && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+            {lotesEnCalidad.length} lote{lotesEnCalidad.length === 1 ? '' : 's'} esperando revision de calidad
+          </h3>
+          <ul className="mt-2 grid gap-1 text-sm text-amber-700 dark:text-amber-400">
+            {lotesEnCalidad.slice(0, 5).map((orden) => (
+              <li key={orden.id}>
+                <Link href="/preparar" className="hover:underline">
+                  Lote {orden.numeroLote}
+                </Link>{' '}
+                ({nombrePorFormulacionId.get(orden.formulationId) ?? 'formulacion eliminada'})
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {!loading && !error && user?.rol === 'ADMIN' && loginsFallidos && loginsFallidos.length > 0 && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-500/30 dark:bg-red-500/10">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-red-800 dark:text-red-300">
+            Alertas de seguridad: intentos de inicio de sesion fallidos
+          </h3>
+          <ul className="mt-2 grid gap-1 text-sm text-red-700 dark:text-red-400">
+            {loginsFallidos.map((entry) => (
+              <li key={entry.id}>
+                {new Date(entry.createdAt).toLocaleString()} — {String(entry.metadata?.email ?? 'correo desconocido')}
+                {entry.ip ? ` (${entry.ip})` : ''}
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/auditoria"
+            className="mt-2 inline-block text-xs font-medium text-red-800 hover:underline dark:text-red-300"
+          >
+            Ver bitacora completa de seguridad
+          </Link>
         </div>
       )}
 

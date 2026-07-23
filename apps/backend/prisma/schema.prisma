@@ -124,6 +124,10 @@ model Formulation {
   /** Horas estimadas para producir cantidadBaseKg. Se escala proporcionalmente para cada orden
    * (igual que los ingredientes) y sirve de base para calcular mano de obra propia y energia. */
   tiempoProduccionHoras Decimal?  @db.Decimal(8, 2)
+  /** Una formulacion con lotes de produccion ya registrados no se puede eliminar (se perderia
+   * ese historial financiero via cascade). Archivarla es la alternativa segura: deja de
+   * ofrecerse en Preparar/Costos pero conserva todos sus datos e historial intactos. */
+  activa             Boolean      @default(true)
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
   usuario            User         @relation(fields: [userId], references: [id], onDelete: Cascade)

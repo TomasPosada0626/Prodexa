@@ -8,9 +8,16 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -47,8 +54,19 @@ export class FormulationsController {
   @ApiOperation({
     summary: 'Listar las formulaciones de la empresa del usuario autenticado',
   })
-  findAll(@CurrentUser() user: RequestUser) {
-    return this.formulationsService.findAll(user.organizationId);
+  @ApiQuery({
+    name: 'incluirArchivadas',
+    required: false,
+    description: 'Si es "true", incluye tambien las formulaciones archivadas',
+  })
+  findAll(
+    @CurrentUser() user: RequestUser,
+    @Query('incluirArchivadas') incluirArchivadas?: string,
+  ) {
+    return this.formulationsService.findAll(
+      user.organizationId,
+      incluirArchivadas === 'true',
+    );
   }
 
   @Get(':id')
@@ -78,7 +96,12 @@ export class FormulationsController {
     @Param('id') id: string,
     @Body() dto: UpdateFormulationDto,
   ) {
-    return this.formulationsService.update(user.organizationId, id, dto);
+    return this.formulationsService.update(
+      user.organizationId,
+      id,
+      dto,
+      user.id,
+    );
   }
 
   @Delete(':id')
@@ -117,6 +140,7 @@ export class FormulationsController {
       id,
       ingredientId,
       dto,
+      user.id,
     );
   }
 

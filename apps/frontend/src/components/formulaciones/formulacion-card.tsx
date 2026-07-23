@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ApiError, createFormulation, Formulation, deleteFormulation } from '@/lib/api';
+import { ApiError, createFormulation, Formulation, deleteFormulation, updateFormulation } from '@/lib/api';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { Collapsible } from '@/components/shared/collapsible';
 import { useAuth } from '@/context/auth-context';
@@ -24,6 +24,10 @@ export function FormulacionCard({ formulacion, onDeleted, onUpdated }: Props) {
   const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
+  const [archivando, setArchivando] = useState(false);
+  // Si el borrado falla porque ya hay lotes de produccion registrados, se ofrece archivar en
+  // su lugar en vez de solo mostrar el error: guarda el mensaje exacto (incluye el conteo).
+  const [archivarPrompt, setArchivarPrompt] = useState<string | null>(null);
 
   async function handleConfirmDelete() {
     setDeleting(true);
@@ -33,12 +37,29 @@ export function FormulacionCard({ formulacion, onDeleted, onUpdated }: Props) {
       setConfirmOpen(false);
       onDeleted();
     } catch (err) {
-      showToast(
-        err instanceof ApiError ? err.message : 'No se pudo eliminar la formulacion.',
-        'error',
-      );
+      const message = err instanceof ApiError ? err.message : 'No se pudo eliminar la formulacion.';
+      if (message.includes('lote')) {
+        setConfirmOpen(false);
+        setArchivarPrompt(message);
+      } else {
+        showToast(message, 'error');
+      }
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function handleArchivar(activa: boolean) {
+    setArchivando(true);
+    try {
+      await updateFormulation(formulacion.id, { activa });
+      showToast(activa ? `"${formulacion.nombreProducto}" reactivada.` : `"${formulacion.nombreProducto}" archivada.`);
+      setArchivarPrompt(null);
+      onUpdated();
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'No se pudo actualizar la formulacion.', 'error');
+    } finally {
+      setArchivando(false);
     }
   }
 
@@ -89,6 +110,11 @@ export function FormulacionCard({ formulacion, onDeleted, onUpdated }: Props) {
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h4 className="text-base font-semibold text-slate-900 dark:text-white">{formulacion.nombreProducto}</h4>
         <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-600 dark:text-zinc-400">
+          {!formulacion.activa && (
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-600 dark:bg-white/10 dark:text-zinc-300">
+              Archivada
+            </span>
+          )}
           {formulacion.categoria && (
             <span className="rounded-full bg-violet-50 px-2 py-0.5 text-violet-700 dark:bg-[#8B5CF6]/10 dark:text-[#a78bfa]">
               {formulacion.categoria}
@@ -124,6 +150,14 @@ export function FormulacionCard({ formulacion, onDeleted, onUpdated }: Props) {
                 className="rounded-full border border-sky-200 px-2 py-0.5 text-sky-700 hover:bg-sky-50 dark:border-[#8B5CF6]/40 dark:text-[#a78bfa] dark:hover:bg-[#8B5CF6]/10"
               >
                 Editar
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleArchivar(!formulacion.activa)}
+                disabled={archivando}
+                className="rounded-full border border-slate-200 px-2 py-0.5 text-slate-600 hover:bg-slate-50 disabled:opacity-60 dark:border-white/10 dark:text-zinc-400 dark:hover:bg-white/5"
+              >
+                {archivando ? 'Guardando...' : formulacion.activa ? 'Archivar' : 'Reactivar'}
               </button>
               <button
                 type="button"
@@ -184,6 +218,16 @@ export function FormulacionCard({ formulacion, onDeleted, onUpdated }: Props) {
         loading={deleting}
         onConfirm={handleConfirmDelete}
         onCancel={() => setConfirmOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={archivarPrompt !== null}
+        title="No se puede eliminar: archivar en su lugar"
+        description={`${archivarPrompt ?? ''} Archivarla la oculta de Preparar y Costos, pero conserva todo su historial intacto y la puedes reactivar cuando quieras.`}
+        confirmLabel="Archivar"
+        loading={archivando}
+        onConfirm={() => void handleArchivar(false)}
+        onCancel={() => setArchivarPrompt(null)}
       />
     </article>
   );

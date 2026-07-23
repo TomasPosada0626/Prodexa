@@ -27,6 +27,34 @@ const EVENTO_INFO: Record<string, { label: string; className: string }> = {
     label: 'Cambio de contrasena',
     className: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',
   },
+  PRODUCTION_ORDER_DELETED: {
+    label: 'Lote anulado',
+    className: 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400',
+  },
+  PAGO_DELETED: {
+    label: 'Abono borrado',
+    className: 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400',
+  },
+  MEMBER_ROLE_CHANGED: {
+    label: 'Cambio de rol',
+    className: 'bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400',
+  },
+  MEMBER_REMOVED: {
+    label: 'Miembro removido',
+    className: 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400',
+  },
+  INGREDIENT_PRICE_UPDATED: {
+    label: 'Precio de ingrediente',
+    className: 'bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400',
+  },
+  FORMULATION_UPDATED: {
+    label: 'Formulacion editada',
+    className: 'bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400',
+  },
+  ORGANIZATION_SETTINGS_UPDATED: {
+    label: 'Tarifas de la empresa',
+    className: 'bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400',
+  },
 };
 
 function infoDeEvento(evento: string) {
@@ -36,6 +64,36 @@ function infoDeEvento(evento: string) {
       className: 'bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-zinc-300',
     }
   );
+}
+
+/** Texto corto y legible del detalle de cada evento, a partir de su metadata — la forma de
+ * metadata varia segun el evento (ver donde se llama auditService.log en el backend). */
+function detalleDeEvento(evento: string, metadata: Record<string, unknown> | null): string {
+  if (!metadata) return '—';
+  const texto = (valor: unknown) => (typeof valor === 'string' || typeof valor === 'number' ? String(valor) : '');
+
+  switch (evento) {
+    case 'MEMBER_ROLE_CHANGED':
+      return `${texto(metadata.memberEmail)}: ${texto(metadata.rolAnterior)} → ${texto(metadata.rolNuevo)}`;
+    case 'MEMBER_REMOVED':
+      return `${texto(metadata.memberNombre) || texto(metadata.memberEmail)}`;
+    case 'INGREDIENT_PRICE_UPDATED':
+      return `${texto(metadata.ingredienteNombre)}: ${texto(metadata.precioAnterior)} → ${texto(metadata.precioNuevo)} (${texto(metadata.proveedor)})`;
+    case 'FORMULATION_UPDATED': {
+      const campos = Array.isArray(metadata.campos) ? (metadata.campos as unknown[]).map(texto).join(', ') : '';
+      return `${texto(metadata.nombreProducto)}${campos ? ` — ${campos}` : ''}`;
+    }
+    case 'ORGANIZATION_SETTINGS_UPDATED': {
+      const campos = Array.isArray(metadata.campos) ? (metadata.campos as unknown[]).map(texto).join(', ') : '';
+      return campos || '—';
+    }
+    case 'PRODUCTION_ORDER_DELETED':
+      return `Lote ${texto(metadata.numeroLote)} (costo ${texto(metadata.costoEscalado)}, ingreso ${texto(metadata.ingresoReal)})`;
+    case 'PAGO_DELETED':
+      return `Abono de ${texto(metadata.monto)}`;
+    default:
+      return '—';
+  }
 }
 
 const selectClasses =
@@ -94,7 +152,8 @@ export default function AuditoriaPage() {
       <div>
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Auditoria</h2>
         <p className="mt-1 text-slate-600 dark:text-zinc-400">
-          Bitacora de seguridad: inicios de sesion, registros y cambios de contrasena de tu empresa.
+          Bitacora de seguridad y de negocio: inicios de sesion, cambios de precios, formulaciones, roles del equipo
+          y tarifas de la empresa — quien hizo que y cuando.
         </p>
       </div>
 
@@ -181,6 +240,7 @@ export default function AuditoriaPage() {
                   <th className="py-2">Fecha</th>
                   <th className="py-2">Usuario</th>
                   <th className="py-2">Evento</th>
+                  <th className="py-2">Detalle</th>
                   <th className="py-2">IP</th>
                 </tr>
               </thead>
@@ -199,6 +259,9 @@ export default function AuditoriaPage() {
                       >
                         {infoDeEvento(evento.evento).label}
                       </span>
+                    </td>
+                    <td className="py-2 text-slate-600 dark:text-zinc-400">
+                      {detalleDeEvento(evento.evento, evento.metadata)}
                     </td>
                     <td className="py-2 font-mono text-xs text-slate-600 dark:text-zinc-400">{evento.ip ?? '—'}</td>
                   </tr>

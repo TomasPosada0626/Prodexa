@@ -1,6 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
+import { AuditEvent } from '../audit/audit.types';
 import { CreateFormulationDto } from './dto/create-formulation.dto';
 import { UpdateFormulationDto } from './dto/update-formulation.dto';
 import { UpdateIngredientPriceDto } from './dto/update-ingredient-price.dto';
@@ -58,7 +64,10 @@ function buildSnapshot(
  */
 @Injectable()
 export class FormulationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
+  ) {}
 
   async create(
     userId: string,
@@ -111,9 +120,11 @@ export class FormulationsService {
     return formulation;
   }
 
-  findAll(organizationId: string) {
+  /** Por defecto solo trae las activas: una formulacion archivada deja de ofrecerse en
+   * Preparar/Costos/el selector normal, pero se puede seguir consultando con incluirArchivadas. */
+  findAll(organizationId: string, incluirArchivadas = false) {
     return this.prisma.formulation.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(!incluirArchivadas && { activa: true }) },
       include: FORMULATION_INCLUDE,
       orderBy: { createdAt: 'desc' },
     });
@@ -132,7 +143,12 @@ export class FormulationsService {
     return formulation;
   }
 
-  async update(organizationId: string, id: string, dto: UpdateFormulationDto) {
+  async update(
+    organizationId: string,
+    id: string,
+    dto: UpdateFormulationDto,
+    userId: string,
+  ) {
     const actual = await this.findOne(organizationId, id);
     const { ingredientes, registroSanitarioVencimiento, ...rest } = dto;
 
@@ -145,7 +161,7 @@ export class FormulationsService {
       },
     });
 
-    return this.prisma.formulation.update({
+    const actualizada = await this.prisma.formulation.update({
       where: { id },
       data: {
         ...rest,
@@ -172,10 +188,34 @@ export class FormulationsService {
       },
       include: FORMULATION_INCLUDE,
     });
+
+    void this.auditService.log(AuditEvent.FORMULATION_UPDATED, {
+      userId,
+      metadata: {
+        formulationId: id,
+        nombreProducto: actual.nombreProducto,
+        campos: Object.keys(dto),
+      },
+    });
+
+    return actualizada;
   }
 
+  /**
+   * Eliminar borra en cascada TODAS las ordenes de produccion (y sus pagos) de esta
+   * formulacion — un historial financiero real irrecuperable. Si ya tiene lotes registrados,
+   * se bloquea el borrado y se sugiere archivar en su lugar (ver UpdateFormulationDto.activa).
+   */
   async remove(organizationId: string, id: string) {
     await this.findOne(organizationId, id);
+    const lotesCount = await this.prisma.productionOrder.count({
+      where: { formulationId: id },
+    });
+    if (lotesCount > 0) {
+      throw new BadRequestException(
+        `Esta formulacion tiene ${lotesCount} lote${lotesCount === 1 ? '' : 's'} de produccion registrado${lotesCount === 1 ? '' : 's'} y no se puede eliminar (se perderia ese historial). Archivala en su lugar para dejar de usarla sin perder los datos.`,
+      );
+    }
     await this.prisma.formulation.delete({ where: { id } });
   }
 
@@ -188,6 +228,7 @@ export class FormulationsService {
     formulationId: string,
     ingredientId: string,
     dto: UpdateIngredientPriceDto,
+    userId: string,
   ) {
     const formulation = await this.findOne(organizationId, formulationId);
     const ingrediente = formulation.ingredientes.find(
@@ -222,10 +263,23 @@ export class FormulationsService {
       },
     });
 
-    return this.prisma.ingredient.update({
+    const actualizado = await this.prisma.ingredient.update({
       where: { id: ingredientId },
       data: { precioKg: dto.precioKg, precioTotal: nuevoPrecioTotal },
     });
+
+    void this.auditService.log(AuditEvent.INGREDIENT_PRICE_UPDATED, {
+      userId,
+      metadata: {
+        formulationId,
+        ingredienteNombre: ingrediente.nombre,
+        precioAnterior: ingrediente.precioKg.toString(),
+        precioNuevo: dto.precioKg,
+        proveedor: nombreProveedor,
+      },
+    });
+
+    return actualizado;
   }
 
   /** Historial de precios de un ingrediente, mas reciente primero. */

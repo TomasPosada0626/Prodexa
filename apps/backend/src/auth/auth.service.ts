@@ -197,6 +197,19 @@ export class AuthService {
     return { userId: stored.userId };
   }
 
+  /**
+   * Para auditar un login fallido contra una cuenta real (LOGIN_FAILED necesita userId para
+   * poder atribuirse a una empresa, ver AuditService.listForOrganization). No revela si el
+   * correo existe: el controller solo la usa para enriquecer el log, nunca para la respuesta.
+   */
+  async findUserIdByEmail(email: string): Promise<string | undefined> {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+    return user?.id;
+  }
+
   async me(userId: string): Promise<AuthenticatedUser> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -246,8 +259,16 @@ export class AuthService {
     });
   }
 
-  /** Sesiones (refresh tokens) activas del usuario, mas reciente primero. Nunca expone el tokenHash. */
-  async listSessions(userId: string) {
+  /**
+   * Sesiones (refresh tokens) activas del usuario, mas reciente primero. Nunca expone el
+   * tokenHash: se usa solo internamente para marcar `actual` (la sesion del refresh token con el
+   * que se hizo esta misma peticion), asi la UI puede resaltarla y evitar que el usuario se
+   * cierre su propia sesion sin darse cuenta.
+   */
+  async listSessions(userId: string, currentRawRefreshToken?: string) {
+    const currentHash = currentRawRefreshToken
+      ? hashToken(currentRawRefreshToken)
+      : null;
     const tokens = await this.prisma.refreshToken.findMany({
       where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },
       orderBy: { createdAt: 'desc' },
@@ -257,9 +278,13 @@ export class AuthService {
         userAgent: true,
         createdAt: true,
         expiresAt: true,
+        tokenHash: true,
       },
     });
-    return tokens;
+    return tokens.map(({ tokenHash, ...sesion }) => ({
+      ...sesion,
+      actual: tokenHash === currentHash,
+    }));
   }
 
   /** Revoca una sesion especifica, verificando que pertenezca al usuario autenticado. */

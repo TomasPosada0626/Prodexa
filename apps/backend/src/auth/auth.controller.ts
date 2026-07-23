@@ -74,8 +74,14 @@ export class AuthController {
       });
       return user;
     } catch (error) {
+      // Sin userId, LOGIN_FAILED no se puede atribuir a ninguna empresa (ver
+      // AuditService.listForOrganization) y quedaria invisible en Auditoria/Dashboard aunque el
+      // correo si sea de un miembro real: se busca el userId solo para el log, nunca para la
+      // respuesta al cliente (no revela si el correo existe).
+      const userId = await this.authService.findUserIdByEmail(dto.email);
       void this.auditService.log(AuditEvent.LOGIN_FAILED, {
         ...auditContext,
+        userId,
         metadata: { email: dto.email },
       });
       throw error;
@@ -162,8 +168,11 @@ export class AuthController {
   @ApiOperation({
     summary: 'Listar las sesiones activas del usuario autenticado',
   })
-  listSessions(@CurrentUser() user: RequestUser) {
-    return this.authService.listSessions(user.id);
+  listSessions(@CurrentUser() user: RequestUser, @Req() req: Request) {
+    const rawRefreshToken = (
+      req.cookies as Record<string, string> | undefined
+    )?.[REFRESH_TOKEN_COOKIE];
+    return this.authService.listSessions(user.id, rawRefreshToken);
   }
 
   @Delete('sessions/:id')

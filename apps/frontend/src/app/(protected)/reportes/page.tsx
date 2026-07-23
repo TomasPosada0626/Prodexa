@@ -161,6 +161,12 @@ export default function ReportesPage() {
     .filter((o) => o.estadoPago !== 'PAGADO' && diasPendiente(o) > 30)
     .reduce((total, o) => total + montoPendienteDeOrden(o), 0);
 
+  // Vista dedicada de cartera por cobrar: solo lotes con saldo pendiente (PENDIENTE o PARCIAL),
+  // de mas a menos urgente, separada del reporte financiero general (que mezcla todo, cobrado o no).
+  const carteraPorCobrar = ordenesRentables
+    .filter((o) => o.estadoPago !== 'PAGADO')
+    .sort((a, b) => diasPendiente(b) - diasPendiente(a));
+
   const nombrePorFormulacionId = new Map(formulaciones.map((f) => [f.id, f.nombreProducto]));
   const capacidad = capacidadUtilizadaMesActual(ordenes ?? [], Number(user?.capacidadProduccionMensualKg ?? 0));
   // Anular un lote es irreversible y borra un registro financiero: solo ADMIN/COORDINADOR,
@@ -206,6 +212,22 @@ export default function ReportesPage() {
         fila.ingresoReal.toFixed(2),
         fila.utilidadReal.toFixed(2),
         fila.margenPorcentaje.toFixed(1),
+      ]),
+    );
+  }
+
+  function handleExportCsvCartera() {
+    const fecha = new Date().toISOString().slice(0, 10);
+    downloadCsv(
+      `cartera-por-cobrar-${fecha}.csv`,
+      ['Lote', 'Formulacion', 'Fecha del lote', 'Estado de pago', 'Dias pendiente', 'Monto pendiente'],
+      carteraPorCobrar.map((orden) => [
+        orden.numeroLote,
+        nombrePorFormulacionId.get(orden.formulationId) ?? '—',
+        new Date(orden.createdAt).toLocaleDateString(),
+        ESTADO_PAGO_LABEL[orden.estadoPago],
+        String(diasPendiente(orden)),
+        montoPendienteDeOrden(orden).toFixed(2),
       ]),
     );
   }
@@ -420,6 +442,60 @@ export default function ReportesPage() {
                     </p>
                   </div>
                 </div>
+
+                {carteraPorCobrar.length > 0 && (
+                  <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+                        Cartera por cobrar (lotes con saldo pendiente)
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={handleExportCsvCartera}
+                        className="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/5"
+                      >
+                        Exportar CSV
+                      </button>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-zinc-500">
+                      Ordenado del mas urgente al menos urgente, para saber a quien cobrarle primero.
+                    </p>
+                    <table className="mt-3 w-full min-w-140 text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-500">
+                          <th className="py-2">Lote</th>
+                          <th className="py-2">Formulacion</th>
+                          <th className="py-2">Fecha del lote</th>
+                          <th className="py-2">Estado</th>
+                          <th className="py-2">Dias pendiente</th>
+                          <th className="py-2">Monto pendiente</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {carteraPorCobrar.map((orden) => (
+                          <tr key={orden.id} className="border-b border-slate-100 dark:border-white/5">
+                            <td className="py-2 font-mono text-slate-800 dark:text-zinc-200">{orden.numeroLote}</td>
+                            <td className="py-2 text-slate-600 dark:text-zinc-400">
+                              {nombrePorFormulacionId.get(orden.formulationId) ?? '—'}
+                            </td>
+                            <td className="py-2 text-slate-600 dark:text-zinc-400">
+                              {new Date(orden.createdAt).toLocaleDateString()}
+                            </td>
+                            <td className="py-2 text-slate-600 dark:text-zinc-400">
+                              {ESTADO_PAGO_LABEL[orden.estadoPago]}
+                            </td>
+                            <td className={`py-2 ${NIVEL_CARTERA_CLASSNAME[nivelCartera(diasPendiente(orden))]}`}>
+                              {diasPendiente(orden)} dias
+                            </td>
+                            <td className="py-2 font-medium text-slate-900 dark:text-white">
+                              {formatCosto(montoPendienteDeOrden(orden))}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
 
                 <div className="mt-6 grid gap-6">
                   <div className="grid gap-6 lg:grid-cols-2">
