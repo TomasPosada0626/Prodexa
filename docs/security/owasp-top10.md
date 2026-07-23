@@ -1,6 +1,8 @@
 # Revision OWASP Top 10 (2021) — Prodexa
 
-Fecha de revision: 2026-07-22
+Fecha de revision: 2026-07-23 (segunda revision — la primera fue 2026-07-22, antes de
+que RBAC y organizaciones multiusuario existieran; ver el historial de cambios de este
+documento en el registro de commits).
 Alcance: `apps/backend` (NestJS + Prisma + PostgreSQL) y `apps/frontend` (Next.js).
 
 Esta es una revision honesta del estado actual, no una checklist marcada de mas.
@@ -8,16 +10,20 @@ Donde algo no esta cubierto, se dice explicitamente y se deja como pendiente.
 
 ## A01:2021 — Broken Access Control
 
-**Estado: cubierto para el modelo actual (single-tenant por cuenta).**
+**Estado: cubierto para el modelo actual (multi-tenant por organizacion, con RBAC).**
 
-- Todas las rutas de `formulations` y `simulations` estan detras de `JwtAuthGuard`
-  (`apps/backend/src/auth/jwt-auth.guard.ts`).
-- Los datos se filtran siempre por `userId` a nivel de query
-  (`formulations.service.ts`: `findFirst({ where: { id, userId } })`), no solo en la UI —
-  un usuario no puede acceder ni por id directo a datos de otro usuario.
-- **Pendiente, por decision de producto:** no hay RBAC por roles (admin/usuario). Se
-  evaluo y se decidio explicitamente no implementarlo por ahora — cada cuenta es
-  independiente y ve solo sus propios datos, sin necesidad de roles todavia.
+- Todas las rutas de negocio estan detras de `JwtAuthGuard`
+  (`apps/backend/src/auth/jwt-auth.guard.ts`); los endpoints de mutacion que lo
+  requieren agregan ademas `RolesGuard` + `@Roles('ADMIN', 'COORDINADOR')` — ver la
+  matriz completa en [`docs/api/endpoints.md`](../api/endpoints.md).
+- Los datos se filtran siempre por `organizationId` a nivel de query (no solo por
+  `userId`, y no solo en la UI): un usuario no puede acceder ni por id directo a datos
+  de otra organizacion. Dentro de la misma organizacion, `ADMIN`/`COORDINADOR` pueden
+  mutar; `MIEMBRO` solo puede leer y operar el flujo de produccion.
+- RBAC se evaluo y se descarto explicitamente el 2026-07-22 (cada cuenta era
+  independiente en ese momento); se construyo despues cuando el modelo de negocio paso
+  a requerir equipos multiusuario por empresa. Decision completa, con consecuencias, en
+  [ADR-005](../adr/ADR-005-rbac-organizaciones-multiusuario.md).
 
 ## A02:2021 — Cryptographic Failures
 
@@ -43,13 +49,17 @@ Donde algo no esta cubierto, se dice explicitamente y se deja como pendiente.
   (`main.ts`) — cualquier campo no declarado en el DTO se rechaza, no se cuela a la capa
   de datos.
 - El contenido enriquecido de "Preparacion" se guarda como HTML (Tiptap) y se
-  renderiza con `dangerouslySetInnerHTML` en el frontend. **Riesgo real de XSS
-  almacenado**: hoy no hay sanitizacion del HTML antes de guardarlo ni antes de
-  renderizarlo. Como el HTML solo lo escribe el propio dueno de la formulacion sobre
-  sus propios datos (no hay contenido de terceros ni multi-usuario compartiendo
-  formulaciones), el impacto practico hoy es bajo (un usuario solo podria "atacarse a
-  si mismo"), pero **si en el futuro las formulaciones se comparten entre usuarios,
-  esto pasa a ser critico y hay que sanitizar (ej. DOMPurify) antes de ese cambio.**
+  renderiza con `dangerouslySetInnerHTML` en `formulacion-card.tsx`. **Riesgo real de
+  XSS almacenado, actualizado desde la revision anterior:** con RBAC y organizaciones
+  multiusuario ya implementados (ver A01, ADR-005), las formulaciones **si** se
+  comparten dentro de una organizacion — un `ADMIN`/`COORDINADOR` que guarde un
+  payload malicioso en este campo lo ejecutaria en el navegador de cualquier otro
+  miembro que abra esa formulacion. No hay ninguna libreria de sanitizacion
+  (DOMPurify, sanitize-html o similar) en las dependencias del proyecto hoy — se
+  confirmo revisando `package.json` de ambas apps. **Siguiente paso concreto:**
+  sanitizar el HTML con DOMPurify antes de guardarlo (o, como minimo, antes de
+  renderizarlo) en `formulacion-card.tsx` y en el editor
+  (`components/shared/rich-text-editor.tsx`).
 
 ## A04:2021 — Insecure Design
 
@@ -104,20 +114,22 @@ Donde algo no esta cubierto, se dice explicitamente y se deja como pendiente.
 
 ## A09:2021 — Security Logging and Monitoring Failures
 
-**Estado: cubierto para eventos de cuenta, a partir de esta revision.**
+**Estado: cubierto, ampliado significativamente desde la revision anterior.**
 
-- Nueva tabla `AuditLog` (`schema.prisma`) registrando `LOGIN_SUCCESS`, `LOGIN_FAILED`,
-  `LOGOUT` y `REGISTER`, con `userId` (cuando aplica), IP y User-Agent
-  (`AuditService`, enganchado en `AuthController`).
+- Tabla `AuditLog` registrando 12 tipos de evento (`AuditEvent`, ver
+  [`docs/observability/audit-log.md`](../observability/audit-log.md)): login/logout/
+  registro/cambio de contrasena, anulacion de lotes y pagos, cambios de rol, remocion
+  de miembros, cambios de precio de ingrediente, ediciones de formulacion y cambios de
+  tarifas de la organizacion — con `userId` (cuando aplica), IP y User-Agent.
 - El logging de auditoria nunca interrumpe el flujo principal si falla (se atrapa y
-  se registra en el logger de la app, no se relanza) — evita que un fallo de auditoria
-  tumbe un login legitimo.
-- **Pendiente:** no audita cambios de contrasena (la funcionalidad de "cambiar
-  contrasena" en si misma todavia no existe — hoy esta marcada "Proximamente" en el
-  menu de perfil). Cuando se construya, debe engancharse al mismo `AuditService`.
-- **Pendiente:** no hay alertas activas ni dashboard sobre estos eventos (ej. aviso
-  ante N logins fallidos seguidos) — los datos ya se capturan, pero no hay consumidor
-  automatizado todavia.
+  se registra en el logger de la app, no se relanza) — verificado con test dedicado.
+- **Ya no esta pendiente (corregido desde la revision anterior):** el cambio de
+  contrasena existe y audita `CHANGE_PASSWORD`. El Dashboard tiene un widget, visible
+  solo para `ADMIN`, con los ultimos intentos de login fallidos de la organizacion —
+  la alerta que la revision anterior marcaba como no construida.
+- **Pendiente real:** no hay un consumidor automatizado que dispare una notificacion
+  proactiva (email, Slack) ante N logins fallidos seguidos — el ADMIN tiene que entrar
+  al Dashboard o a Auditoria para verlo, no se le avisa solo.
 
 ## A10:2021 — Server-Side Request Forgery (SSRF)
 
@@ -133,17 +145,17 @@ de nuevo si se agrega una funcionalidad de ese tipo.
 
 | Categoria | Estado |
 |---|---|
-| A01 Broken Access Control | Cubierto (para el alcance actual) |
+| A01 Broken Access Control | Cubierto (multi-tenant por organizacion, con RBAC) |
 | A02 Cryptographic Failures | Cubierto |
-| A03 Injection | Cubierto, con riesgo XSS documentado a vigilar si se comparten formulaciones |
+| A03 Injection | Cubierto, con **riesgo XSS real y accionable** (formulaciones compartidas, sin sanitizacion todavia) |
 | A04 Insecure Design | Cubierto |
 | A05 Security Misconfiguration | Cubierto, con nota sobre Swagger en produccion |
 | A06 Vulnerable and Outdated Components | Cubierto (Dependabot + npm audit en CI) |
 | A07 Identification and Authentication Failures | Cubierto |
 | A08 Software and Data Integrity Failures | Parcial (aplica mas en Fase 8, CD) |
-| A09 Security Logging and Monitoring Failures | Cubierto para eventos de cuenta; sin alertas aun |
+| A09 Security Logging and Monitoring Failures | Cubierto, 12 tipos de evento; sin notificacion proactiva |
 | A10 SSRF | No aplica hoy |
 
-**Proxima revision recomendada:** cuando se implemente cambio de contrasena, cuando
-se decida si las formulaciones se comparten entre usuarios (por el riesgo XSS de A03),
-y antes de habilitar CD real a produccion (Fase 8).
+**Proxima revision recomendada:** cuando se sanitice el HTML de "Preparacion" (A03,
+el hallazgo con mayor prioridad de esta revision), y antes de habilitar CD real a
+produccion (Fase 8).

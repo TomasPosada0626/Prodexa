@@ -1,5 +1,15 @@
 # Clean Architecture modular en Prodexa
 
+> **Nota de evolución arquitectónica.** Este documento captura el diseño en capas
+> planteado en la fase de diseño inicial del proyecto. Durante la construcción se
+> optó conscientemente por una convención más simple e idiomática de NestJS —módulos
+> planos, con Prisma inyectado directo en el service layer— para evitar abstracciones
+> prematuras sobre un dominio que todavía estaba tomando forma. Es la misma disciplina
+> de "no pagar complejidad que no se necesita" aplicada en otras partes del proyecto
+> (Redis provisionado sin conectar, Prometheus fuera de alcance). El diseño real,
+> con su razonamiento, está en [`docs/architecture/overview.md`](overview.md) y
+> [`docs/architecture/modulos_y_contextos.md`](modulos_y_contextos.md).
+
 ## Principios
 - SOLID
 - DRY

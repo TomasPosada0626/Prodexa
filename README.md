@@ -1,6 +1,6 @@
 <p align="center">
   <b>Prodexa</b><br>
-  <i>Plataforma de costeo y rentabilidad para formulaciones de alimentos y cosméticos</i>
+  <i>Plataforma de costeo, producción y rentabilidad para fabricantes de alimentos y cosméticos</i>
 </p>
 
 <p align="center">
@@ -10,43 +10,48 @@
   <img src="https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma&logoColor=white" />
   <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white" />
-  <img src="https://img.shields.io/badge/tests-passing-brightgreen" />
+  <img src="https://img.shields.io/badge/license-MIT-blue.svg" />
+  <img src="https://img.shields.io/badge/tests-255%20passing-brightgreen" />
 </p>
 
 <p align="center">
 
 | Statements                  | Branches                | Functions                 | Lines             |
 | ---------------------------- | ----------------------- | ------------------------- | ------------------ |
-| ![Statements](https://img.shields.io/badge/statements-100%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-87.89%25-yellow.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-100%25-brightgreen.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-100%25-brightgreen.svg?style=flat) |
+| ![Statements](https://img.shields.io/badge/statements-98.97%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-87.5%25-yellow.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-98.63%25-brightgreen.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-98.88%25-brightgreen.svg?style=flat) |
 
 </p>
 
 ---
 
-## Que problema resuelve
+## Qué problema resuelve
 
-Quien produce alimentos o cosméticos en pequeña escala normalmente calcula costos, márgenes y precios de venta en una hoja de cálculo que se vuelve inconsistente apenas hay más de un par de productos: precios de insumos desactualizados, márgenes que nadie recuerda por qué se fijaron así, y cero trazabilidad de qué cambió y cuándo.
+Quien fabrica alimentos o cosméticos a escala de pyme normalmente calcula costos, márgenes y precios de venta en una hoja de cálculo que se vuelve inconsistente apenas hay más de un par de productos y más de una persona tocándola: precios de insumos desactualizados, márgenes que nadie recuerda por qué se fijaron así, cero trazabilidad de qué lote se produjo con qué costo real, y ningún control de quién puede editar qué.
 
-Prodexa reemplaza esa hoja de cálculo con una plataforma real: cada formulación tiene su historial completo de cambios, su cumplimiento regulatorio (registro sanitario y vencimientos), su rentabilidad calculada con el mismo motor de costeo en todas partes, y un panel de análisis que responde la pregunta que más importa — **cuánto deja cada producto, y cómo se compara con los demás**.
+Prodexa reemplaza esa hoja de cálculo con una plataforma real, multiusuario por empresa: cada formulación tiene su historial completo de cambios, su cumplimiento regulatorio (registro sanitario y vencimientos), su rentabilidad calculada con el mismo motor de costeo en todas partes, un flujo de producción con control de calidad obligatorio antes de dar un lote por terminado, y un panel de análisis que responde la pregunta que más importa — **cuánto deja cada producto, y cómo se compara con los demás**.
+
+El proyecto tiene un predecesor real: `legacy/desktop-v1/` es la calculadora de escritorio en Python con la que arrancó esta idea (un solo archivo, sin persistencia real, sin multiusuario). Prodexa es su reemplazo completo.
 
 ## Demo
 
 ![Demo de Prodexa](docs/demo/prodexa-demo.gif)
 
-*(Registro → creación de formulación → análisis de rendimiento → calidad → reportes, grabado en local con Playwright.)*
+*(Registro → crear formulación → analizar costos → registrar el lote → avanzarlo por control de calidad → auditoría, sesiones activas, proveedores y cartera por cobrar. Grabado en local con un script de Playwright propio — ver [`apps/frontend/scripts/record-demo.mjs`](apps/frontend/scripts/record-demo.mjs), `npm run demo:record` para volver a generarlo.)*
 
 ## Recorrido por la aplicación
 
 | Sección | Qué hace |
 |---|---|
-| **Dashboard** | KPIs de margen y utilidad con filtro por periodo, formulación y categoría; gráfico de márgenes. |
-| **Formulaciones** | CRUD completo con ingredientes, preparación enriquecida, categoría, registro sanitario, historial de versiones (snapshot completo en cada edición) e historial de precios por ingrediente. Buscador y duplicado de formulaciones. |
-| **Producción** | Escala cualquier formulación a la cantidad objetivo y calcula el costo real del lote; cada lote producido queda registrado como una orden de producción persistente. |
-| **Costos** | Simulador de precio de venta con descuentos/mayoristas y desglose de costo por ingrediente. |
-| **Análisis** | Ficha de rendimiento por formulación: costo, precio de venta, utilidad, punto de equilibrio, utilidad real acumulada (a partir de las órdenes de producción), desglose de costo por ingrediente y ranking frente a las demás formulaciones. Exportable a PDF. |
-| **Calidad** | Estado del registro sanitario de cada formulación (vigente / por vencer / vencido), con fecha y estado editables directamente en la tabla — incluye un override manual para casos como "en trámite de renovación" que la fecha sola no puede representar. |
-| **Reportes** | Reporte consolidado de rentabilidad exportable a PDF (con mini-gráfico de márgenes) y CSV, con filtro por rango de fechas. |
-| **Configuración** | Perfil, margen por defecto para formulaciones nuevas, cambio de contraseña y gestión de sesiones activas (ver/revocar). |
+| **Dashboard** | KPIs de margen y utilidad con filtro por periodo, formulación y categoría; gráficos de tendencia; alertas de registros sanitarios/lotes por vencer; widget de lotes esperando revisión de calidad; y (solo ADMIN) alertas de seguridad con los últimos inicios de sesión fallidos. |
+| **Formulaciones** | CRUD completo con ingredientes, preparación enriquecida, categoría, registro sanitario, historial de versiones (snapshot completo en cada edición) e historial de precios por ingrediente. Una formulación con lotes de producción ya registrados no se puede eliminar (perdería ese historial financiero); se archiva en su lugar. |
+| **Producción (Preparar)** | Escala cualquier formulación a la cantidad objetivo y calcula el costo real del lote; cada lote queda registrado como una orden de producción persistente, con una máquina de estados explícita (`PLANIFICADO → EN_PROCESO → EN_CALIDAD → TERMINADO`, o `RECHAZADO` en cualquier punto) — el control de calidad es obligatorio antes de poder marcar un lote como terminado. |
+| **Costos** | Simulador de precio de venta con descuentos/mayoristas y desglose de costo por ingrediente. Un análisis que convence se registra directo como orden de producción en Preparar con un botón, sin retipear nada. |
+| **Análisis** | Ficha de rendimiento por formulación: costo, precio de venta, utilidad, punto de equilibrio, utilidad real acumulada, tasa de rechazo en calidad, desglose de costo por ingrediente y ranking frente a las demás formulaciones. Exportable a PDF. |
+| **Calidad** | Estado del registro sanitario de cada formulación (vigente / por vencer / vencido), con fecha y estado editables directamente en la tabla. |
+| **Reportes** | Reporte financiero consolidado (exportable a PDF/CSV) y una vista dedicada de **cartera por cobrar**: solo lotes con saldo pendiente, ordenados del más urgente al menos urgente, con su propio export CSV. |
+| **Proveedores** | CRUD real (crear, renombrar, eliminar) para poder limpiar duplicados o corregir nombres — antes solo se creaban implícitamente al registrar un precio de ingrediente. |
+| **Configuración** | Perfil, margen por defecto, cambio de contraseña, tarifas de producción de la empresa, **sesiones activas** (ver y revocar cada dispositivo con sesión iniciada) y gestión de equipo (roles, invitaciones). |
+| **Auditoría** | Bitácora de seguridad y de negocio: login/logout/registro, cambios de rol, remoción de miembros, cambios de precio, ediciones de formulación y de tarifas — cada evento con su detalle específico visible en la tabla. Solo ADMIN. |
 
 ## Arquitectura
 
@@ -58,7 +63,8 @@ flowchart LR
     subgraph Servidor
         API["NestJS 11<br/>REST + Swagger"]
         AUTH["Auth: JWT + refresh<br/>rotatorio (cookies httpOnly)"]
-        AUDIT["Audit log<br/>(eventos de seguridad)"]
+        RBAC["RolesGuard<br/>(ADMIN/COORDINADOR/MIEMBRO)"]
+        AUDIT["Audit log<br/>(seguridad + eventos de negocio)"]
         COST["Motor de costeo<br/>(SimulationService, puro y sin estado)"]
     end
     subgraph Datos
@@ -67,22 +73,24 @@ flowchart LR
 
     FE -- "fetch con credentials:include" --> API
     API --> AUTH
+    API --> RBAC
     API --> AUDIT
     API --> COST
     API -- "Prisma Client" --> PG
     COST -. "misma formula, espejada en el cliente<br/>para vistas de solo lectura" .-> FE
 ```
 
-La API vive detrás de `/api/v1`; `/health` y `/ready` quedan fuera de ese prefijo a propósito porque un orquestador los golpea sin versionar.
+La API vive detrás de `/api/v1`; `/health` y `/ready` quedan fuera de ese prefijo a propósito porque un orquestador los golpea sin versionar. Diagramas completos (C4 niveles 1-3, entidad-relación, despliegue y la máquina de estados de producción) en [`docs/diagrams/`](docs/diagrams/).
 
 ## Decisiones de ingeniería que no son obvias
 
-- **RBAC deliberadamente descartado, no omitido.** Se evaluó agregar roles admin/usuario y se decidió no implementarlo: hoy cada cuenta es independiente y ve solo sus propios datos, sin necesidad real de compartir formulaciones entre usuarios distintos. Agregar roles sin un caso de uso real habría sido complejidad especulativa. La decisión y su fecha quedan documentadas en el checklist de ejecución, no perdidas en un commit.
-- **El motor de costeo es una función pura, reusada en cuatro lugares distintos.** `SimulationService.calculate()` (backend) y su espejo en `lib/costing.ts` (frontend) son la única fuente de verdad para costo/precio/utilidad — los usan el simulador de Costos, el Dashboard, Análisis y las órdenes de producción. Ningún lugar recalcula la fórmula a su manera; un cambio en la lógica de negocio se hace en un solo sitio y se prueba en aislamiento (`simulation.service.spec.ts`).
-- **El historial de versiones guarda el snapshot completo, no solo el precio.** `FormulationVersion` captura ingredientes, margen, preparación y registro sanitario en cada edición — distinto y más completo que el historial de precios por ingrediente (`SupplierPrice`), que existe aparte porque responde una pregunta distinta (cuánto costaba este insumo en el tiempo).
-- **La auditoría de seguridad es un log separado de los datos de negocio.** `AuditLog` registra login/logout/registro/cambio de contraseña con IP y user-agent, y su escritura **nunca** puede tumbar el flujo principal si falla (se atrapa y se loguea, nunca se relanza) — una decisión explícita verificada con test.
-- **Accesibilidad validada con herramienta automatizada, no a ojo.** Cada pantalla nueva se corrió contra `@axe-core/playwright` (WCAG 2.1 AA) en modo claro y oscuro; las violaciones de contraste que encontró (y que una revisión visual no habría atrapado) están corregidas y verificadas en 0.
-- **Logging estructurado con correlation id, listo para producción.** Cada request lleva un `X-Request-Id` (se reutiliza si el cliente ya lo manda) que aparece tanto en los logs JSON como en la respuesta de error — así un reporte de bug se puede rastrear exactamente en los logs sin adivinar.
+- **RBAC se descartó primero, después se revirtió — con la decisión documentada en ambos sentidos.** El 2026-07-22 se evaluó agregar roles y se decidió explícitamente no hacerlo (cada cuenta era independiente). Cuando el modelo de negocio pasó a requerir equipos multiusuario por empresa, se construyó `Organization` + `Invitation` + roles `ADMIN`/`COORDINADOR`/`MIEMBRO` con `RolesGuard`. Ambas decisiones, con su fecha y su razón, quedan en [`docs/adr/ADR-005-rbac-organizaciones-multiusuario.md`](docs/adr/ADR-005-rbac-organizaciones-multiusuario.md) — no se reescribió la historia, se documentó el cambio de rumbo.
+- **Un lote con historial financiero no se borra, se archiva.** Eliminar una formulación con órdenes de producción ya registradas perdería ese historial vía cascada; el backend lo bloquea y ofrece archivar (`Formulation.activa`) como alternativa segura — la formulación deja de ofrecerse en Preparar/Costos pero conserva todos sus datos.
+- **El flujo de producción tiene una máquina de estados real, no un campo de texto libre.** `estadoProduccion` solo permite las transiciones de `TRANSICIONES_ESTADO_PRODUCCION` (backend y su espejo en el frontend): calidad es un paso obligatorio antes de `TERMINADO`, y se permite retroceder un paso para reprocesar. Ver [`docs/diagrams/estado-produccion-uml.md`](docs/diagrams/estado-produccion-uml.md).
+- **El motor de costeo es una función pura, reusada en cuatro lugares distintos.** `SimulationService.calculate()` (backend) y su espejo en `lib/costing.ts` (frontend) son la única fuente de verdad para costo/precio/utilidad — los usan el simulador de Costos, el Dashboard, Análisis y las órdenes de producción.
+- **El historial de versiones guarda el snapshot completo, no solo el precio.** `FormulationVersion` captura ingredientes, margen, preparación y registro sanitario en cada edición como un `Json` — distinto y más completo que el historial de precios por ingrediente (`SupplierPrice`), que existe aparte porque responde una pregunta distinta.
+- **La auditoría de seguridad y de negocio nunca puede tumbar el flujo principal.** `AuditService.log()` registra 12 tipos de evento (login/logout/registro/cambio de contraseña, anulación de lotes y pagos, cambios de rol, remoción de miembros, cambios de precio, ediciones de formulación, cambios de tarifas) y atrapa sus propios errores — nunca se relanzan, verificado con test.
+- **Logging estructurado con correlation id, listo para producción — con un hueco conocido y documentado.** Cada request lleva un `X-Request-Id`. Lo que *no* hace hoy: un error no-HTTP (500) se responde con un mensaje genérico sin loguear el detalle real de la causa — se descubrió de la peor forma (un Docker caído se veía igual que un bug de la app) y queda como hallazgo explícito en [`docs/observability/known-gaps.md`](docs/observability/known-gaps.md), no escondido.
 
 ## Stack técnico
 
@@ -91,7 +99,7 @@ La API vive detrás de `/api/v1`; `/health` y `/ready` quedan fuera de ese prefi
 | Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Framer Motion |
 | Backend | NestJS 11, Prisma 7 (driver adapter `@prisma/adapter-pg`), class-validator |
 | Datos | PostgreSQL 16 |
-| Auth | JWT (access 15 min) + refresh token opaco rotatorio, Argon2, cookies httpOnly |
+| Auth | JWT (access 15 min) + refresh token opaco rotatorio, Argon2, cookies httpOnly, RBAC por organización |
 | Observabilidad | pino-http (logs JSON estructurados + correlation id), `/health` y `/ready` |
 | Calidad | Jest (backend), Playwright + axe-core (E2E y accesibilidad, frontend) |
 | CI | GitHub Actions: tests + typecheck + lint + quality gate de cobertura (`test.yml`), gitleaks, `npm audit`, Dependabot (`security.yml`) |
@@ -100,42 +108,123 @@ La API vive detrás de `/api/v1`; `/health` y `/ready` quedan fuera de ese prefi
 
 ## Empezar en local
 
-Requisitos: Node 20+, Docker.
+Requisitos: Node 22+, Docker.
 
 ```bash
 npm install
-npm run db:up             # Postgres en localhost:55432
+npm run db:up             # Postgres + Redis en Docker (localhost:55432 / 6379)
 npm run prisma:generate
 npm run prisma:migrate
 npm run dev                # backend :3000, frontend :3001
 ```
 
-Documentación interactiva de la API: `http://localhost:3000/api/docs` (Swagger). Se expondrá públicamente cuando el proyecto se despliegue.
+Documentación interactiva de la API: `http://localhost:3000/api/docs` (Swagger).
+
+### Variables de entorno
+
+| Variable | Dónde | Ejemplo | Para qué |
+|---|---|---|---|
+| `DATABASE_URL` | raíz, `apps/backend/.env` | `postgresql://prodexa:prodexa@localhost:55432/prodexa` | Conexión a Postgres |
+| `BACKEND_PORT` | raíz, `apps/backend/.env` | `3000` | Puerto del backend |
+| `CORS_ORIGIN` | raíz, `apps/backend/.env` | `http://localhost:3001` | Origin exacto permitido (cookies cross-origin) |
+| `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` | `apps/backend/.env` | generar con `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | Firma de tokens |
+| `JWT_ACCESS_TTL` / `JWT_REFRESH_TTL_DAYS` | `apps/backend/.env` | `15m` / `30` | Vida de los tokens |
+| `COOKIE_SECURE` | `apps/backend/.env` | `false` en local, `true` en producción | Flag `Secure` de las cookies |
+| `UPLOADS_DIR` | `apps/backend/.env` | vacío = `./uploads` | Carpeta de imágenes subidas (editor de preparación) |
+| `NEXT_PUBLIC_API_URL` | raíz, `apps/frontend/.env.local` | `http://localhost:3000/api/v1` | Base de la API que consume el frontend |
+| `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | raíz `.env` | `prodexa` | Credenciales del contenedor de Postgres |
+
+Copiar cada `.env.example` (raíz, `apps/backend/`, `apps/backend/.env.test.example`, `apps/frontend/`) al archivo real correspondiente antes de arrancar. El Postgres de Docker usa `55432` (no `5432`) para no chocar con una instalación local.
+
+### Docker y scripts
+
+`docker-compose.yml` define 4 servicios — el stack completo corre en contenedores, no solo la base de datos:
+
+| Servicio | Imagen/build | Puerto | Notas |
+|---|---|---|---|
+| `db` | `postgres:16-alpine` | `55432→5432` | Volumen persistente, healthcheck `pg_isready` |
+| `redis` | `redis:7-alpine` | `6379` | Provisionado, no conectado a código todavía |
+| `backend` | `apps/backend/Dockerfile` | `3000` | Espera a que `db`/`redis` estén healthy |
+| `frontend` | `apps/frontend/Dockerfile` | `3001→3000` | Depende de `backend` |
+
+```bash
+npm run compose:up    # levanta los 4 servicios
+npm run compose:down
+```
+
+Scripts del monorepo (`package.json` raíz):
+
+| Script | Qué hace |
+|---|---|
+| `npm run dev` | backend + frontend en paralelo (`concurrently`) |
+| `npm run build` | build de producción de ambas apps |
+| `npm run lint` / `npm run test` | lint / tests de ambas apps |
+| `npm run db:up` / `db:down` | solo Postgres + Redis en Docker |
+| `npm run prisma:generate` / `prisma:migrate` / `prisma:studio` | cliente Prisma, migraciones, UI de datos |
+| `npm run test:coverage` | cobertura del backend (falla si baja del umbral) |
+| `npm run badges:update` | regenera los badges de cobertura del README desde el reporte real de Jest |
 
 ## Testing y cobertura
 
 Pirámide de testing completa, cada nivel corriendo contra algo real (nunca solo mocks):
 
 ```bash
-npm run test:backend           # backend: 96 unit tests, Jest, contra Prisma mockeado
-npm run test:backend:e2e       # backend: 16 tests de integracion contra Postgres real (prodexa_test)
-npm run test:frontend          # frontend: 16 unit tests, Vitest, sobre lib/costing, lib/format, lib/export
-npm run test:frontend:e2e      # frontend: 4 flujos E2E con Playwright (auth, CRUD, simulacion, dashboard) + axe-core
+npm run test:backend           # backend: 196 unit tests, Jest, contra Prisma mockeado
+npm run test:backend:e2e       # backend: 27 tests de integración contra Postgres real (prodexa_test)
+npm run test:frontend          # frontend: 27 unit tests, Vitest (lib/costing, lib/format, lib/export, lib/api)
+npm run test:frontend:e2e      # frontend: 5 flujos E2E con Playwright + axe-core
 npm run test:coverage          # backend con reporte de cobertura (falla si baja de los umbrales, ver abajo)
 ```
 
-Los badges de cobertura arriba se actualizan con `npm run badges:update` (lee `apps/backend/coverage/coverage-summary.json` real, generado por Jest — no son un numero fijo a mano). Las exclusiones de cobertura (`*.module.ts`, `*.dto.ts`, `main.ts`) son deliberadas: son wiring/decoradores sin lógica ejecutable propia, no código sin probar escondido.
+Detalle completo de la estrategia de testing, la convención de specs `_tmp-verify-*.spec.ts` de un solo uso, y qué corre cada workflow de CI en [`docs/testing/`](docs/testing/).
 
-**Integration testing contra base de datos real, no mocks.** `apps/backend/test/*.e2e-spec.ts` levanta la app de Nest completa (el mismo pipeline de `main.ts`: prefijo, cookies, `ValidationPipe`, filtro de errores) contra `prodexa_test`, una base Postgres dedicada. Cubre registro/login/refresh/logout, y — el caso que de verdad importa en una app multi-cuenta — que un usuario **no puede ver, editar ni eliminar** una formulación ajena (404, no 403: la API no revela ni que existe).
+**Quality gate real, no solo aspiracional:** `coverageThreshold` en `apps/backend/package.json` exige >=95% de statements/lines/functions y >=80% de branches. `.github/workflows/test.yml` corre unit + integration/e2e contra un Postgres de servicio + unit tests de frontend en cada push/PR a `main`, además de typecheck y lint en ambas apps.
 
-**Quality gate real, no solo aspiracional:** `coverageThreshold` en `apps/backend/package.json` exige >=95% de statements/lines/functions y >=80% de branches — `npm run test:cov` falla (exit code distinto de cero) si la cobertura baja de ahí. `.github/workflows/test.yml` corre unit tests + integration/e2e contra un Postgres de servicio + unit tests de frontend en cada push/PR a `main`, además de typecheck y lint en ambas apps. Falta un paso manual de configuración en GitHub (branch protection → "Require status checks to pass") para que ese check bloquee el merge de verdad y no solo aparezca en rojo.
+## Documentación adicional
 
-## Roadmap
+| Carpeta | Contenido |
+|---|---|
+| [`docs/architecture/`](docs/architecture/) | Módulos reales, estructura del monorepo, política de errores |
+| [`docs/adr/`](docs/adr/) | Decisiones de arquitectura, incluidas las revertidas |
+| [`docs/api/`](docs/api/) | Referencia de endpoints, autenticación, errores (Swagger vivo en `/api/docs`) |
+| [`docs/database/`](docs/database/) | Modelo de datos, decisiones de esquema, migraciones |
+| [`docs/diagrams/`](docs/diagrams/) | C4 niveles 1-3, diagrama entidad-relación, despliegue, máquina de estados |
+| [`docs/deployment/`](docs/deployment/) | Setup local, Docker, plan de despliegue futuro |
+| [`docs/testing/`](docs/testing/) | Estrategia de testing y CI |
+| [`docs/security/`](docs/security/) | Revisión OWASP Top 10, honesta y con pendientes explícitos |
+| [`docs/observability/`](docs/observability/) | Logging, health checks, huecos conocidos |
 
-- [x] Fase 0-5: gestión, arquitectura, dominio de costeo, autenticación y seguridad, UX/dashboard profesional.
-- [x] Observabilidad basica: `/health`, `/ready`, logging estructurado con correlation id.
-- [ ] Cobertura de integración contra Postgres real y E2E de los flujos de simulación/dashboard completos.
-- [ ] Despliegue (Vercel + Railway/Neon) y Swagger público.
+## Roadmap y estado
+
+Prodexa se construye por fases (ver [`ROADMAP.md`](ROADMAP.md) para el detalle completo). Estado real, no aspiracional:
+
+| Fase | Estado |
+|---|---|
+| 0-3 — Gobernanza, arquitectura base, setup fullstack, dominio de costeo | ✅ Cerradas |
+| 4 — Seguridad empresarial (incluye RBAC, revertido y luego construido) | ✅ Cerrada |
+| 5 — UX/UI y dashboard profesional | ✅ Cerrada |
+| 6 — Observabilidad (salud, logging; métricas Prometheus/Grafana fuera de alcance por decisión) | ✅ Cerrada en el alcance decidido |
+| 7 — Testing total y cobertura | ✅ Cerrada |
+| 8 — DevOps, CI/CD y despliegue real | ⬜ No iniciada |
+| 9 — Integración IA (Groq Cloud, se descartó Ollama) | ⬜ Decisión tomada, no construida |
+| 10-11 — Documentación completa y profesionalismo de repositorio | ✅ Esta entrega |
+| 12-13 — Cierre final y backlog de continuidad | ⬜ Futuras |
+
+## FAQ y soporte
+
+**¿Por qué Redis está en `docker-compose.yml` pero no se usa?** Está provisionado para cuando haga falta cache o rate-limiting distribuido; conectarlo sin un caso de uso real habría sido complejidad especulativa.
+
+**¿Hay RBAC?** Sí — `ADMIN`, `COORDINADOR` y `MIEMBRO` por organización. Se descartó al principio y se construyó después; la decisión completa está en [ADR-005](docs/adr/ADR-005-rbac-organizaciones-multiusuario.md).
+
+**¿Cómo reporto un bug?** Abre un issue con la plantilla de [`.github/ISSUE_TEMPLATE/bug_report.md`](.github/ISSUE_TEMPLATE/bug_report.md).
+
+**¿Cómo reporto una vulnerabilidad de seguridad?** No la reportes como issue público — sigue el proceso de [`SECURITY.md`](SECURITY.md).
+
+**¿Cómo contribuyo?** Ver [`CONTRIBUTING.md`](CONTRIBUTING.md) (setup, convenciones de ramas/commits, checklist de PR).
+
+## Licencia
+
+MIT — ver [`LICENSE`](LICENSE).
 
 ## Autor
 

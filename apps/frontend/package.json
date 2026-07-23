@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:cov": "vitest run --coverage",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "demo:record": "node scripts/record-demo.mjs"
   },
   "dependencies": {
     "@tiptap/extension-image": "^3.28.0",
