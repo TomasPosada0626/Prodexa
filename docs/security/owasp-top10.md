@@ -111,8 +111,9 @@ Donde algo no esta cubierto, se dice explicitamente y se deja como pendiente.
 - Las migraciones de Prisma estan versionadas en el repo (`prisma/migrations/`), no se
   aplican cambios de esquema fuera de ese flujo.
 - **Pendiente:** no hay verificacion de integridad de artefactos de build/CI (ej.
-  firma de imagenes Docker) — aplica mas quando exista pipeline de despliegue continuo
-  (Fase 8 del checklist, todavia no iniciada).
+  firma de imagenes Docker) — Render reconstruye la imagen desde el commit en cada
+  push, sin un registry de imagenes con tags propios ni firma, ver
+  [`docs/deployment/roadmap-despliegue.md`](../deployment/roadmap-despliegue.md).
 
 ## A09:2021 — Security Logging and Monitoring Failures
 
@@ -154,8 +155,9 @@ de nuevo si se agrega una funcionalidad de ese tipo.
 | A05 Security Misconfiguration | Cubierto, con nota sobre Swagger en produccion |
 | A06 Vulnerable and Outdated Components | Cubierto (Dependabot + npm audit en CI) |
 | A07 Identification and Authentication Failures | Cubierto |
-| A08 Software and Data Integrity Failures | Parcial (aplica mas en Fase 8, CD) |
+| A08 Software and Data Integrity Failures | Parcial (sin firma de imagenes ni registry versionado) |
 | A09 Security Logging and Monitoring Failures | Cubierto, 12 tipos de evento; sin notificacion proactiva |
 | A10 SSRF | No aplica hoy |
 
-**Proxima revision recomendada:** antes de habilitar CD real a produccion (Fase 8).
+**Proxima revision recomendada:** cuando se active branch protection con status checks
+obligatorios en GitHub (paso manual pendiente, ver [`CONTRIBUTING.md`](../../CONTRIBUTING.md)).

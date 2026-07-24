@@ -25,10 +25,13 @@ sin conocer la versión del API.
 ## Qué está deliberadamente fuera de alcance
 
 Prometheus, Grafana, métricas técnicas de infraestructura y alertas automáticas se
-evaluaron y se decidió no construirlos mientras el proyecto no tiene un ambiente
-desplegado real — es infraestructura de monitoreo sin nada real que monitorear
-todavía. Se revisará cuando exista un despliegue (ver
-[`docs/deployment/roadmap-despliegue.md`](../deployment/roadmap-despliegue.md)).
+evaluaron y se decidió no construirlos. El proyecto ya tiene un ambiente desplegado
+real (ver [`docs/deployment/roadmap-despliegue.md`](../deployment/roadmap-despliegue.md)),
+pero sigue siendo una sola instancia gratuita en Render, sin tráfico real que
+justifique un stack de monitoreo dedicado — sería infraestructura sin nada real que
+monitorear. `/health` y `/ready` ya cubren lo que un orquestador necesita para saber
+si el servicio está arriba; esto se revisaría si el proyecto pasara a tener carga o
+usuarios reales.
 
 ## Huecos conocidos
 

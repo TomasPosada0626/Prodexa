@@ -19,8 +19,10 @@ packages/
                se usa (mismo criterio que Redis en docker-compose.yml: se
                documenta como no-usado en vez de aparentar que lo está).
 infra/
-  → vacío (.gitkeep). Reservado para IaC si algún día hay despliegue real
-    (Fase 8, hoy no iniciada).
+  → vacío (.gitkeep). El despliegue real (Vercel + Render, ver
+    docs/deployment/roadmap-despliegue.md) se configura directo en el dashboard de
+    cada plataforma, no con IaC en el repo — esta carpeta quedaría para si algún día
+    eso se formaliza en código (Terraform/Pulumi u otro).
 templates/
   module-template/ → plantilla original de Fase 1 (domain/application/
                       infrastructure/presentation). Ningún módulo real la

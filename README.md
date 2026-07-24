@@ -36,6 +36,23 @@
 
 ---
 
+## Índice
+
+- [Qué problema resuelve](#qué-problema-resuelve)
+- [Demo](#demo)
+- [Recorrido por la aplicación](#recorrido-por-la-aplicación)
+- [Arquitectura](#arquitectura)
+- [Stack técnico](#stack-técnico)
+- [Empezar en local](#empezar-en-local)
+  - [Variables de entorno](#variables-de-entorno)
+  - [Docker y scripts](#docker-y-scripts)
+- [Despliegue](#despliegue)
+- [Testing y cobertura](#testing-y-cobertura)
+- [Documentación adicional](#documentación-adicional)
+- [FAQ y soporte](#faq-y-soporte)
+- [Licencia](#licencia)
+- [Autor](#autor)
+
 ## Qué problema resuelve
 
 Quien fabrica alimentos o cosméticos a escala de pyme normalmente calcula costos, márgenes y precios de venta en una hoja de cálculo que se vuelve inconsistente apenas hay más de un par de productos y más de una persona tocándola: precios de insumos desactualizados, márgenes que nadie recuerda por qué se fijaron así, cero trazabilidad de qué lote se produjo con qué costo real, y ningún control de quién puede editar qué.
@@ -45,6 +62,10 @@ Prodexa reemplaza esa hoja de cálculo con una plataforma real, multiusuario por
 El proyecto tiene un predecesor real: `legacy/desktop-v1/` es la calculadora de escritorio en Python con la que arrancó esta idea (un solo archivo, sin persistencia real, sin multiusuario). Prodexa es su reemplazo completo.
 
 ## Demo
+
+**En vivo**: [prodexa-iota.vercel.app](https://prodexa-iota.vercel.app) (frontend en
+Vercel, API en Render — el backend gratuito se duerme tras inactividad, la primera
+petición puede tardar 50+ segundos en despertar).
 
 ![Demo de Prodexa](docs/demo/prodexa-demo.gif)
 
@@ -96,17 +117,6 @@ flowchart LR
 ```
 
 La API vive detrás de `/api/v1`; `/health` y `/ready` quedan fuera de ese prefijo a propósito porque un orquestador los golpea sin versionar. Diagramas completos (C4 niveles 1-3, entidad-relación, despliegue y la máquina de estados de producción) en [`docs/diagrams/`](docs/diagrams/).
-
-## Decisiones de ingeniería que no son obvias
-
-- **RBAC se descartó primero, después se revirtió — con la decisión documentada en ambos sentidos.** El 2026-07-22 se evaluó agregar roles y se decidió explícitamente no hacerlo (cada cuenta era independiente). Cuando el modelo de negocio pasó a requerir equipos multiusuario por empresa, se construyó `Organization` + `Invitation` + roles `ADMIN`/`COORDINADOR`/`MIEMBRO` con `RolesGuard`. Ambas decisiones, con su fecha y su razón, quedan en [`docs/adr/ADR-005-rbac-organizaciones-multiusuario.md`](docs/adr/ADR-005-rbac-organizaciones-multiusuario.md) — no se reescribió la historia, se documentó el cambio de rumbo.
-- **Un lote con historial financiero no se borra, se archiva.** Eliminar una formulación con órdenes de producción ya registradas perdería ese historial vía cascada; el backend lo bloquea y ofrece archivar (`Formulation.activa`) como alternativa segura — la formulación deja de ofrecerse en Preparar/Costos pero conserva todos sus datos.
-- **El flujo de producción tiene una máquina de estados real, no un campo de texto libre.** `estadoProduccion` solo permite las transiciones de `TRANSICIONES_ESTADO_PRODUCCION` (backend y su espejo en el frontend): calidad es un paso obligatorio antes de `TERMINADO`, y se permite retroceder un paso para reprocesar. Ver [`docs/diagrams/estado-produccion-uml.md`](docs/diagrams/estado-produccion-uml.md).
-- **El motor de costeo es una función pura, reusada en cuatro lugares distintos.** `SimulationService.calculate()` (backend) y su espejo en `lib/costing.ts` (frontend) son la única fuente de verdad para costo/precio/utilidad — los usan el simulador de Costos, el Dashboard, Análisis y las órdenes de producción.
-- **El historial de versiones guarda el snapshot completo, no solo el precio.** `FormulationVersion` captura ingredientes, margen, preparación y registro sanitario en cada edición como un `Json` — distinto y más completo que el historial de precios por ingrediente (`SupplierPrice`), que existe aparte porque responde una pregunta distinta.
-- **La auditoría de seguridad y de negocio nunca puede tumbar el flujo principal.** `AuditService.log()` registra 12 tipos de evento (login/logout/registro/cambio de contraseña, anulación de lotes y pagos, cambios de rol, remoción de miembros, cambios de precio, ediciones de formulación, cambios de tarifas) y atrapa sus propios errores — nunca se relanzan, verificado con test.
-- **Logging estructurado con correlation id, y un hueco real que se cerró después de morderlo.** Cada request lleva un `X-Request-Id`. Hasta hace poco, un error no-HTTP (500) se respondía con un mensaje genérico sin loguear el detalle real de la causa — se descubrió de la peor forma (un Docker caído se veía igual que un bug de la app). Ya está arreglado: `HttpExceptionFilter` loguea el error completo del lado del servidor (nunca lo expone al cliente), historia completa en [`docs/observability/known-gaps.md`](docs/observability/known-gaps.md).
-- **La matriz de permisos de la API se genera del código, no se mantiene a mano.** `docs/api/endpoints.md` sale de un script (`apps/backend/scripts/generate-endpoints-doc.mjs`) que lee los decoradores reales (`@Roles`, `@UseGuards`, `@ApiOperation`) de cada controller — y CI falla (`npm run docs:api:check`) si el archivo committeado queda desactualizado respecto al código.
 
 ## Stack técnico
 
@@ -180,6 +190,15 @@ Scripts del monorepo (`package.json` raíz):
 | `npm run test:coverage` | cobertura del backend (falla si baja del umbral) |
 | `npm run badges:update` | regenera los badges de cobertura del README desde el reporte real de Jest |
 
+## Despliegue
+
+**Frontend en [Vercel](https://vercel.com), backend en [Render](https://render.com)**
+(Web Service tipo Docker, desde `apps/backend/Dockerfile`), Postgres gestionado por
+Render. Detalle completo — variables de entorno de producción, el fix de cookies
+cross-site que hizo falta, migraciones en cada deploy, y las limitaciones reales del
+plan gratuito (cold start, uploads no persistentes) — en
+[`docs/deployment/roadmap-despliegue.md`](docs/deployment/roadmap-despliegue.md).
+
 ## Testing y cobertura
 
 Pirámide de testing completa, cada nivel corriendo contra algo real (nunca solo mocks):
@@ -210,22 +229,6 @@ Detalle completo de la estrategia de testing, la convención de specs `_tmp-veri
 | [`docs/testing/`](docs/testing/) | Estrategia de testing y CI |
 | [`docs/security/`](docs/security/) | Revisión OWASP Top 10, honesta y con pendientes explícitos |
 | [`docs/observability/`](docs/observability/) | Logging, health checks, huecos conocidos |
-
-## Roadmap y estado
-
-Prodexa se construye por fases (ver [`ROADMAP.md`](ROADMAP.md) para el detalle completo). Estado real, no aspiracional:
-
-| Fase | Estado |
-|---|---|
-| 0-3 — Gobernanza, arquitectura base, setup fullstack, dominio de costeo | ✅ Cerradas |
-| 4 — Seguridad empresarial (incluye RBAC, revertido y luego construido) | ✅ Cerrada |
-| 5 — UX/UI y dashboard profesional | ✅ Cerrada |
-| 6 — Observabilidad (salud, logging; métricas Prometheus/Grafana fuera de alcance por decisión) | ✅ Cerrada en el alcance decidido |
-| 7 — Testing total y cobertura | ✅ Cerrada |
-| 8 — DevOps, CI/CD y despliegue real | ⬜ No iniciada |
-| 9 — Integración IA (Groq Cloud, se descartó Ollama) | ⬜ Decisión tomada, no construida |
-| 10-11 — Documentación completa y profesionalismo de repositorio | ✅ Esta entrega |
-| 12-13 — Cierre final y backlog de continuidad | ⬜ Futuras |
 
 ## FAQ y soporte
 

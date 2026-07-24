@@ -4,11 +4,9 @@
 
 M0-M4 fueron la agrupacion original de planificacion (Fase 0), antes de que
 existiera un solo tag de git en el repositorio. Los milestones que realmente
-se crean en GitHub usan el esquema de versiones de [`ROADMAP.md`](../../ROADMAP.md)
-(`v0.2.0`, `v0.3.0`, `v1.0.0`), atado a tags reales — ese archivo es la fuente
-vigente para saber en que milestone/version esta cada fase. La tabla siguiente
-mapea uno contra el otro para que ningun lector se quede con la duda de cual
-manda:
+se crean en GitHub usan un esquema de versiones (`v0.2.0`, `v0.3.0`, `v1.0.0`),
+atado a tags reales. La tabla siguiente mapea uno contra el otro para que
+ningun lector se quede con la duda de cual manda:
 
 | Agrupacion original | Fases que cubre | Milestone/tag real en GitHub |
 |---|---|---|

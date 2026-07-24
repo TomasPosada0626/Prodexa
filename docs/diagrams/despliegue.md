@@ -1,8 +1,8 @@
 # Diagrama de despliegue
 
-Dos escenarios, claramente separados: lo que corre hoy y lo que está planeado.
+Dos escenarios reales: desarrollo local y producción.
 
-## Hoy: local, vía Docker Compose
+## Local, vía Docker Compose
 
 ```mermaid
 flowchart TB
@@ -23,15 +23,17 @@ flowchart TB
 Un solo comando (`npm run compose:up`) levanta los 4 contenedores. Detalle completo:
 [`docs/deployment/docker.md`](../deployment/docker.md).
 
-## Planeado (Fase 8, no construido)
+## Producción: Vercel + Render
 
 ```mermaid
 flowchart LR
-    U["Usuario final"] --> V["Vercel<br/>(frontend Next.js)"]
-    V --> R["Railway / Render<br/>(backend NestJS,<br/>Dockerfile existente)"]
-    R --> N["Neon / Railway Postgres<br/>(base de datos gestionada)"]
+    U["Usuario final"] --> V["Vercel<br/>(frontend Next.js, build nativo)"]
+    V -- "fetch credentials:include<br/>CORS + cookies SameSite=None" --> R["Render<br/>(backend NestJS,<br/>Web Service Docker desde<br/>apps/backend/Dockerfile)"]
+    R --> N["Postgres gestionado de Render<br/>(misma region: Oregon)"]
 ```
 
-**Nada de este segundo diagrama existe todavía** — no hay ambiente de staging ni de
-producción desplegado. Ver el detalle de qué falta en
+Sin ambiente de staging separado — un solo entorno de producción, razonable para el
+tamaño actual del proyecto. Variables de entorno, el fix de cookies cross-site
+necesario para que esto funcione, migraciones en cada deploy y las limitaciones reales
+del plan gratuito en
 [`docs/deployment/roadmap-despliegue.md`](../deployment/roadmap-despliegue.md).

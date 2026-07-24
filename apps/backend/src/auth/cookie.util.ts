@@ -8,7 +8,8 @@ function baseCookieOptions(): CookieOptions {
   return {
     httpOnly: true,
     secure: process.env.COOKIE_SECURE === 'true',
-    sameSite: 'lax',
+    sameSite:
+      (process.env.COOKIE_SAMESITE as CookieOptions['sameSite']) ?? 'lax',
     path: '/',
   };
 }

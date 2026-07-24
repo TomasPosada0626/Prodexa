@@ -4,8 +4,7 @@
 > evolucionaron con decisiones tomadas mas adelante y ya construidas: RBAC/
 > multi-tenant (ver [ADR-005](../adr/ADR-005-rbac-organizaciones-multiusuario.md))
 > e integracion IA (Groq Cloud en vez de Ollama). Este archivo se actualizo
-> para reflejar ese estado real en vez de dejarlo contradictorio; el estado
-> vigente por fase completa esta en [`ROADMAP.md`](../../ROADMAP.md).
+> para reflejar ese estado real en vez de dejarlo contradictorio.
 
 ## Vision
 Prodexa sera la plataforma de referencia para gestionar formulaciones alimenticias y cosmeticas, costeo y decisiones de precio con trazabilidad, reduciendo errores manuales y acelerando la toma de decisiones de negocio.
@@ -43,7 +42,7 @@ Prodexa sera la plataforma de referencia para gestionar formulaciones alimentici
 - Dashboard operativo con filtros por periodo y categoria.
 - Auditoria de cambios criticos de negocio.
 - Integracion IA (Groq Cloud) como asistencia — decision tomada, pendiente de
-  construir (ver estado real en [`ROADMAP.md`](../../ROADMAP.md), Fase 9).
+  construir.
 - Exportacion de reportes CSV/PDF.
 - Observabilidad base (health, logs estructurados, metricas).
 

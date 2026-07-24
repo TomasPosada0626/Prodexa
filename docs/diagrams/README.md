@@ -9,7 +9,7 @@ reincrustar los mismos diagramas en varios archivos.
 | [`c4-nivel2-contenedores.md`](c4-nivel2-contenedores.md) | Frontend, backend, Postgres, Redis |
 | [`c4-nivel3-componentes.md`](c4-nivel3-componentes.md) | Módulos internos del backend NestJS |
 | [`er-diagrama.md`](er-diagrama.md) | Modelo de datos y sus relaciones clave |
-| [`despliegue.md`](despliegue.md) | Docker Compose local (real) vs. destino planeado (Fase 8) |
+| [`despliegue.md`](despliegue.md) | Docker Compose local vs. producción real (Vercel + Render) |
 | [`estado-produccion-uml.md`](estado-produccion-uml.md) | Máquina de estados de `estadoProduccion` |
 
 Todos los diagramas usan sintaxis Mermaid (`flowchart`, `erDiagram`, `stateDiagram-v2`)

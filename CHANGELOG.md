@@ -3,9 +3,9 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 versionado con [SemVer](https://semver.org/lang/es/).
 
-Nota sobre este historial: el proyecto se construyó por fases internas (ver
-[`ROADMAP.md`](ROADMAP.md)), pero no se etiquetó una versión por cada una — este
-archivo no fabrica releases retroactivos que no existieron. `[0.1.0]` es el commit
+Nota sobre este historial: el proyecto se construyó por fases internas, pero no se
+etiquetó una versión por cada una — este archivo no fabrica releases retroactivos que
+no existieron. `[0.1.0]` es el commit
 inicial real; `[0.2.0]` es una retrospectiva honesta de todo lo construido desde
 entonces hasta esta entrega, agrupado por tipo de cambio, no una lista de 9 versiones
 inventadas. De aquí en adelante, cada tag corresponde a un release real.

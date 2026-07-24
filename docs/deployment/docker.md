@@ -32,9 +32,11 @@ backend o frontend lo usa todavía — no hay cliente de Redis en ninguna depend
 documenta así en vez de aparentar que ya cumple una función (cache, rate-limiting
 distribuido) que hoy no cumple.
 
-## Esto no es lo mismo que "hay un despliegue"
+## Esto no es lo mismo que "el despliegue real"
 
-Este stack de Docker Compose corre **en local**, en la máquina de quien lo levanta. No
-hay ningún ambiente desplegado (staging o producción) hoy — ver
+Este stack de Docker Compose corre **en local**, en la máquina de quien lo levanta —
+distinto del despliegue real en Vercel + Render, que reutiliza `apps/backend/Dockerfile`
+tal cual pero no corre `docker-compose.yml` en absoluto (Render construye la imagen
+directo desde el Dockerfile, Vercel ni siquiera usa Docker). Ver
 [`docs/deployment/roadmap-despliegue.md`](roadmap-despliegue.md) para el estado real de
-eso.
+producción.
