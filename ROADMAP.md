@@ -54,3 +54,7 @@ de verdad, no cuando "ya se ve bien".
   cierre de los hallazgos de seguridad/cobertura/testing pendientes.
 - **v0.3.0 — Despliegue real**: Fase 8 (Vercel + Render), branch protection.
 - **v1.0.0**: cierre formal, Fase 12.
+
+Este es el esquema vigente de milestones/versiones. El flujo Kanban (columnas,
+límites WIP) que se usó para planificar el trabajo dentro de cada uno vive en
+[`docs/gestion/milestones_y_kanban.md`](docs/gestion/milestones_y_kanban.md).

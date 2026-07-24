@@ -65,6 +65,9 @@ El proyecto tiene un predecesor real: `legacy/desktop-v1/` es la calculadora de 
 | **Configuración** | Perfil, margen por defecto, cambio de contraseña, tarifas de producción de la empresa, **sesiones activas** (ver y revocar cada dispositivo con sesión iniciada) y gestión de equipo (roles, invitaciones). |
 | **Auditoría** | Bitácora de seguridad y de negocio: login/logout/registro, cambios de rol, remoción de miembros, cambios de precio, ediciones de formulación y de tarifas — cada evento con su detalle específico visible en la tabla. Solo ADMIN. |
 
+Guía paso a paso para el usuario final (sin jerga técnica, con capturas reales de cada
+pantalla): [`docs/usuario/guia-usuario.md`](docs/usuario/guia-usuario.md).
+
 ## Arquitectura
 
 ```mermaid
@@ -197,6 +200,7 @@ Detalle completo de la estrategia de testing, la convención de specs `_tmp-veri
 
 | Carpeta | Contenido |
 |---|---|
+| [`docs/usuario/`](docs/usuario/) | Guía de usuario final, sin jerga técnica, con capturas reales de cada pantalla |
 | [`docs/architecture/`](docs/architecture/) | Módulos reales, estructura del monorepo, política de errores |
 | [`docs/adr/`](docs/adr/) | Decisiones de arquitectura, incluidas las revertidas |
 | [`docs/api/`](docs/api/) | Referencia de endpoints, autenticación, errores (Swagger vivo en `/api/docs`) |

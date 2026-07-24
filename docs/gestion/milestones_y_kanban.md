@@ -1,11 +1,22 @@
 # Milestones y Kanban de Prodexa
 
 ## Milestones por release
-- M0: Fundacion tecnica (arquitectura, setup, calidad base).
-- M1: Core funcional (recetas + simulacion de costos).
-- M2: Seguridad y control de acceso.
-- M3: Dashboard y experiencia de usuario.
-- M4: Observabilidad, hardening y release v1.0.0.
+
+M0-M4 fueron la agrupacion original de planificacion (Fase 0), antes de que
+existiera un solo tag de git en el repositorio. Los milestones que realmente
+se crean en GitHub usan el esquema de versiones de [`ROADMAP.md`](../../ROADMAP.md)
+(`v0.2.0`, `v0.3.0`, `v1.0.0`), atado a tags reales — ese archivo es la fuente
+vigente para saber en que milestone/version esta cada fase. La tabla siguiente
+mapea uno contra el otro para que ningun lector se quede con la duda de cual
+manda:
+
+| Agrupacion original | Fases que cubre | Milestone/tag real en GitHub |
+|---|---|---|
+| M0 — Fundacion tecnica | Fases 0-2 | (previo a `v0.1.0`, sin tag) |
+| M1 — Core funcional | Fase 3 | (previo a `v0.1.0`, sin tag) |
+| M2 — Seguridad y control de acceso | Fase 4 (RBAC revertido y reconstruido) | incluido en `v0.2.0` |
+| M3 — Dashboard y experiencia de usuario | Fase 5 | incluido en `v0.2.0` |
+| M4 — Observabilidad, hardening y release v1.0.0 | Fases 6-7 y 10-13 | `v0.2.0` (6-7, 10-11) + `v0.3.0` (8) + `v1.0.0` (12) |
 
 ## Kanban operativo
 Columnas:
