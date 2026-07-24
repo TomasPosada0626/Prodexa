@@ -7,6 +7,7 @@ import { useAuth } from '@/context/auth-context';
 import { ApiError } from '@/lib/api';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { Button } from '@/components/ui/Button';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 
 const inputClasses =
   'w-full min-w-0 rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-zinc-500 outline-none transition-colors focus:border-[#8B5CF6]';
@@ -59,8 +60,7 @@ export default function LoginPage() {
         </label>
         <label className="grid gap-1 text-sm text-zinc-300">
           Contrasena
-          <input
-            type="password"
+          <PasswordInput
             className={inputClasses}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -75,6 +75,12 @@ export default function LoginPage() {
           {submitting ? 'Ingresando...' : 'Iniciar sesion'}
         </Button>
       </form>
+
+      <p className="text-center text-sm text-zinc-400">
+        <Link href="/recuperar-contrasena" className="font-semibold text-[#8B5CF6] hover:underline">
+          Olvidaste tu contrasena?
+        </Link>
+      </p>
 
       <p className="text-center text-sm text-zinc-400">
         No tienes cuenta?{' '}

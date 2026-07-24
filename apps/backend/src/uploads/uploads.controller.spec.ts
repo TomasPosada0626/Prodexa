@@ -1,38 +1,43 @@
 import { BadRequestException } from '@nestjs/common';
-import * as fs from 'fs';
-
-// fs.existsSync/mkdirSync no son redefinibles con jest.spyOn en este entorno
-// (propiedades no configurables del modulo real) — se automockea el modulo
-// completo, que si permite controlar el valor de retorno por test.
-jest.mock('fs');
-const fsMock = jest.mocked(fs);
-
 import {
   UploadsController,
-  asegurarDirectorioDeImagenes,
   generarNombreArchivo,
   imageFileFilter,
 } from './uploads.controller';
 
 describe('UploadsController', () => {
   let controller: UploadsController;
+  const storageService = {
+    upload: jest.fn(),
+  };
 
   beforeEach(() => {
-    controller = new UploadsController();
+    jest.resetAllMocks();
+    controller = new UploadsController(storageService);
   });
 
-  it('lanza BadRequestException si no llega archivo (rechazado por el filtro de mimetype)', () => {
-    expect(() =>
+  it('lanza BadRequestException si no llega archivo (rechazado por el filtro de mimetype)', async () => {
+    await expect(
       controller.uploadImage(undefined as unknown as Express.Multer.File),
-    ).toThrow(BadRequestException);
+    ).rejects.toThrow(BadRequestException);
+    expect(storageService.upload).not.toHaveBeenCalled();
   });
 
-  it('devuelve la url publica del archivo subido', () => {
-    const file = { filename: 'abc123.png' } as Express.Multer.File;
+  it('delega en StorageService.upload y devuelve la url que este retorne', async () => {
+    storageService.upload.mockResolvedValue('/uploads/images/abc123.png');
+    const file = {
+      buffer: Buffer.from('fake-image'),
+      mimetype: 'image/png',
+    } as Express.Multer.File;
 
-    expect(controller.uploadImage(file)).toEqual({
-      url: '/uploads/images/abc123.png',
-    });
+    const result = await controller.uploadImage(file);
+
+    expect(result).toEqual({ url: '/uploads/images/abc123.png' });
+    expect(storageService.upload).toHaveBeenCalledWith(
+      file.buffer,
+      expect.stringMatching(/\.png$/) as string,
+      'image/png',
+    );
   });
 });
 
@@ -96,30 +101,5 @@ describe('generarNombreArchivo', () => {
     expect(generarNombreArchivo('image/png')).not.toBe(
       generarNombreArchivo('image/png'),
     );
-  });
-});
-
-describe('asegurarDirectorioDeImagenes', () => {
-  beforeEach(() => {
-    fsMock.existsSync.mockClear();
-    fsMock.mkdirSync.mockClear();
-  });
-
-  it('crea el directorio si no existe', () => {
-    fsMock.existsSync.mockReturnValue(false);
-
-    asegurarDirectorioDeImagenes('/tmp/uploads/images');
-
-    expect(fsMock.mkdirSync).toHaveBeenCalledWith('/tmp/uploads/images', {
-      recursive: true,
-    });
-  });
-
-  it('no hace nada si el directorio ya existe', () => {
-    fsMock.existsSync.mockReturnValue(true);
-
-    asegurarDirectorioDeImagenes('/tmp/uploads/images');
-
-    expect(fsMock.mkdirSync).not.toHaveBeenCalled();
   });
 });

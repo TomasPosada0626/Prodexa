@@ -17,14 +17,24 @@ Viven en `apps/frontend/e2e/` y corren en cada `npm run test:frontend:e2e`:
 
 Cada spec registra una cuenta nueva — con 6 specs, correr `npx playwright test`
 completo hace ~6 registros en menos de 60 segundos, que puede chocar con el límite
-real de `/auth/register` (5/min, ver `docs/security/owasp-top10.md` A04). Si eso pasa,
-el spec que corrió de último falla con un timeout esperando la redirección a
-`/login` — **no es una regresión**: reiniciar el backend (limpia el
+real de `/auth/register` (5/min, ver `docs/security/owasp-top10.md` A04). Si eso pasa
+en **local**, el spec que corrió de último falla con un timeout esperando la
+redirección a `/login` — **no es una regresión**: reiniciar el backend (limpia el
 `ThrottlerStorage` en memoria) y volver a correr esa suite/spec puntual confirma que
-pasa. Esto no afecta CI: los workflows de GitHub Actions no corren esta suite E2E
-(solo unit tests de frontend, ver `docs/testing/ci.md`), y no afecta a un usuario real
-(nadie se registra 6 veces en un minuto). No se relaja el rate limit para acomodar
-esto — es una protección de seguridad real, la fricción es aceptable.
+pasa. No se relaja el rate limit para acomodar esto — es una protección de seguridad
+real, la fricción en local es aceptable.
+
+### Esta suite sí corre en CI (job `frontend-e2e`)
+
+El límite de 5/min en `register`/`login`/`change-password`/`forgot-password`/
+`reset-password` es configurable via la variable de entorno `AUTH_THROTTLE_LIMIT`
+(`@Throttle({ default: { limit: () => Number(process.env.AUTH_THROTTLE_LIMIT ?? 5), ttl: 60_000 } })`
+en `apps/backend/src/auth/auth.controller.ts`) — sin esa variable, el límite real de
+producción sigue siendo 5, sin cambios. El job `frontend-e2e` en
+`.github/workflows/test.yml` la sube a `1000` solo para su propio entorno aislado
+(Postgres de servicio, backend y frontend arrancados en background dentro del job),
+así los 6 specs corren seguidos sin chocar con el límite — sin tocar la protección
+real. Ver detalle del job en [`ci.md`](ci.md).
 
 ## La convención de specs de un solo uso
 

@@ -8,15 +8,19 @@ import {
 } from '@nestjs/common';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomBytes, randomInt } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AuthTokens, AuthenticatedUser, RolOrganizacion } from './types';
 
 const REFRESH_TOKEN_BYTES = 40;
+const PASSWORD_RESET_CODE_TTL_MINUTES = 15;
 
 /** Incluye la organizacion en la misma consulta: toAuthenticatedUser necesita su nombre. */
 const USER_INCLUDE_ORGANIZACION = { organizacion: true };
@@ -26,6 +30,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
   ) {}
 
   /**
@@ -257,6 +262,88 @@ export class AuthService {
       where: { id: userId },
       data: { passwordHash },
     });
+  }
+
+  /**
+   * No revela si el correo existe: siempre retorna sin lanzar, el controller responde
+   * el mismo mensaje generico sin importar el resultado. Si la cuenta existe, invalida
+   * cualquier codigo anterior sin usar (solo el ultimo pedido es valido, mismo espiritu
+   * que la rotacion de refresh tokens) y envia uno nuevo por correo.
+   */
+  async forgotPassword(dto: ForgotPasswordDto): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+    if (!user || !user.activo) {
+      return;
+    }
+
+    await this.prisma.passwordResetCode.updateMany({
+      where: { userId: user.id, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+
+    const codigo = String(randomInt(0, 1_000_000)).padStart(6, '0');
+    await this.prisma.passwordResetCode.create({
+      data: {
+        userId: user.id,
+        codeHash: hashToken(codigo),
+        expiresAt: new Date(
+          Date.now() + PASSWORD_RESET_CODE_TTL_MINUTES * 60 * 1000,
+        ),
+      },
+    });
+
+    await this.mailService.enviarCodigoRecuperacion(user.email, codigo);
+  }
+
+  /**
+   * Colapsa toda falla (correo inexistente, codigo inexistente/usado/expirado/no
+   * coincide) en un solo error generico — mismo patron que la validacion de
+   * Invitation en register(), para no revelar cual condicion fallo. Al resetear,
+   * revoca todas las sesiones activas del usuario (mismo mecanismo que
+   * OrganizationsService al remover un miembro): un codigo de recuperacion usado
+   * significa que cualquier sesion abierta en otro dispositivo deja de ser confiable.
+   */
+  async resetPassword(dto: ResetPasswordDto): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+    const invalido = () =>
+      new BadRequestException('El codigo no es valido o ya expiro.');
+
+    if (!user) {
+      throw invalido();
+    }
+
+    const record = await this.prisma.passwordResetCode.findFirst({
+      where: { userId: user.id, usedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (
+      !record ||
+      record.expiresAt < new Date() ||
+      record.codeHash !== hashToken(dto.code)
+    ) {
+      throw invalido();
+    }
+
+    const passwordHash = (await argon2.hash(dto.newPassword)) as string;
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash },
+      }),
+      this.prisma.passwordResetCode.update({
+        where: { id: record.id },
+        data: { usedAt: new Date() },
+      }),
+      this.prisma.refreshToken.updateMany({
+        where: { userId: user.id, revokedAt: null },
+        data: { revokedAt: new Date() },
+      }),
+    ]);
   }
 
   /**

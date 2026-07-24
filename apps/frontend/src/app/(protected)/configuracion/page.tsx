@@ -5,6 +5,7 @@ import { useAuth } from '@/context/auth-context';
 import { ApiError, Session, changePassword, getSessions, revokeSession } from '@/lib/api';
 import { useToast } from '@/context/toast-context';
 import { PasswordRequirements, passwordMeetsRequirements } from '@/components/ui/PasswordRequirements';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { Equipo } from '@/components/organizations/equipo';
 
 const inputClasses =
@@ -299,8 +300,7 @@ function CambiarContrasenaForm() {
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="grid gap-1 text-sm text-slate-700 dark:text-zinc-300 sm:col-span-2">
           Contrasena actual
-          <input
-            type="password"
+          <PasswordInput
             className={inputClasses}
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
@@ -309,8 +309,7 @@ function CambiarContrasenaForm() {
         </label>
         <label className="grid gap-1 text-sm text-slate-700 dark:text-zinc-300">
           Nueva contrasena
-          <input
-            type="password"
+          <PasswordInput
             className={inputClasses}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
@@ -319,8 +318,7 @@ function CambiarContrasenaForm() {
         </label>
         <label className="grid gap-1 text-sm text-slate-700 dark:text-zinc-300">
           Repetir nueva contrasena
-          <input
-            type="password"
+          <PasswordInput
             className={inputClasses}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}

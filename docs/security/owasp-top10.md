@@ -71,8 +71,13 @@ Donde algo no esta cubierto, se dice explicitamente y se deja como pendiente.
   deliberada para evitar confusion de sesion.
 - Contrasenas exigen mayuscula, minuscula, numero y caracter especial
   (`register.dto.ts`).
-- Rate limiting especifico y mas estricto en `login`/`register` (5/min) ademas del
-  limite global (60/min) — mitiga fuerza bruta y credential stuffing basico.
+- Rate limiting especifico y mas estricto en `login`/`register`/`change-password`/
+  `forgot-password`/`reset-password` (5/min) ademas del limite global (60/min) —
+  mitiga fuerza bruta, credential stuffing y fuerza bruta contra el codigo de
+  recuperacion de contrasena. El limite es configurable via `AUTH_THROTTLE_LIMIT`
+  (sin esa variable, sigue siendo 5 — es el default de produccion); solo se sube en
+  el job `frontend-e2e` de CI para que la suite de Playwright pueda correr completa,
+  ver `docs/testing/e2e.md`.
 
 ## A05:2021 — Security Misconfiguration
 

@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   NotFoundException,
@@ -9,6 +10,7 @@ import {
 import * as argon2 from 'argon2';
 import { createHash } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { AuthService } from './auth.service';
 
 /** Espejo del hashToken privado de AuthService (mismo algoritmo), solo para armar fixtures de test. */
@@ -38,10 +40,19 @@ describe('AuthService', () => {
       update: jest.fn(),
       updateMany: jest.fn(),
     },
+    passwordResetCode: {
+      create: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+      updateMany: jest.fn(),
+    },
     productionOrder: {
       findMany: jest.fn(),
     },
     $transaction: jest.fn(),
+  };
+  const mailService = {
+    enviarCodigoRecuperacion: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -49,7 +60,8 @@ describe('AuthService', () => {
     process.env.JWT_ACCESS_SECRET = 'test-secret';
     process.env.JWT_REFRESH_TTL_DAYS = '30';
     prisma.$transaction.mockImplementation(
-      (callback: (tx: typeof prisma) => unknown) => callback(prisma),
+      (arg: ((tx: typeof prisma) => unknown) | Promise<unknown>[]) =>
+        Array.isArray(arg) ? Promise.all(arg) : arg(prisma),
     );
     // Sin lotes registrados por defecto: capacidadProduccionMensualKg calcula 0.0000 / 0 meses,
     // salvo que un test especifico mockee otra cosa para probar el promedio.
@@ -59,6 +71,7 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         { provide: PrismaService, useValue: prisma },
+        { provide: MailService, useValue: mailService },
         JwtService,
       ],
     }).compile();
@@ -620,6 +633,125 @@ describe('AuthService', () => {
           'NuevaContrasena123!',
         ),
       ).toBe(true);
+    });
+  });
+
+  describe('forgotPassword', () => {
+    it('no hace nada si el correo no existe (no revela si existe o no)', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await service.forgotPassword({ email: 'nadie@a.com' });
+
+      expect(prisma.passwordResetCode.create).not.toHaveBeenCalled();
+      expect(mailService.enviarCodigoRecuperacion).not.toHaveBeenCalled();
+    });
+
+    it('no hace nada si el usuario existe pero esta inactivo', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-1', activo: false });
+
+      await service.forgotPassword({ email: 'a@a.com' });
+
+      expect(prisma.passwordResetCode.create).not.toHaveBeenCalled();
+    });
+
+    it('invalida codigos anteriores, crea uno nuevo de 6 digitos y lo envia por correo', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        id: 'user-1',
+        email: 'a@a.com',
+        activo: true,
+      });
+      prisma.passwordResetCode.updateMany.mockResolvedValue({});
+      prisma.passwordResetCode.create.mockResolvedValue({});
+
+      await service.forgotPassword({ email: 'a@a.com' });
+
+      expect(prisma.passwordResetCode.updateMany).toHaveBeenCalledWith({
+        where: { userId: 'user-1', usedAt: null },
+        data: { usedAt: expect.any(Date) as Date },
+      });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const createArgs = prisma.passwordResetCode.create.mock.calls[0][0] as {
+        data: { codeHash: string; expiresAt: Date };
+      };
+      expect(createArgs.data.codeHash).toHaveLength(64); // sha256 hex
+      expect(mailService.enviarCodigoRecuperacion).toHaveBeenCalledWith(
+        'a@a.com',
+        expect.stringMatching(/^\d{6}$/) as string,
+      );
+    });
+  });
+
+  describe('resetPassword', () => {
+    const baseInput = {
+      email: 'a@a.com',
+      code: '123456',
+      newPassword: 'NuevaContrasena123!',
+    };
+
+    it('lanza BadRequestException si el correo no existe', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(service.resetPassword(baseInput)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('lanza BadRequestException si no hay codigo pendiente', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-1' });
+      prisma.passwordResetCode.findFirst.mockResolvedValue(null);
+
+      await expect(service.resetPassword(baseInput)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('lanza BadRequestException si el codigo no coincide', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-1' });
+      prisma.passwordResetCode.findFirst.mockResolvedValue({
+        id: 'code-1',
+        codeHash: hashToken('000000'),
+        expiresAt: new Date(Date.now() + 60_000),
+      });
+
+      await expect(service.resetPassword(baseInput)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('lanza BadRequestException si el codigo ya expiro', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-1' });
+      prisma.passwordResetCode.findFirst.mockResolvedValue({
+        id: 'code-1',
+        codeHash: hashToken('123456'),
+        expiresAt: new Date(Date.now() - 60_000),
+      });
+
+      await expect(service.resetPassword(baseInput)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('con codigo valido: actualiza la contrasena, marca el codigo usado y revoca todas las sesiones', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-1' });
+      prisma.passwordResetCode.findFirst.mockResolvedValue({
+        id: 'code-1',
+        codeHash: hashToken('123456'),
+        expiresAt: new Date(Date.now() + 60_000),
+      });
+
+      await service.resetPassword(baseInput);
+
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'user-1' } }),
+      );
+      expect(prisma.passwordResetCode.update).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'code-1' } }),
+      );
+      expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith({
+        where: { userId: 'user-1', revokedAt: null },
+        data: { revokedAt: expect.any(Date) as Date },
+      });
     });
   });
 

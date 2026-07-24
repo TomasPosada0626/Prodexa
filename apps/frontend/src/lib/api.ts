@@ -314,6 +314,16 @@ export interface ChangePasswordInput {
   newPassword: string;
 }
 
+export interface ForgotPasswordInput {
+  email: string;
+}
+
+export interface ResetPasswordInput {
+  email: string;
+  code: string;
+  newPassword: string;
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -420,6 +430,17 @@ export function updateOrganizationSettings(
 
 export async function changePassword(input: ChangePasswordInput): Promise<void> {
   await request<void>('/auth/change-password', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function forgotPassword(input: ForgotPasswordInput): Promise<{ message: string }> {
+  return request<{ message: string }>('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export async function resetPassword(input: ResetPasswordInput): Promise<void> {
+  await request<void>('/auth/reset-password', { method: 'POST', body: JSON.stringify(input) });
 }
 
 export function getSessions(): Promise<Session[]> {

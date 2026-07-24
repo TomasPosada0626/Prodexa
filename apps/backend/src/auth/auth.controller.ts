@@ -23,6 +23,8 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { CurrentUser } from './current-user.decorator';
 import type { RequestUser } from './types';
@@ -41,7 +43,12 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle({
+    default: {
+      limit: () => Number(process.env.AUTH_THROTTLE_LIMIT ?? 5),
+      ttl: 60_000,
+    },
+  })
   @ApiOperation({
     summary: 'Registrar una nueva cuenta (no inicia sesion automaticamente)',
   })
@@ -57,7 +64,12 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle({
+    default: {
+      limit: () => Number(process.env.AUTH_THROTTLE_LIMIT ?? 5),
+      ttl: 60_000,
+    },
+  })
   @ApiOperation({ summary: 'Iniciar sesion' })
   async login(
     @Body() dto: LoginDto,
@@ -148,7 +160,12 @@ export class AuthController {
   @Post('change-password')
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(JwtAuthGuard)
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle({
+    default: {
+      limit: () => Number(process.env.AUTH_THROTTLE_LIMIT ?? 5),
+      ttl: 60_000,
+    },
+  })
   @ApiOperation({ summary: 'Cambiar la contrasena del usuario autenticado' })
   async changePassword(
     @CurrentUser() user: RequestUser,
@@ -161,6 +178,58 @@ export class AuthController {
       ip: req.ip,
       userAgent: req.headers['user-agent'],
     });
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({
+    default: {
+      limit: () => Number(process.env.AUTH_THROTTLE_LIMIT ?? 5),
+      ttl: 60_000,
+    },
+  })
+  @ApiOperation({
+    summary: 'Solicitar un codigo de recuperacion de contrasena por correo',
+  })
+  async forgotPassword(@Body() dto: ForgotPasswordDto, @Req() req: Request) {
+    await this.authService.forgotPassword(dto);
+    // No revela si el correo existe en la respuesta — el userId solo se busca para
+    // poder auditar el evento cuando si existe, mismo patron que LOGIN_FAILED arriba.
+    const userId = await this.authService.findUserIdByEmail(dto.email);
+    if (userId) {
+      void this.auditService.log(AuditEvent.PASSWORD_RESET_REQUESTED, {
+        userId,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
+    }
+    return {
+      message: 'Si el correo existe, te enviamos un codigo de recuperacion.',
+    };
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({
+    default: {
+      limit: () => Number(process.env.AUTH_THROTTLE_LIMIT ?? 5),
+      ttl: 60_000,
+    },
+  })
+  @ApiOperation({
+    summary:
+      'Confirmar el codigo de recuperacion y establecer una nueva contrasena',
+  })
+  async resetPassword(@Body() dto: ResetPasswordDto, @Req() req: Request) {
+    await this.authService.resetPassword(dto);
+    const userId = await this.authService.findUserIdByEmail(dto.email);
+    if (userId) {
+      void this.auditService.log(AuditEvent.PASSWORD_RESET_COMPLETED, {
+        userId,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
+    }
   }
 
   @Get('sessions')

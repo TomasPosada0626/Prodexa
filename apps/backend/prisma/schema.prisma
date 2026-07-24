@@ -28,6 +28,7 @@ model User {
   refreshTokens    RefreshToken[]
   auditLogs        AuditLog[]
   invitacionesCreadas Invitation[]
+  passwordResetCodes PasswordResetCode[]
 
   @@index([organizationId])
 }
@@ -100,6 +101,25 @@ model RefreshToken {
   revokedAt  DateTime?
   createdAt  DateTime  @default(now())
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/**
+ * Codigo de 6 digitos para el flujo de "olvide mi contrasena". Un solo uso; expira a
+ * los 15 minutos. Al pedir uno nuevo, cualquier codigo anterior sin usar del mismo
+ * usuario queda invalidado (mismo espiritu que la rotacion de refresh tokens: solo el
+ * ultimo pedido es valido). Se guarda el hash (SHA-256, mismo hashToken() que
+ * RefreshToken), nunca el codigo en texto plano.
+ */
+model PasswordResetCode {
+  id        String    @id @default(cuid())
+  userId    String
+  codeHash  String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }

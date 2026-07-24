@@ -16,6 +16,8 @@ describe('AuthController', () => {
     me: jest.fn(),
     updateProfile: jest.fn(),
     changePassword: jest.fn(),
+    forgotPassword: jest.fn(),
+    resetPassword: jest.fn(),
     listSessions: jest.fn(),
     revokeSession: jest.fn(),
     findUserIdByEmail: jest.fn(),
@@ -196,6 +198,53 @@ describe('AuthController', () => {
     expect(authService.changePassword).toHaveBeenCalledWith('user-1', dto);
     expect(auditService.log).toHaveBeenCalledWith(
       AuditEvent.CHANGE_PASSWORD,
+      expect.objectContaining({ userId: 'user-1' }),
+    );
+  });
+
+  it('forgotPassword audita PASSWORD_RESET_REQUESTED cuando el correo pertenece a una cuenta real', async () => {
+    authService.findUserIdByEmail.mockResolvedValue('user-1');
+
+    const result = await controller.forgotPassword(
+      { email: 'a@a.com' },
+      mockRequest(),
+    );
+
+    expect(authService.forgotPassword).toHaveBeenCalledWith({
+      email: 'a@a.com',
+    });
+    expect(result).toEqual({
+      message: 'Si el correo existe, te enviamos un codigo de recuperacion.',
+    });
+    expect(auditService.log).toHaveBeenCalledWith(
+      AuditEvent.PASSWORD_RESET_REQUESTED,
+      expect.objectContaining({ userId: 'user-1' }),
+    );
+  });
+
+  it('forgotPassword no audita nada si el correo no pertenece a ninguna cuenta (no revela si existe)', async () => {
+    authService.findUserIdByEmail.mockResolvedValue(undefined);
+
+    const result = await controller.forgotPassword(
+      { email: 'no-existe@a.com' },
+      mockRequest(),
+    );
+
+    expect(result).toEqual({
+      message: 'Si el correo existe, te enviamos un codigo de recuperacion.',
+    });
+    expect(auditService.log).not.toHaveBeenCalled();
+  });
+
+  it('resetPassword audita PASSWORD_RESET_COMPLETED tras resetear la contrasena', async () => {
+    authService.findUserIdByEmail.mockResolvedValue('user-1');
+    const dto = { email: 'a@a.com', code: '123456', newPassword: 'Nueva123!' };
+
+    await controller.resetPassword(dto, mockRequest());
+
+    expect(authService.resetPassword).toHaveBeenCalledWith(dto);
+    expect(auditService.log).toHaveBeenCalledWith(
+      AuditEvent.PASSWORD_RESET_COMPLETED,
       expect.objectContaining({ userId: 'user-1' }),
     );
   });

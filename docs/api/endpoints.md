@@ -34,6 +34,8 @@ completos: Swagger en `/api/docs`.
 | GET | `/auth/me` | — | Obtener el usuario autenticado actual |
 | PATCH | `/auth/me` | — | Actualizar el perfil del usuario autenticado |
 | POST | `/auth/change-password` | — | Cambiar la contrasena del usuario autenticado |
+| POST | `/auth/forgot-password` | público | Solicitar un codigo de recuperacion de contrasena por correo |
+| POST | `/auth/reset-password` | público | Confirmar el codigo de recuperacion y establecer una nueva contrasena |
 | GET | `/auth/sessions` | — | Listar las sesiones activas del usuario autenticado |
 | DELETE | `/auth/sessions/:id` | — | Revocar una sesion activa (cierra esa sesion en particular) |
 

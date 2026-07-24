@@ -115,3 +115,99 @@ jobs:
       - name: Unit tests con cobertura (lib/costing, lib/format, lib/export)
         working-directory: apps/frontend
         run: npm run test:cov
+
+  frontend-e2e:
+    name: Frontend (E2E, Playwright)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: prodexa
+          POSTGRES_PASSWORD: prodexa
+          POSTGRES_DB: prodexa_e2e
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U prodexa -d prodexa_e2e"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://prodexa:prodexa@localhost:55432/prodexa_e2e?schema=public
+      JWT_ACCESS_SECRET: ci-only-access-secret
+      JWT_REFRESH_SECRET: ci-only-refresh-secret
+      JWT_ACCESS_TTL: 15m
+      JWT_REFRESH_TTL_DAYS: 30
+      COOKIE_SECURE: 'false'
+      CORS_ORIGIN: http://localhost:3001
+      # Solo para esta suite: el limite real de produccion (5/min en
+      # register/login/change-password/forgot-password/reset-password) no alcanza
+      # para correr los 6 specs de Playwright seguidos, cada uno registrando su
+      # propia cuenta. No se toca el default de produccion (sigue siendo 5 sin esta
+      # variable), ver docs/testing/e2e.md.
+      AUTH_THROTTLE_LIMIT: '1000'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/backend/package-lock.json
+
+      - name: Backend — instalar dependencias
+        working-directory: apps/backend
+        run: npm ci
+      - name: Backend — generar cliente de Prisma
+        working-directory: apps/backend
+        run: npm run prisma:generate
+      - name: Backend — aplicar migraciones
+        working-directory: apps/backend
+        run: npm run prisma:deploy
+      - name: Backend — build
+        working-directory: apps/backend
+        run: npm run build
+      - name: Backend — arrancar en background
+        working-directory: apps/backend
+        # dist/src/main.js (no dist/main.js, que es el script start:prod de
+        # package.json y no coincide con lo que de verdad genera nest build) — esta
+        # es la misma ruta que usa el Dockerfile de produccion real.
+        run: nohup node dist/src/main.js > backend.log 2>&1 &
+      - name: Backend — esperar a que este listo (/health y /ready)
+        run: |
+          timeout 60 bash -c 'until curl -sf http://localhost:3000/health; do sleep 2; done'
+          timeout 60 bash -c 'until curl -sf http://localhost:3000/ready; do sleep 2; done'
+
+      - name: Frontend — instalar dependencias
+        working-directory: apps/frontend
+        run: npm ci
+      - name: Frontend — build (NEXT_PUBLIC_API_URL se hornea en build time)
+        working-directory: apps/frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
+        run: npm run build
+      - name: Frontend — instalar navegador de Playwright
+        working-directory: apps/frontend
+        run: npx playwright install --with-deps chromium
+      - name: Frontend — arrancar en background
+        working-directory: apps/frontend
+        run: nohup npx next start -p 3001 > frontend.log 2>&1 &
+      - name: Frontend — esperar a que este listo
+        run: timeout 60 bash -c 'until curl -sf http://localhost:3001/; do sleep 2; done'
+
+      - name: Correr la suite E2E
+        working-directory: apps/frontend
+        env:
+          E2E_BASE_URL: http://localhost:3001
+        run: npx playwright test
+
+      - name: Subir artifacts (reporte y logs) si algo falla
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-e2e-artifacts
+          path: |
+            apps/frontend/playwright-report/
+            apps/backend/backend.log
+            apps/frontend/frontend.log
+          retention-days: 7
