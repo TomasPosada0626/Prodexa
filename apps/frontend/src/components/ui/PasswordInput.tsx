@@ -26,7 +26,7 @@ export function PasswordInput({ className, ...inputProps }: PasswordInputProps) 
         aria-checked={visible}
         aria-label={visible ? 'Ocultar contrasena' : 'Mostrar contrasena'}
         onClick={() => setVisible((v) => !v)}
-        className="absolute inset-y-0 right-0 grid w-10 place-items-center text-current opacity-60 transition-opacity hover:opacity-100"
+        className="absolute inset-y-0 right-0 grid w-10 place-items-center text-current opacity-90 transition-opacity hover:opacity-100"
       >
         {visible ? (
           <EyeOff className="h-4 w-4" aria-hidden />

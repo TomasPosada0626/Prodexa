@@ -50,6 +50,18 @@
     "resend": "^6.18.0",
     "rxjs": "^7.8.1"
   },
+  "overrides": {
+    "@nestjs/swagger": {
+      "js-yaml": "^5.2.2"
+    },
+    "prisma": {
+      "@prisma/dev": {
+        "valibot": "^1.4.2",
+        "find-my-way": "^9.7.0",
+        "@hono/node-server": "^2.0.11"
+      }
+    }
+  },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
