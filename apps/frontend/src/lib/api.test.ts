@@ -38,4 +38,24 @@ describe('request (401 retry-via-refresh)', () => {
     const urls = fetchMock.mock.calls.map((call) => call[0] as string);
     expect(urls[1]).toContain('/auth/refresh');
   });
+
+  it('dos llamadas paralelas con 401 a la vez comparten un solo refresh, no uno cada una', async () => {
+    // El refresh token es rotatorio: si cada llamada dispara su propio /auth/refresh, la
+    // primera invalida el token para la segunda. Con el access token vencido y varios
+    // widgets pidiendo datos al montar el Dashboard, esto pasaba en producción.
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(401, { message: 'No autorizado.' }))
+      .mockResolvedValueOnce(jsonResponse(401, { message: 'No autorizado.' }))
+      .mockResolvedValueOnce(jsonResponse(200, {}))
+      .mockResolvedValueOnce(jsonResponse(200, []))
+      .mockResolvedValueOnce(jsonResponse(200, []));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await Promise.all([getFormulations(), getFormulations()]);
+
+    const refreshCalls = fetchMock.mock.calls.filter((call) => (call[0] as string).includes('/auth/refresh'));
+    expect(refreshCalls).toHaveLength(1);
+    expect(fetchMock).toHaveBeenCalledTimes(5);
+  });
 });

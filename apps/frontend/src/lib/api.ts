@@ -335,6 +335,25 @@ async function rawFetch(path: string, init?: RequestInit): Promise<Response> {
   });
 }
 
+// El refresh token es rotatorio (se invalida al usarse y se emite uno nuevo): si varias
+// llamadas paralelas ven un 401 a la vez (ej. varios widgets del Dashboard al montar, con
+// el access token ya vencido), cada una llamando a /auth/refresh por su cuenta invalida el
+// intento de las demas entre si — la primera rota el token, y el resto llega tarde con el
+// token ya viejo. Se comparte una sola promesa de refresh en vuelo para que todas esperen el
+// mismo resultado en vez de pisarse.
+let refreshInFlight: Promise<boolean> | null = null;
+
+function refreshSession(): Promise<boolean> {
+  if (!refreshInFlight) {
+    refreshInFlight = rawFetch('/auth/refresh', { method: 'POST' })
+      .then((res) => res.ok)
+      .finally(() => {
+        refreshInFlight = null;
+      });
+  }
+  return refreshInFlight;
+}
+
 async function request<T>(path: string, init?: RequestInit, isRetry = false): Promise<T> {
   const response = await rawFetch(path, init);
 
@@ -346,8 +365,8 @@ async function request<T>(path: string, init?: RequestInit, isRetry = false): Pr
   // reintentar: es el chequeo de sesion al cargar la app y es exactamente el caso donde el access
   // token corto ya expiro pero el refresh token (persistente) sigue siendo valido.
   if (response.status === 401 && !isRetry && path !== '/auth/refresh' && path !== '/auth/login') {
-    const refreshed = await rawFetch('/auth/refresh', { method: 'POST' });
-    if (refreshed.ok) {
+    const refreshed = await refreshSession();
+    if (refreshed) {
       return request<T>(path, init, true);
     }
   }
