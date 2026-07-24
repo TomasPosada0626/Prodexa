@@ -50,7 +50,7 @@ export class AuthService {
       );
     }
 
-    const passwordHash = (await argon2.hash(dto.password)) as string;
+    const passwordHash = await argon2.hash(dto.password);
 
     if (dto.invitationToken) {
       // El token es un codigo corto pensado para escribirlo a mano: se normaliza
@@ -257,7 +257,7 @@ export class AuthService {
       throw new UnauthorizedException('La contrasena actual no es correcta.');
     }
 
-    const passwordHash = (await argon2.hash(dto.newPassword)) as string;
+    const passwordHash = await argon2.hash(dto.newPassword);
     await this.prisma.user.update({
       where: { id: userId },
       data: { passwordHash },
@@ -329,7 +329,7 @@ export class AuthService {
       throw invalido();
     }
 
-    const passwordHash = (await argon2.hash(dto.newPassword)) as string;
+    const passwordHash = await argon2.hash(dto.newPassword);
     await this.prisma.$transaction([
       this.prisma.user.update({
         where: { id: user.id },

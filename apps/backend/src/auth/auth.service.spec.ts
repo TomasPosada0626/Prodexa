@@ -199,7 +199,7 @@ describe('AuthService', () => {
     });
 
     it('lanza UnauthorizedException si la contrasena es incorrecta', async () => {
-      const passwordHash = (await argon2.hash('contrasenaCorrecta')) as string;
+      const passwordHash = await argon2.hash('contrasenaCorrecta');
       prisma.user.findUnique.mockResolvedValue({
         id: '1',
         email: 'a@a.com',
@@ -212,7 +212,7 @@ describe('AuthService', () => {
     });
 
     it('emite tokens cuando las credenciales son correctas', async () => {
-      const passwordHash = (await argon2.hash('contrasenaCorrecta')) as string;
+      const passwordHash = await argon2.hash('contrasenaCorrecta');
       prisma.user.findUnique.mockResolvedValue({
         id: '1',
         email: 'a@a.com',
@@ -255,7 +255,7 @@ describe('AuthService', () => {
 
     it('usa 30 dias de vigencia por defecto si no hay JWT_REFRESH_TTL_DAYS configurado', async () => {
       delete process.env.JWT_REFRESH_TTL_DAYS;
-      const passwordHash = (await argon2.hash('contrasenaCorrecta')) as string;
+      const passwordHash = await argon2.hash('contrasenaCorrecta');
       prisma.user.findUnique.mockResolvedValue({
         id: '1',
         email: 'a@a.com',
@@ -597,7 +597,7 @@ describe('AuthService', () => {
     });
 
     it('lanza UnauthorizedException si la contrasena actual es incorrecta', async () => {
-      const passwordHash = (await argon2.hash('contrasenaActual')) as string;
+      const passwordHash = await argon2.hash('contrasenaActual');
       prisma.user.findUnique.mockResolvedValue({ id: 'user-1', passwordHash });
 
       await expect(
@@ -610,7 +610,7 @@ describe('AuthService', () => {
     });
 
     it('actualiza el hash cuando la contrasena actual es correcta', async () => {
-      const passwordHash = (await argon2.hash('contrasenaActual')) as string;
+      const passwordHash = await argon2.hash('contrasenaActual');
       prisma.user.findUnique.mockResolvedValue({ id: 'user-1', passwordHash });
       prisma.user.update.mockResolvedValue({});
 
