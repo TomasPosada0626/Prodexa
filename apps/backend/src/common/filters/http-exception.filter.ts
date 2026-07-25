@@ -1,10 +1,11 @@
 import {
-  ArgumentsHost,
+  type ArgumentsHost,
   Catch,
   ExceptionFilter,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import { SentryExceptionCaptured } from '@sentry/nestjs';
 import { Request, Response } from 'express';
 import type { Logger } from 'pino';
 
@@ -14,6 +15,7 @@ type RequestWithId = Request & { id?: string; log?: Logger };
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
+  @SentryExceptionCaptured()
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();

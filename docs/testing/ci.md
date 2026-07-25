@@ -24,7 +24,11 @@ nuevas en dependencias que ya estaban instaladas, no solo en cada cambio de cód
 ## Dependabot
 
 `.github/dependabot.yml`: actualizaciones semanales de npm para `apps/backend`,
-`apps/frontend`, y de las propias GitHub Actions usadas en los workflows.
+`apps/frontend`, y de las propias GitHub Actions usadas en los workflows. Las
+actualizaciones minor/patch de cada ecosistema se agrupan en una sola PR
+(`groups: minor-and-patch`) para no acumular una PR por paquete; los bumps de
+major siguen llegando aislados, ya que ahí sí vale la pena revisar cada uno
+(precedente: la migración de eslint 9→10 se evaluó a mano, no se automatizó).
 
 ## Branch protection
 

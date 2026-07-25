@@ -81,14 +81,16 @@ Donde algo no esta cubierto, se dice explicitamente y se deja como pendiente.
 
 ## A05:2021 — Security Misconfiguration
 
-**Estado: cubierto, con una nota.**
+**Estado: cubierto.**
 
 - `helmet()` activo (`main.ts`) para cabeceras HTTP seguras por defecto.
 - CORS restringido a un origin exacto configurado por variable de entorno, con
   `credentials: true` (no `origin: '*'`).
-- Swagger (`/api/docs`) esta disponible sin autenticacion. Es aceptable en desarrollo;
-  **antes de exponer produccion publicamente, evaluar si Swagger debe protegerse o
-  deshabilitarse fuera de desarrollo.**
+- Swagger (`/api/docs`) esta disponible sin autenticacion, pero solo fuera de
+  produccion (`main.ts`: gateado por `NODE_ENV !== 'production'`, con opt-in
+  explicito via `SWAGGER_ENABLED=true` para el caso raro de necesitarlo expuesto).
+  En el Render actual (`NODE_ENV=production` seteado en el `Dockerfile`), `/api/docs`
+  responde 404 por defecto.
 
 ## A06:2021 — Vulnerable and Outdated Components
 
@@ -162,7 +164,7 @@ de nuevo si se agrega una funcionalidad de ese tipo.
 | A02 Cryptographic Failures | Cubierto |
 | A03 Injection | Cubierto — XSS almacenado resuelto (DOMPurify en los 2 puntos de renderizado/parseo) |
 | A04 Insecure Design | Cubierto |
-| A05 Security Misconfiguration | Cubierto, con nota sobre Swagger en produccion |
+| A05 Security Misconfiguration | Cubierto — Swagger deshabilitado en produccion por defecto |
 | A06 Vulnerable and Outdated Components | Cubierto (Dependabot + npm audit en CI) |
 | A07 Identification and Authentication Failures | Cubierto |
 | A08 Software and Data Integrity Failures | Parcial (sin firma de imagenes ni registry versionado) |

@@ -8,6 +8,14 @@ updates:
     labels:
       - 'dependencies'
       - 'backend'
+    groups:
+      # Minor/patch se acumulan y se prueban juntas en una sola PR — solo un bump
+      # de major (potencialmente breaking) sigue llegando aislado para revisarlo
+      # con más cuidado, igual que se hizo a mano con eslint 10 este ciclo.
+      minor-and-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
 
   - package-ecosystem: 'npm'
     directory: '/apps/frontend'
@@ -17,6 +25,11 @@ updates:
     labels:
       - 'dependencies'
       - 'frontend'
+    groups:
+      minor-and-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
 
   - package-ecosystem: 'github-actions'
     directory: '/'
@@ -25,3 +38,8 @@ updates:
     labels:
       - 'dependencies'
       - 'ci'
+    groups:
+      minor-and-patch:
+        update-types:
+          - 'minor'
+          - 'patch'

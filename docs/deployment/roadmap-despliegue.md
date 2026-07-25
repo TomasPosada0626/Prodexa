@@ -6,8 +6,9 @@
 ## URLs en vivo
 
 - **Frontend**: https://prodexa-iota.vercel.app
-- **Backend**: https://prodexa-backend.onrender.com (`/api/v1` para la API, `/api/docs`
-  para Swagger, `/health` y `/ready` para monitoreo)
+- **Backend**: https://prodexa-backend.onrender.com (`/api/v1` para la API, `/health` y
+  `/ready` para monitoreo). `/api/docs` (Swagger) esta deshabilitado en produccion por
+  defecto — ver `docs/security/owasp-top10.md` A05.
 
 ## Arquitectura real desplegada
 
@@ -70,20 +71,35 @@ Se resolvió haciendo `sameSite` configurable por entorno (`COOKIE_SAMESITE`, de
 producción se setea a `none`, que exige `COOKIE_SECURE=true` junto con él (el navegador
 rechaza `SameSite=None` sin `Secure`).
 
-## Migraciones en cada deploy
+## Migraciones en cada deploy (manual, por ahora)
 
 Ni el `Dockerfile` ni su `CMD` corren `prisma migrate deploy` — el contenedor solo
 arranca el servidor. Render sí tiene un mecanismo dedicado para esto (**Advanced →
 Pre-Deploy Command**), pero es una función de plan pago — en el plan **Free** ese campo
-aparece bloqueado. La alternativa real usada acá: sobrescribir **Docker Command** en el
-Web Service con
+aparece bloqueado.
+
+Se probó la alternativa obvia — sobrescribir el **Docker Command** del Web Service
+para encadenar migración + arranque:
 
 ```
 sh -c "npx prisma migrate deploy && node dist/src/main.js"
 ```
 
-que encadena las migraciones antes de arrancar el servidor, sin depender de una
-función que el plan gratuito no habilita.
+pero esto causó un crash silencioso por falta de memoria (el plan Free tiene 512MB):
+durante la ventana en que migración y arranque coexisten, el pico de uso supera ese
+límite. Sin ese Docker Command override, el arranque solo (`node dist/src/main.js`)
+funciona bien — confirmado aislando la variable.
+
+**Estado actual:** las migraciones nuevas se aplican a mano desde la pestaña **Shell**
+de Render (`npx prisma migrate deploy`) después de cada deploy que agregue una
+migración. Es un paso manual, no automatizado — aceptable para el volumen de cambios
+de este proyecto, documentado para no descubrirlo a mitad de un incidente.
+
+**Camino a automatizarlo sin plan pago:** el producto **Jobs** de Render (distinto de
+un Web Service — corre el comando una vez y termina, no queda un proceso persistente
+compitiendo por los mismos 512MB) es la vía estándar para esto. No se confirmó todavía
+si el plan Free actual lo habilita — hay que probarlo directo en el dashboard de Render
+antes de asumirlo.
 
 ## Limitaciones reales del plan gratuito (documentadas, no escondidas)
 

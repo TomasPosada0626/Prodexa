@@ -1,3 +1,7 @@
+// Debe ser el primer import del archivo: Sentry necesita inicializarse antes de
+// que se cargue cualquier otro modulo para poder instrumentarlo automaticamente.
+import './instrument';
+
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
@@ -34,15 +38,23 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Prodexa API')
-    .setDescription(
-      'API de formulaciones, ingredientes y simulacion de costos de Prodexa',
-    )
-    .setVersion('1.0')
-    .build();
-  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, swaggerDocument);
+  // Fuera de produccion siempre esta disponible; en produccion requiere el opt-in
+  // explicito SWAGGER_ENABLED=true (mismo patron que COOKIE_SAMESITE/COOKIE_SECURE:
+  // default seguro, override explicito si de verdad se necesita expuesto).
+  const swaggerHabilitado =
+    process.env.NODE_ENV !== 'production' ||
+    process.env.SWAGGER_ENABLED === 'true';
+  if (swaggerHabilitado) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Prodexa API')
+      .setDescription(
+        'API de formulaciones, ingredientes y simulacion de costos de Prodexa',
+      )
+      .setVersion('1.0')
+      .build();
+    const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, swaggerDocument);
+  }
 
   await app.listen(process.env.BACKEND_PORT ?? 3000);
 }
