@@ -27,6 +27,7 @@ model User {
   formulaciones    Formulation[]
   refreshTokens    RefreshToken[]
   auditLogs        AuditLog[]
+  auditLogsRevisados AuditLog[] @relation("AuditLogRevisadoPor")
   invitacionesCreadas Invitation[]
   passwordResetCodes PasswordResetCode[]
 
@@ -77,14 +78,19 @@ model Invitation {
 
 /** Eventos de seguridad de la cuenta: login, logout, registro, cambio de contrasena. */
 model AuditLog {
-  id        String   @id @default(cuid())
-  userId    String?
-  evento    String
-  ip        String?
-  userAgent String?
-  metadata  Json?
-  createdAt DateTime @default(now())
-  usuario   User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id            String    @id @default(cuid())
+  userId        String?
+  evento        String
+  ip            String?
+  userAgent     String?
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+  /** Solo aplica a LOGIN_FAILED: un ADMIN lo marca como revisado para que deje de contar
+   * como alerta activa en el panel de Auditoria. Null = pendiente de revisar. */
+  revisadoAt    DateTime?
+  revisadoPorId String?
+  usuario       User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  revisadoPor   User?     @relation("AuditLogRevisadoPor", fields: [revisadoPorId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([evento])

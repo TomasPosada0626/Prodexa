@@ -616,11 +616,19 @@ export interface AuditLogEntry {
   metadata: Record<string, unknown> | null;
   createdAt: string;
   usuario: { id: string; nombre: string | null; email: string } | null;
+  /** Solo se completa en eventos LOGIN_FAILED marcados como revisados. */
+  revisadoAt: string | null;
+  revisadoPor: { id: string; nombre: string | null; email: string } | null;
 }
 
 /** Bitacora de seguridad de la empresa (login/logout/registro/cambio de contrasena). Solo ADMIN. */
 export function getAuditLog(): Promise<AuditLogEntry[]> {
   return request<AuditLogEntry[]>('/audit-log');
+}
+
+/** Marca un LOGIN_FAILED como revisado para que deje de contar como alerta activa. Solo ADMIN. */
+export function revisarAlerta(id: string): Promise<void> {
+  return request<void>(`/audit-log/${id}/revisar`, { method: 'PATCH' });
 }
 
 export function getMembers(): Promise<Member[]> {

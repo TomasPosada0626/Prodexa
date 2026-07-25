@@ -1,11 +1,23 @@
 import { Test } from '@nestjs/testing';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from './audit.service';
 import { AuditEvent } from './audit.types';
 
 describe('AuditService', () => {
   let service: AuditService;
-  const prisma = { auditLog: { create: jest.fn(), findMany: jest.fn() } };
+  const prisma = {
+    auditLog: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+    },
+  };
 
   beforeEach(async () => {
     jest.resetAllMocks();
@@ -82,6 +94,62 @@ describe('AuditService', () => {
       expect(prisma.auditLog.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ take: 10 }),
       );
+    });
+  });
+
+  describe('marcarComoRevisado', () => {
+    it('lanza NotFoundException si el evento no existe', async () => {
+      prisma.auditLog.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.marcarComoRevisado('evento-1', 'org-1', 'admin-1'),
+      ).rejects.toThrow(NotFoundException);
+      expect(prisma.auditLog.update).not.toHaveBeenCalled();
+    });
+
+    it('lanza BadRequestException si el evento no es LOGIN_FAILED', async () => {
+      prisma.auditLog.findUnique.mockResolvedValue({
+        id: 'evento-1',
+        evento: AuditEvent.LOGIN_SUCCESS,
+        usuario: { organizationId: 'org-1' },
+      });
+
+      await expect(
+        service.marcarComoRevisado('evento-1', 'org-1', 'admin-1'),
+      ).rejects.toThrow(BadRequestException);
+      expect(prisma.auditLog.update).not.toHaveBeenCalled();
+    });
+
+    it('lanza ForbiddenException si el evento es de otra empresa', async () => {
+      prisma.auditLog.findUnique.mockResolvedValue({
+        id: 'evento-1',
+        evento: AuditEvent.LOGIN_FAILED,
+        usuario: { organizationId: 'otra-org' },
+      });
+
+      await expect(
+        service.marcarComoRevisado('evento-1', 'org-1', 'admin-1'),
+      ).rejects.toThrow(ForbiddenException);
+      expect(prisma.auditLog.update).not.toHaveBeenCalled();
+    });
+
+    it('marca el evento como revisado cuando es un LOGIN_FAILED de la misma empresa', async () => {
+      prisma.auditLog.findUnique.mockResolvedValue({
+        id: 'evento-1',
+        evento: AuditEvent.LOGIN_FAILED,
+        usuario: { organizationId: 'org-1' },
+      });
+      prisma.auditLog.update.mockResolvedValue({});
+
+      await service.marcarComoRevisado('evento-1', 'org-1', 'admin-1');
+
+      expect(prisma.auditLog.update).toHaveBeenCalledWith({
+        where: { id: 'evento-1' },
+        data: {
+          revisadoAt: expect.any(Date) as Date,
+          revisadoPorId: 'admin-1',
+        },
+      });
     });
   });
 });

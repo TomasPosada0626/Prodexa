@@ -1,4 +1,12 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -22,5 +30,19 @@ export class AuditController {
   })
   list(@CurrentUser() user: RequestUser) {
     return this.auditService.listForOrganization(user.organizationId);
+  }
+
+  @Patch(':id/revisar')
+  @Roles('ADMIN')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Marcar un inicio de sesion fallido como revisado',
+  })
+  revisar(@CurrentUser() user: RequestUser, @Param('id') id: string) {
+    return this.auditService.marcarComoRevisado(
+      id,
+      user.organizationId,
+      user.id,
+    );
   }
 }

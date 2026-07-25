@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ApiError, AuditLogEntry, getAuditLog } from '@/lib/api';
+import { ApiError, AuditLogEntry, getAuditLog, revisarAlerta } from '@/lib/api';
 import { useAuth } from '@/context/auth-context';
+import { useToast } from '@/context/toast-context';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
 
@@ -101,10 +102,41 @@ const selectClasses =
 
 export default function AuditoriaPage() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [eventos, setEventos] = useState<AuditLogEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filtroEvento, setFiltroEvento] = useState<string>('todos');
+  const [revisando, setRevisando] = useState<Set<string>>(new Set());
   const [ahora] = useState(() => Date.now());
+
+  async function handleRevisar(id: string) {
+    setRevisando((prev) => new Set(prev).add(id));
+    try {
+      await revisarAlerta(id);
+      const ahoraIso = new Date().toISOString();
+      setEventos((prev) =>
+        prev
+          ? prev.map((e) =>
+              e.id === id
+                ? {
+                    ...e,
+                    revisadoAt: ahoraIso,
+                    revisadoPor: user ? { id: user.id, nombre: user.nombre ?? null, email: user.email } : null,
+                  }
+                : e,
+            )
+          : prev,
+      );
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'No se pudo marcar como revisado.', 'error');
+    } finally {
+      setRevisando((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  }
 
   useEffect(() => {
     if (user && user.rol !== 'ADMIN') return;
@@ -129,7 +161,10 @@ export default function AuditoriaPage() {
   const eventosFiltrados = (eventos ?? []).filter((e) => filtroEvento === 'todos' || e.evento === filtroEvento);
 
   const loginsFallidos24h = (eventos ?? []).filter(
-    (e) => e.evento === 'LOGIN_FAILED' && ahora - new Date(e.createdAt).getTime() <= 24 * 60 * 60 * 1000,
+    (e) =>
+      e.evento === 'LOGIN_FAILED' &&
+      !e.revisadoAt &&
+      ahora - new Date(e.createdAt).getTime() <= 24 * 60 * 60 * 1000,
   ).length;
 
   if (user && user.rol !== 'ADMIN') {
@@ -200,7 +235,7 @@ export default function AuditoriaPage() {
                     : 'text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400'
                 }
               >
-                Inicios de sesion fallidos (24h)
+                Inicios de sesion fallidos sin revisar (24h)
               </p>
               <p
                 className={`mt-1 text-3xl font-bold ${loginsFallidos24h > 0 ? 'text-red-800 dark:text-red-300' : 'text-slate-900 dark:text-white'}`}
@@ -242,6 +277,7 @@ export default function AuditoriaPage() {
                   <th className="py-2">Evento</th>
                   <th className="py-2">Detalle</th>
                   <th className="py-2">IP</th>
+                  <th className="py-2">Alerta</th>
                 </tr>
               </thead>
               <tbody>
@@ -264,6 +300,28 @@ export default function AuditoriaPage() {
                       {detalleDeEvento(evento.evento, evento.metadata)}
                     </td>
                     <td className="py-2 font-mono text-xs text-slate-600 dark:text-zinc-400">{evento.ip ?? '—'}</td>
+                    <td className="py-2 whitespace-nowrap">
+                      {evento.evento !== 'LOGIN_FAILED' ? (
+                        '—'
+                      ) : evento.revisadoAt ? (
+                        <span
+                          className="text-xs text-slate-500 dark:text-zinc-500"
+                          title={new Date(evento.revisadoAt).toLocaleString()}
+                        >
+                          Revisado
+                          {evento.revisadoPor ? ` por ${evento.revisadoPor.nombre ?? evento.revisadoPor.email}` : ''}
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleRevisar(evento.id)}
+                          disabled={revisando.has(evento.id)}
+                          className="rounded-full border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-60 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/10"
+                        >
+                          {revisando.has(evento.id) ? 'Guardando...' : 'Marcar como revisado'}
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

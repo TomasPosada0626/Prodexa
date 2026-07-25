@@ -22,6 +22,7 @@ completos: Swagger en `/api/docs`.
 | Método | Ruta | Rol | Qué hace |
 |---|---|---|---|
 | GET | `/audit-log` | ADMIN | Listar eventos de seguridad de la empresa (login, logout, registro, cambio de contrasena) |
+| PATCH | `/audit-log/:id/revisar` | ADMIN | Marcar un inicio de sesion fallido como revisado |
 
 ## `auth`
 

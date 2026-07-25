@@ -1,4 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditEvent } from './audit.types';
@@ -57,8 +63,43 @@ export class AuditService {
         userAgent: true,
         metadata: true,
         createdAt: true,
+        revisadoAt: true,
         usuario: { select: { id: true, nombre: true, email: true } },
+        revisadoPor: { select: { id: true, nombre: true, email: true } },
       },
+    });
+  }
+
+  /**
+   * Marca un LOGIN_FAILED como revisado: deja de contar como alerta activa en el panel
+   * de Auditoria (ver AuditoriaPage, tarjeta "Inicios de sesion fallidos"). Solo aplica a
+   * ese evento — los demas (cambios de precio, roles, etc.) no son "alertas de seguridad"
+   * pendientes de revisar.
+   */
+  async marcarComoRevisado(
+    id: string,
+    organizationId: string,
+    revisadoPorId: string,
+  ): Promise<void> {
+    const evento = await this.prisma.auditLog.findUnique({
+      where: { id },
+      include: { usuario: true },
+    });
+    if (!evento) {
+      throw new NotFoundException('No se encontro ese evento.');
+    }
+    if (evento.evento !== (AuditEvent.LOGIN_FAILED as string)) {
+      throw new BadRequestException(
+        'Solo los inicios de sesion fallidos se pueden marcar como revisados.',
+      );
+    }
+    if (evento.usuario?.organizationId !== organizationId) {
+      throw new ForbiddenException('Ese evento no pertenece a tu empresa.');
+    }
+
+    await this.prisma.auditLog.update({
+      where: { id },
+      data: { revisadoAt: new Date(), revisadoPorId },
     });
   }
 }
