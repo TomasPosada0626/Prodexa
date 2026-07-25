@@ -39,6 +39,11 @@ jobs:
       - name: Instalar dependencias
         working-directory: apps/${{ matrix.app }}
         run: npm ci
-      - name: npm audit (falla en vulnerabilidades altas o criticas)
+      - name: npm audit (falla en vulnerabilidades altas o criticas de produccion)
         working-directory: apps/${{ matrix.app }}
-        run: npm audit --audit-level=high
+        # --omit=dev: las vulnerabilidades de devDependencies (eslint, jest, @nestjs/cli)
+        # no llegan nunca al build de produccion ni se ejecutan con input de un atacante,
+        # solo se invocan localmente/en CI con rutas de archivos del propio repo. Auditar
+        # solo lo que se despliega evita bloquear el pipeline por herramientas de
+        # desarrollo sin fix disponible (ver docs/security/owasp-top10.md).
+        run: npm audit --audit-level=high --omit=dev

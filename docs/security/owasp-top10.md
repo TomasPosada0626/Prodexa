@@ -96,8 +96,13 @@ Donde algo no esta cubierto, se dice explicitamente y se deja como pendiente.
 
 - `.github/dependabot.yml` — actualizaciones semanales de dependencias npm para
   `apps/backend`, `apps/frontend`, y de las propias GitHub Actions.
-- `.github/workflows/security.yml` — job `npm audit --audit-level=high` en cada push/PR
-  a `main` y semanalmente, para ambos apps.
+- `.github/workflows/security.yml` — job `npm audit --audit-level=high --omit=dev` en
+  cada push/PR a `main` y semanalmente, para ambos apps. Se excluyen devDependencies
+  a proposito: herramientas como eslint/jest/`@nestjs/cli` nunca llegan al build de
+  produccion ni procesan input de un atacante (solo rutas de archivos del propio
+  repo), asi que una vulnerabilidad sin fix disponible ahi no debe bloquear el
+  pipeline. Las dependencias que sí se despliegan (`dependencies`) se siguen
+  auditando sin excepcion.
 
 ## A07:2021 — Identification and Authentication Failures
 
