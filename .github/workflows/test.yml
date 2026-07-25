@@ -203,7 +203,7 @@ jobs:
 
       - name: Subir artifacts (reporte y logs) si algo falla
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-e2e-artifacts
           path: |
