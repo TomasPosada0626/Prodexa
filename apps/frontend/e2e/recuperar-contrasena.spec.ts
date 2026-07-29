@@ -67,7 +67,9 @@ test.describe('Recuperacion de contrasena', () => {
     await test.step('Completar el reset con el codigo real logueado por el backend', async () => {
       const codigo = await leerCodigoDeRecuperacion(email, offsetLog);
       await page.getByLabel('Codigo de 6 digitos').fill(codigo);
-      await page.getByLabel('Nueva contrasena').fill(passwordNueva);
+      // exact: true es necesario — "Nueva contrasena" es substring de "Repetir nueva
+      // contrasena", sin esto Playwright tira strict mode violation (2 matches).
+      await page.getByLabel('Nueva contrasena', { exact: true }).fill(passwordNueva);
       await page.getByLabel('Repetir nueva contrasena').fill(passwordNueva);
       await page.getByRole('button', { name: 'Restablecer contrasena' }).click();
       await expect(page).toHaveURL(/\/login$/);
