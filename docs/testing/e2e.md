@@ -1,6 +1,6 @@
 # E2E (Playwright)
 
-## Los 6 specs permanentes
+## Los 7 specs permanentes
 
 Viven en `apps/frontend/e2e/` y corren en cada `npm run test:frontend:e2e`:
 
@@ -12,12 +12,15 @@ Viven en `apps/frontend/e2e/` y corren en cada `npm run test:frontend:e2e`:
 | `dashboard-filtros.spec.ts` | Filtro por formulación específica y por categoría en el Dashboard |
 | `verificaciones-permanentes.spec.ts` | Anular una orden de producción, borrar un registro sanitario en Calidad, formato + subida de imagen real en el editor de preparación |
 | `modulos-avanzados.spec.ts` | Tasa de rechazo y ranking en Análisis, cartera por cobrar en Reportes, CRUD de Proveedores, tarifas/sesiones/equipo en Configuración, detalle de eventos en Auditoría — una sola cuenta compartida para las 5 verificaciones |
+| `recuperar-contrasena.spec.ts` | Solicitar código, resetear contraseña, confirma que la vieja deja de servir y la nueva funciona. Lee el código real desde `apps/backend/backend.log` (ahí lo loguea `MailService` sin `RESEND_API_KEY`, ver el propio spec) — si ese archivo no existe (dev local sin redirigir stdout), el spec se salta con `test.skip` en vez de fallar. |
 
 ### Nota sobre el rate limit al correr la suite completa localmente
 
-Cada spec registra una cuenta nueva — con 6 specs, correr `npx playwright test`
-completo hace ~6 registros en menos de 60 segundos, que puede chocar con el límite
-real de `/auth/register` (5/min, ver `docs/security/owasp-top10.md` A04). Si eso pasa
+Cada spec registra una cuenta nueva — con 7 specs, correr `npx playwright test`
+completo hace ~7 registros en menos de 60 segundos (más las llamadas extra de
+`recuperar-contrasena.spec.ts` a `forgot-password`/`reset-password`/`login`), que
+puede chocar con el límite real de `/auth/register` (5/min, ver
+`docs/security/owasp-top10.md` A04). Si eso pasa
 en **local**, el spec que corrió de último falla con un timeout esperando la
 redirección a `/login` — **no es una regresión**: reiniciar el backend (limpia el
 `ThrottlerStorage` en memoria) y volver a correr esa suite/spec puntual confirma que
@@ -33,7 +36,7 @@ en `apps/backend/src/auth/auth.controller.ts`) — sin esa variable, el límite 
 producción sigue siendo 5, sin cambios. El job `frontend-e2e` en
 `.github/workflows/test.yml` la sube a `1000` solo para su propio entorno aislado
 (Postgres de servicio, backend y frontend arrancados en background dentro del job),
-así los 6 specs corren seguidos sin chocar con el límite — sin tocar la protección
+así los 7 specs corren seguidos sin chocar con el límite — sin tocar la protección
 real. Ver detalle del job en [`ci.md`](ci.md).
 
 ## La convención de specs de un solo uso

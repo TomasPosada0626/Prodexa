@@ -9,7 +9,7 @@ Dos workflows de GitHub Actions, ambos en `main` (push y PR):
 | `backend` | `npx tsc --noEmit`, `npx eslint src`, `npm run test:cov` (falla si la cobertura baja del umbral) |
 | `backend-integration` | Levanta un Postgres 16 de servicio, aplica migraciones (`prisma migrate deploy`), corre `npm run test:e2e` |
 | `frontend` | Typecheck, lint, `npm run test:cov` |
-| `frontend-e2e` | Levanta Postgres de servicio + backend y frontend reales en background dentro del job, y corre los 6 specs de Playwright (`npx playwright test`) contra ellos. Sube `AUTH_THROTTLE_LIMIT=1000` solo en este job para que la suite completa no choque con el límite real de 5/min (ver `docs/testing/e2e.md`). Sube el reporte de Playwright y los logs como artifact si algo falla. |
+| `frontend-e2e` | Levanta Postgres de servicio + backend y frontend reales en background dentro del job, y corre los 7 specs de Playwright (`npx playwright test`) contra ellos. Sube `AUTH_THROTTLE_LIMIT=1000` solo en este job para que la suite completa no choque con el límite real de 5/min (ver `docs/testing/e2e.md`). Sube el reporte de Playwright y los logs (incluido `backend.log`, que `recuperar-contrasena.spec.ts` necesita para leer el código de recuperación) como artifact si algo falla. |
 
 ## `.github/workflows/security.yml`
 

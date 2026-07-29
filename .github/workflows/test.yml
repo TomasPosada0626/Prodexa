@@ -143,7 +143,7 @@ jobs:
       CORS_ORIGIN: http://localhost:3001
       # Solo para esta suite: el limite real de produccion (5/min en
       # register/login/change-password/forgot-password/reset-password) no alcanza
-      # para correr los 6 specs de Playwright seguidos, cada uno registrando su
+      # para correr los 7 specs de Playwright seguidos, cada uno registrando su
       # propia cuenta. No se toca el default de produccion (sigue siendo 5 sin esta
       # variable), ver docs/testing/e2e.md.
       AUTH_THROTTLE_LIMIT: '1000'
