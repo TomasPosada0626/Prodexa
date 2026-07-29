@@ -378,6 +378,34 @@ describe('ProductionOrdersService', () => {
       };
       expect(llamada.data.montoCobrado).toBeUndefined();
     });
+
+    it('usa el precio sugerido como montoCobrado si se marca PAGADO sin enviar precioVentaReal', async () => {
+      prisma.formulation.findFirst.mockResolvedValue({
+        id: 'f-1',
+        cantidadBaseKg: 1,
+        margenPorcentaje: 30,
+        impuestoPorcentaje: 19,
+        vidaUtilDias: null,
+        ingredientes: [{ precioTotal: 100 }],
+      });
+      prisma.productionOrder.create.mockResolvedValue({ id: 'po-1' });
+
+      await service.create('user-1', 'org-1', {
+        formulationId: 'f-1',
+        cantidadObjetivoKg: 1,
+        estadoPago: 'PAGADO',
+      });
+
+      expect(prisma.productionOrder.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          data: expect.objectContaining({
+            estadoPago: 'PAGADO',
+            montoCobrado: 142.86,
+          }),
+        }),
+      );
+    });
   });
 
   describe('findAll', () => {
@@ -569,6 +597,72 @@ describe('ProductionOrdersService', () => {
       );
     });
 
+    it('actualiza tamanoPresentacion y unidadPresentacion cuando se envian', async () => {
+      prisma.productionOrder.findFirst.mockResolvedValue({
+        id: 'po-1',
+        formulationId: 'f-1',
+        cantidadObjetivoKg: 2,
+        margenPorcentaje: 30,
+        costoGastosGenerales: 0,
+      });
+      prisma.formulation.findFirst.mockResolvedValue({
+        id: 'f-1',
+        cantidadBaseKg: 1,
+        margenPorcentaje: 30,
+        impuestoPorcentaje: 19,
+        ingredientes: [{ precioTotal: 100 }],
+      });
+      prisma.productionOrder.update.mockResolvedValue({ id: 'po-1' });
+
+      await service.update('org-1', 'po-1', {
+        tamanoPresentacion: 250,
+        unidadPresentacion: 'ml',
+      });
+
+      expect(prisma.productionOrder.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'po-1' },
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          data: expect.objectContaining({
+            tamanoPresentacion: 250,
+            unidadPresentacion: 'ml',
+          }),
+        }),
+      );
+    });
+
+    it('usa el precio sugerido como montoCobrado al marcar PAGADO sin enviar precioVentaReal, si la orden ya tenia uno registrado', async () => {
+      prisma.productionOrder.findFirst.mockResolvedValue({
+        id: 'po-1',
+        formulationId: 'f-1',
+        cantidadObjetivoKg: 2,
+        margenPorcentaje: 30,
+        costoGastosGenerales: 0,
+        precioVentaReal: 175,
+      });
+      prisma.formulation.findFirst.mockResolvedValue({
+        id: 'f-1',
+        cantidadBaseKg: 1,
+        margenPorcentaje: 30,
+        impuestoPorcentaje: 19,
+        ingredientes: [{ precioTotal: 100 }],
+      });
+      prisma.productionOrder.update.mockResolvedValue({ id: 'po-1' });
+
+      await service.update('org-1', 'po-1', { estadoPago: 'PAGADO' });
+
+      expect(prisma.productionOrder.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'po-1' },
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          data: expect.objectContaining({
+            estadoPago: 'PAGADO',
+            montoCobrado: 175,
+          }),
+        }),
+      );
+    });
+
     it('vuelve montoCobrado a 0 al marcar PENDIENTE directo', async () => {
       prisma.productionOrder.findFirst.mockResolvedValue({
         id: 'po-1',
@@ -655,6 +749,18 @@ describe('ProductionOrdersService', () => {
           estadoProduccion,
         };
       }
+
+      it('trata un estadoProduccion fuera del enum (dato legado/corrupto) como estado final, no como transicion valida', async () => {
+        prisma.productionOrder.findFirst.mockResolvedValue(
+          ordenEn('ESTADO_LEGADO_DESCONOCIDO'),
+        );
+
+        await expect(
+          service.update('org-1', 'po-1', { estadoProduccion: 'EN_PROCESO' }),
+        ).rejects.toThrow(
+          'ESTADO_LEGADO_DESCONOCIDO es un estado final: este lote ya no puede cambiar de estado.',
+        );
+      });
 
       it('rechaza saltar de PLANIFICADO directo a TERMINADO (calidad es obligatoria)', async () => {
         prisma.productionOrder.findFirst.mockResolvedValue(
@@ -792,6 +898,47 @@ describe('ProductionOrdersService', () => {
           estadoPago: 'PAGADO',
           fechaPago: fechaUltimoPago,
         },
+      });
+    });
+
+    it('addPago guarda la fecha enviada en vez de undefined', async () => {
+      prisma.productionOrder.findFirst.mockResolvedValue(ORDEN_BASE);
+      prisma.pago.create.mockResolvedValue({ id: 'pago-3' });
+      prisma.productionOrder.findUniqueOrThrow.mockResolvedValue(ORDEN_BASE);
+      prisma.pago.aggregate.mockResolvedValue({ _sum: { monto: 40 } });
+      prisma.productionOrder.update.mockResolvedValue({ id: 'po-1' });
+
+      await service.addPago('org-1', 'po-1', {
+        monto: 40,
+        fecha: '2026-08-20',
+      });
+
+      expect(prisma.pago.create).toHaveBeenCalledWith({
+        data: {
+          productionOrderId: 'po-1',
+          monto: 40,
+          fecha: new Date('2026-08-20'),
+        },
+      });
+    });
+
+    it('usa precioVentaReal (no precioVentaSugerido) como montoTotal cuando la orden ya lo tiene registrado', async () => {
+      const ordenConPrecioReal = { ...ORDEN_BASE, precioVentaReal: 150 };
+      prisma.productionOrder.findFirst.mockResolvedValue(ordenConPrecioReal);
+      prisma.pago.create.mockResolvedValue({ id: 'pago-4' });
+      prisma.productionOrder.findUniqueOrThrow.mockResolvedValue(
+        ordenConPrecioReal,
+      );
+      // 100 cubre precioVentaSugerido (100) pero no precioVentaReal (150): si el calculo
+      // usara precioVentaSugerido por error, esto daria PAGADO en vez de PARCIAL.
+      prisma.pago.aggregate.mockResolvedValue({ _sum: { monto: 100 } });
+      prisma.productionOrder.update.mockResolvedValue({ id: 'po-1' });
+
+      await service.addPago('org-1', 'po-1', { monto: 100 });
+
+      expect(prisma.productionOrder.update).toHaveBeenCalledWith({
+        where: { id: 'po-1' },
+        data: { montoCobrado: 100, estadoPago: 'PARCIAL', fechaPago: null },
       });
     });
 

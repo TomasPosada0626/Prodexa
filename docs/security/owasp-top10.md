@@ -62,6 +62,14 @@ Donde algo no esta cubierto, se dice explicitamente y se deja como pendiente.
   era explotable). Verificado con test unitario (`sanitize-html.test.ts`: bloquea
   `<script>`, `onerror`, `onclick`, `javascript:`; conserva negrita/listas/imágenes
   propias) y con el flujo real end-to-end (`verificaciones-permanentes.spec.ts`).
+- **Subida de imagenes (`/uploads/images`) valida la firma real del archivo, no solo
+  el `Content-Type` declarado.** El header lo controla quien sube el archivo — es
+  trivial mandar un `.html` o `.svg` con script disfrazado de `image/png`.
+  `file-type-adapter.ts` (via `file-type`, deteccion por magic bytes) revisa el
+  buffer ya recibido y usa ESE resultado — no el declarado — para decidir si se
+  acepta y con que extension se guarda. Verificado en vivo contra el backend real:
+  un PNG de verdad se acepta, un archivo con `<script>` y `Content-Type: image/png`
+  se rechaza con 400 (`uploads.controller.spec.ts` cubre lo mismo con mocks).
 
 ## A04:2021 — Insecure Design
 
