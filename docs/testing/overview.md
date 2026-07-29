@@ -5,7 +5,7 @@
 ```
         ▲  6 specs E2E (Playwright + axe-core)         — flujos de usuario reales
        ╱ ╲ 27 tests integración (Postgres real)          — apps/backend/test/*.e2e-spec.ts
-      ╱   ╲ 217 unit backend (Jest) + 42 unit frontend (Vitest)
+      ╱   ╲ 241 unit backend (Jest) + 43 unit frontend (Vitest)
      ╱─────╲
 ```
 
@@ -18,9 +18,9 @@ desarrollo.
 
 | Suite | Comando | Qué cubre |
 |---|---|---|
-| Backend unit | `npm run test:backend` | 217 tests, Jest, Prisma mockeado — servicios, guards, DTOs, el motor de costeo |
+| Backend unit | `npm run test:backend` | 241 tests, Jest, Prisma mockeado — servicios, guards, DTOs, el motor de costeo |
 | Backend integración/e2e | `npm run test:backend:e2e` | 27 tests contra Postgres real: registro/login/refresh/logout, aislamiento entre organizaciones (404, no 403), reglas de negocio (bloqueo de borrado, máquina de estados) |
-| Frontend unit | `npm run test:frontend` | 42 tests, Vitest — `lib/costing.ts` (espejo del motor de costeo), `lib/format.ts`, `lib/export.ts`, retry-on-401 de `lib/api.ts`, `lib/calidad.ts`, `lib/sanitize-html.ts` |
+| Frontend unit | `npm run test:frontend` | 43 tests, Vitest — `lib/costing.ts` (espejo del motor de costeo), `lib/format.ts`, `lib/export.ts`, retry-on-401 de `lib/api.ts`, `lib/calidad.ts`, `lib/sanitize-html.ts` |
 | Frontend E2E | `npm run test:frontend:e2e` | 6 specs Playwright — ver [`e2e.md`](e2e.md) |
 
 ## Quality gate real

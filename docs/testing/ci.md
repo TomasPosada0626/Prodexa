@@ -16,7 +16,7 @@ Dos workflows de GitHub Actions, ambos en `main` (push y PR):
 | Job | Qué hace |
 |---|---|
 | `secret-scan` | `gitleaks/gitleaks-action` sobre todo el historial (`fetch-depth: 0`) |
-| `dependency-audit` | `npm audit --audit-level=high`, matrix backend/frontend |
+| `dependency-audit` | `npm audit --audit-level=high --omit=dev`, matrix backend/frontend — se excluyen devDependencies a proposito, ver `docs/security/owasp-top10.md` A06 |
 
 Corre en push/PR a `main` **y** semanalmente (cron), para detectar vulnerabilidades
 nuevas en dependencias que ya estaban instaladas, no solo en cada cambio de código.
@@ -32,10 +32,9 @@ major siguen llegando aislados, ya que ahí sí vale la pena revisar cada uno
 
 ## Branch protection
 
-Activado en GitHub (Rulesets → `main`): PR obligatorio, status checks requeridos
-(`Backend (unit tests + cobertura >= 95%)`, `Backend (integration/e2e contra Postgres
-real)`, `Frontend (typecheck + lint + unit tests)`), borrado y force-push bloqueados,
-con el rol de administrador en la lista de bypass para poder seguir iterando directo
-sin depender de un PR en cada cambio. **Pendiente**: agregar `Frontend (E2E,
-Playwright)` (el job `frontend-e2e`, agregado después de configurar el ruleset) a la
-lista de checks requeridos — mismo lugar en GitHub, paso manual.
+Activado en GitHub (Rulesets → `main`): PR obligatorio, los 4 jobs de `test.yml` como
+status checks requeridos (`Backend (unit tests + cobertura >= 95%)`, `Backend
+(integration/e2e contra Postgres real)`, `Frontend (typecheck + lint + unit tests)`,
+`Frontend (E2E, Playwright)`), borrado y force-push bloqueados, con el rol de
+administrador en la lista de bypass para poder seguir iterando directo sin depender
+de un PR en cada cambio.
