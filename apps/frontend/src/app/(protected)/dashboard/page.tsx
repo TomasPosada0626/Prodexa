@@ -103,7 +103,10 @@ export default function DashboardPage() {
     let cancelled = false;
     getAuditLog()
       .then((data) => {
-        if (!cancelled) setLoginsFallidos(data.filter((e) => e.evento === 'LOGIN_FAILED').slice(0, 5));
+        if (!cancelled)
+          setLoginsFallidos(
+            data.filter((e) => e.evento === 'LOGIN_FAILED' && !e.revisadoAt).slice(0, 5),
+          );
       })
       .catch(() => {
         if (!cancelled) setLoginsFallidos([]);
