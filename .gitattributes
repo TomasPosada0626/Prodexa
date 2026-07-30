@@ -1,0 +1,6 @@
+# Los hooks de husky y los scripts de shell deben mantener LF siempre — con CRLF
+# (el default de git en Windows) el shebang queda invalido y el hook falla en
+# silencio o con un error dificil de diagnosticar la primera vez que alguien
+# clona el repo en Windows.
+.husky/* text eol=lf
+scripts/*.sh text eol=lf

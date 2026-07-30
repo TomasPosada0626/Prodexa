@@ -26,9 +26,11 @@
     "prisma:migrate": "npm --prefix apps/backend run prisma:migrate",
     "prisma:studio": "npm --prefix apps/backend exec prisma studio",
     "test:coverage": "npm --prefix apps/backend run test:cov",
-    "badges:update": "npm run test:coverage && npm --prefix apps/backend exec istanbul-badges-readme -- --readmeDir=. --coverageDir=./apps/backend/coverage"
+    "badges:update": "npm run test:coverage && npm --prefix apps/backend exec istanbul-badges-readme -- --readmeDir=. --coverageDir=./apps/backend/coverage",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "concurrently": "^10.0.3"
+    "concurrently": "^10.0.3",
+    "husky": "^9.1.7"
   }
 }
