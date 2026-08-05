@@ -48,7 +48,7 @@ correrlo una sola vez contra la app real (backend + Postgres reales, no mocks), 
 flujo completo de principio a fin exactamente una vez, sin inflar la suite permanente
 con specs de un caso puntual que ya no aportan nada una vez verificado.
 
-Los 5 specs permanentes existen porque cubren flujos que sí vale la pena volver a
+Los 7 specs permanentes existen porque cubren flujos que sí vale la pena volver a
 correr en cada cambio (regresión); los `_tmp-verify-*` existen para el momento
 puntual de "¿esto que acabo de construir funciona de verdad, con datos reales, de
 punta a punta?".

@@ -1,6 +1,34 @@
 # CI
 
-Dos workflows de GitHub Actions, ambos en `main` (push y PR):
+Dos capas: un hook local que corre antes de dejar hacer `git push`, y dos workflows
+de GitHub Actions que corren después, ya en el remoto.
+
+## Hook de pre-push (local, `.husky/pre-push`)
+
+Nació de un caso real: un locator ambiguo en un spec de Playwright pasó todas las
+verificaciones locales que sí se corrían a mano (tsc, eslint, tests unitarios) y
+solo salió rojo cuando CI corrió la suite en un navegador real. `scripts/pre-push-check.sh`
+corre, en este orden, antes de que git transmita nada al remoto:
+
+| Paso | Qué hace |
+|---|---|
+| 1-2 | Backend: `tsc --noEmit`, `eslint src` |
+| 3 | Backend: `test:cov` (unitarios, con cobertura) |
+| 4 | Backend: `test:e2e` contra Postgres real (requiere que esté arriba en `localhost:55432`) |
+| 5-6 | Frontend: `tsc --noEmit`, `eslint src`, `test:cov` |
+| 7 | Frontend: los 7 specs de Playwright reales — build real (`next build`) + `next start` (no `next dev`, que tiene un lock de una sola instancia por carpeta) contra un backend recién levantado en un puerto propio (3900/3901, para no chocar con un `npm run dev` que ya esté corriendo) |
+
+Si cualquier paso falla, el push se cancela ahí — nada se sube. Escape hatch para
+cuando hace falta pushear sin la parte de Playwright (ej. Postgres no está arriba,
+o la máquina no tiene memoria libre para el ciclo de build+navegador):
+
+```bash
+SKIP_E2E_PLAYWRIGHT=1 git push
+```
+
+Los pasos 1-6 se siguen corriendo igual — el skip es solo del paso 7. `.gitattributes`
+fuerza LF en `.husky/*` y `scripts/*.sh`: con CRLF (el default de git en Windows) el
+shebang queda inválido y el hook falla en silencio en un clon fresco.
 
 ## `.github/workflows/test.yml`
 

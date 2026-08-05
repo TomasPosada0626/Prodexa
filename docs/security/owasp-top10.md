@@ -36,8 +36,9 @@ Donde algo no esta cubierto, se dice explicitamente y se deja como pendiente.
   usables directamente.
 - Cookies de sesion `httpOnly` (no accesibles desde JS del navegador), `secure` en
   produccion.
-- **Pendiente:** no hay TLS/HTTPS gestionado por la app misma (se asume terminado por
-  el proveedor de hosting en produccion) — a confirmar en el momento del despliegue real.
+- TLS/HTTPS no lo gestiona la app misma — lo termina el proveedor de hosting
+  (Vercel y Render, ambos por defecto), confirmado en el despliegue real
+  (ver [`docs/deployment/roadmap-despliegue.md`](../deployment/roadmap-despliegue.md)).
 
 ## A03:2021 — Injection
 
@@ -65,11 +66,14 @@ Donde algo no esta cubierto, se dice explicitamente y se deja como pendiente.
 - **Subida de imagenes (`/uploads/images`) valida la firma real del archivo, no solo
   el `Content-Type` declarado.** El header lo controla quien sube el archivo — es
   trivial mandar un `.html` o `.svg` con script disfrazado de `image/png`.
-  `file-type-adapter.ts` (via `file-type`, deteccion por magic bytes) revisa el
-  buffer ya recibido y usa ESE resultado — no el declarado — para decidir si se
-  acepta y con que extension se guarda. Verificado en vivo contra el backend real:
-  un PNG de verdad se acepta, un archivo con `<script>` y `Content-Type: image/png`
-  se rechaza con 400 (`uploads.controller.spec.ts` cubre lo mismo con mocks).
+  `detectarMimetypeReal()` (`uploads.controller.ts`, sin dependencias externas —
+  la libreria `file-type` es ESM-only e incompatible con el dynamic `import()` que
+  necesita el propio suite e2e del backend bajo Jest) revisa los magic bytes del
+  buffer ya recibido (PNG/JPEG/GIF/WEBP) y usa ESE resultado — no el declarado —
+  para decidir si se acepta y con que extension se guarda. Verificado en vivo contra
+  el backend real: un PNG de verdad se acepta, un archivo con `<script>` y
+  `Content-Type: image/png` se rechaza con 400 (`uploads.controller.spec.ts` cubre
+  lo mismo con buffers reales, no mocks del contenido).
 
 ## A04:2021 — Insecure Design
 
@@ -150,6 +154,10 @@ Donde algo no esta cubierto, se dice explicitamente y se deja como pendiente.
   contrasena existe y audita `CHANGE_PASSWORD`. El Dashboard tiene un widget, visible
   solo para `ADMIN`, con los ultimos intentos de login fallidos de la organizacion —
   la alerta que la revision anterior marcaba como no construida.
+- Sentry (backend y frontend, ver [`docs/observability/overview.md`](../observability/overview.md))
+  reporta excepciones no capturadas, pero eso es error tracking general, no un
+  consumidor de eventos de seguridad especificos — un intento de login fallido no
+  lanza una excepcion, asi que Sentry no lo ve.
 - **Pendiente real:** no hay un consumidor automatizado que dispare una notificacion
   proactiva (email, Slack) ante N logins fallidos seguidos — el ADMIN tiene que entrar
   al Dashboard o a Auditoria para verlo, no se le avisa solo.
@@ -179,5 +187,6 @@ de nuevo si se agrega una funcionalidad de ese tipo.
 | A09 Security Logging and Monitoring Failures | Cubierto, 12 tipos de evento; sin notificacion proactiva |
 | A10 SSRF | No aplica hoy |
 
-**Proxima revision recomendada:** cuando se active branch protection con status checks
-obligatorios en GitHub (paso manual pendiente, ver [`CONTRIBUTING.md`](../../CONTRIBUTING.md)).
+**Proxima revision recomendada:** si se agrega una funcionalidad que haga llamadas
+salientes a URLs provistas por el usuario (A10 dejaria de ser "no aplica"), o si se
+automatiza el deploy de forma que el resultado de CI pueda bloquearlo (A08).

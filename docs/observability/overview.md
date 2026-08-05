@@ -22,6 +22,18 @@ un reporte de bug se rastrea con ese id sin tener que adivinar cuál request fue
 Ambos quedan **fuera** del prefijo `/api/v1` a propósito: un orquestador los golpea
 sin conocer la versión del API.
 
+## Error tracking (Sentry)
+
+Backend (`@sentry/nestjs`, `apps/backend/src/instrument.ts`, importado primero en
+`main.ts`) y frontend (`instrumentation-client.ts`, `sentry.server.config.ts`,
+`sentry.edge.config.ts`, `instrumentation.ts`, `app/global-error.tsx`) reportan
+excepciones no capturadas a Sentry. Ambos gatean en la variable de entorno del DSN
+(`SENTRY_DSN` en el backend, `NEXT_PUBLIC_SENTRY_DSN` en el frontend): sin DSN
+configurado, `Sentry.init()` nunca se llama — cero llamadas de red, cero overhead, es
+el mismo patrón de fallback-a-no-op ya usado para `RESEND_API_KEY` y las variables de
+R2. El backend samplea trazas al 10% (`tracesSampleRate: 0.1`); no hay session replay
+ni profiling habilitados.
+
 ## Qué está deliberadamente fuera de alcance
 
 Prometheus, Grafana, métricas técnicas de infraestructura y alertas automáticas se

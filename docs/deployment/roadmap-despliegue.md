@@ -90,10 +90,22 @@ durante la ventana en que migración y arranque coexisten, el pico de uso supera
 límite. Sin ese Docker Command override, el arranque solo (`node dist/src/main.js`)
 funciona bien — confirmado aislando la variable.
 
-**Estado actual:** las migraciones nuevas se aplican a mano desde la pestaña **Shell**
-de Render (`npx prisma migrate deploy`) después de cada deploy que agregue una
-migración. Es un paso manual, no automatizado — aceptable para el volumen de cambios
-de este proyecto, documentado para no descubrirlo a mitad de un incidente.
+**Estado actual:** la pestaña **Shell** de Render (que permitiría correr el comando
+directo contra el Web Service) es una función de plan pago — no está disponible en el
+plan **Free** usado acá. La alternativa real: Render expone, en el panel del servicio
+de Postgres, tanto una "Internal Database URL" (solo alcanzable entre servicios de
+Render) como una "External Database URL" (alcanzable desde cualquier máquina). Las
+migraciones nuevas se aplican a mano desde la máquina local con esa URL externa:
+
+```
+DATABASE_URL="<external-url-de-render>" npx prisma migrate deploy
+```
+
+Es un paso manual, no automatizado — y ya causó un incidente real en producción por
+olvidarlo (`/audit-log` devolviendo 500 porque dos migraciones nunca se habían
+aplicado; ver [`docs/observability/known-gaps.md`](../observability/known-gaps.md)).
+Aceptable para el volumen de cambios de este proyecto, pero es el punto más frágil
+del proceso de deploy actual.
 
 **Camino a automatizarlo sin plan pago:** el producto **Jobs** de Render (distinto de
 un Web Service — corre el comando una vez y termina, no queda un proceso persistente
@@ -114,9 +126,11 @@ antes de asumirlo.
 
 ## Qué falta para que esto sea un pipeline de CD completo
 
-- Activar "Require status checks to pass" en la protección de rama de GitHub — hoy
-  `.github/workflows/test.yml` corre en cada push/PR pero nada bloquea un merge si
-  falla (paso manual pendiente en la configuración del repo, no en el código).
+- La protección de rama de GitHub ya está activa (PR obligatorio + los 4 jobs de
+  `test.yml` como status checks requeridos; ver
+  [`docs/testing/ci.md`](../testing/ci.md#branch-protection)), pero el deploy en sí
+  sigue sin estar atado a ese resultado — Render redespliega desde el commit en push
+  a `main` independientemente de si CI corrió o terminó en verde.
 - Rollback definido y probado, runbook de incidentes.
 - Build de imágenes versionadas (hoy Render reconstruye desde el commit en cada push,
   no hay un registry de imágenes con tags propios).

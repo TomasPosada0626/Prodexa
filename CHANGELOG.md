@@ -10,6 +10,75 @@ inicial real; `[0.2.0]` es una retrospectiva honesta de todo lo construido desde
 entonces hasta esta entrega, agrupado por tipo de cambio, no una lista de 9 versiones
 inventadas. De aquí en adelante, cada tag corresponde a un release real.
 
+## [0.3.0] - 2026-08-05
+
+### Added
+
+- **Recuperación de contraseña por código de email**: `POST /auth/forgot-password` +
+  `POST /auth/reset-password`, código de 6 dígitos con expiración de 15 min,
+  invalida sesiones activas al usarse. Envío real vía Resend, con fallback a loguear
+  el código en desarrollo si no hay `RESEND_API_KEY` configurada.
+  `/recuperar-contrasena` en el frontend, link desde `/login`.
+- **Mostrar/ocultar contraseña** (ícono de ojo) en los tres formularios que piden
+  contraseña: login, registro, cambio de contraseña en Configuración.
+- **Despliegue real**: frontend en Vercel, backend en Render (Docker, desde el
+  `Dockerfile` existente), Postgres gestionado por Render — ver
+  [`docs/deployment/roadmap-despliegue.md`](docs/deployment/roadmap-despliegue.md).
+- **Almacenamiento de imágenes en Cloudflare R2** para producción (el filesystem de
+  Render es efímero entre deploys), con fallback automático a disco local si las
+  variables de R2 no están configuradas — desarrollo local no cambia.
+- **Sentry** (backend y frontend) para error tracking, gateado por la presencia del
+  DSN — sin configurarlo, cero llamadas de red. Ver
+  [`docs/observability/overview.md`](docs/observability/overview.md).
+- **Suite E2E de Playwright corriendo en CI** (`frontend-e2e`, en
+  `.github/workflows/test.yml`), contra un backend y frontend reales levantados en
+  el propio job — antes solo corría en local.
+- **Acción de revisión de alertas de login fallido**: desde Auditoría, un `ADMIN`
+  puede marcar una alerta como revisada; el widget de Inicio deja de mostrar las ya
+  revisadas.
+- **Hook de pre-push (husky)**: corre localmente, antes de cualquier `git push`, la
+  misma batería que CI corre después (tsc, eslint, tests con cobertura, e2e de
+  backend contra Postgres real, y los specs de Playwright) — nació de un locator
+  ambiguo que pasó todas las verificaciones locales a mano y solo salió rojo en CI.
+  Ver [`docs/testing/ci.md`](docs/testing/ci.md).
+
+### Changed
+
+- **Swagger (`/api/docs`) deshabilitado por defecto en producción**, con opt-in
+  explícito vía `SWAGGER_ENABLED=true` para el caso raro de necesitarlo expuesto.
+- **Dependabot agrupa las actualizaciones minor/patch** de cada ecosistema en una
+  sola PR en vez de una por paquete; los bumps de major siguen llegando aislados.
+- **`npm audit` en CI excluye devDependencies** (`--omit=dev`) — ninguna herramienta
+  de build/lint/test llega al build de producción ni procesa input de un atacante,
+  ver A06 en [`docs/security/owasp-top10.md`](docs/security/owasp-top10.md).
+- **Cookie de sesión con `SameSite` configurable por entorno** (`COOKIE_SAMESITE`,
+  default `lax`): en producción se necesita `none` porque Vercel y Render son dos
+  sitios distintos, no solo subdominios.
+
+### Fixed
+
+- **Subida de imágenes ahora valida la firma real del archivo (magic bytes)**, no el
+  `Content-Type` declarado por quien sube el archivo — cierra un vector de spoofing
+  (ej. un `.html` con script disfrazado de `image/png`).
+- **Migraciones de Prisma faltantes en la base de datos de producción** causaban un
+  500 genérico en `/audit-log` sin ningún cambio de código asociado — aplicadas, y
+  documentado el proceso real para el plan gratuito de Render (sin Shell, vía la
+  External Database URL desde una máquina local). Ver
+  [`docs/observability/known-gaps.md`](docs/observability/known-gaps.md).
+- Locator ambiguo de Playwright en `recuperar-contrasena.spec.ts`, encontrado por CI
+  después de pasar todas las verificaciones locales.
+- Lockfile de npm rechazado por `npm ci` (aunque `npm install` lo aceptaba) por un
+  override anidado; y una regresión de ESLint en CI por una versión ESM-only de
+  `brace-expansion` traída por ese mismo override — ambos revertidos.
+
+### Security
+
+- Nuevas variables de entorno: `RESEND_API_KEY`/`MAIL_FROM` (email), `R2_*`
+  (almacenamiento), `SENTRY_DSN`/`NEXT_PUBLIC_SENTRY_DSN` (error tracking),
+  `SWAGGER_ENABLED` — las cuatro con fallback seguro si no están configuradas.
+- Rate limiting propio (5/min) en `forgot-password` y `reset-password`, mismo
+  criterio que login/register — el código de 6 dígitos es un blanco de fuerza bruta.
+
 ## [0.2.1] - 2026-07-23
 
 ### Security

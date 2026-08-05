@@ -23,14 +23,14 @@
   <img src="https://img.shields.io/badge/Playwright-E2E-2EAD33?logo=playwright&logoColor=white" />
   <img src="https://img.shields.io/badge/ESLint-4B32C3?logo=eslint&logoColor=white" />
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" />
-  <img src="https://img.shields.io/badge/tests-292%20passing-brightgreen" />
+  <img src="https://img.shields.io/badge/tests-300%20passing-brightgreen" />
 </p>
 
 <div align="center">
 
 | Statements                  | Branches                | Functions                 | Lines             |
 | :---------------------------: | :----------------------: | :-------------------------: | :------------------: |
-| ![Statements](https://img.shields.io/badge/statements-99.7%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-88.39%25-yellow.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-99.32%25-brightgreen.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-99.68%25-brightgreen.svg?style=flat) |
+| ![Statements](https://img.shields.io/badge/statements-99.24%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-88.75%25-yellow.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-97%25-brightgreen.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-99.18%25-brightgreen.svg?style=flat) |
 
 </div>
 
@@ -84,7 +84,8 @@ petición puede tardar 50+ segundos en despertar).
 | **Reportes** | Reporte financiero consolidado (exportable a PDF/CSV) y una vista dedicada de **cartera por cobrar**: solo lotes con saldo pendiente, ordenados del más urgente al menos urgente, con su propio export CSV. |
 | **Proveedores** | CRUD real (crear, renombrar, eliminar) para poder limpiar duplicados o corregir nombres — antes solo se creaban implícitamente al registrar un precio de ingrediente. |
 | **Configuración** | Perfil, margen por defecto, cambio de contraseña, tarifas de producción de la empresa, **sesiones activas** (ver y revocar cada dispositivo con sesión iniciada) y gestión de equipo (roles, invitaciones). |
-| **Auditoría** | Bitácora de seguridad y de negocio: login/logout/registro, cambios de rol, remoción de miembros, cambios de precio, ediciones de formulación y de tarifas — cada evento con su detalle específico visible en la tabla. Solo ADMIN. |
+| **Auditoría** | Bitácora de seguridad y de negocio: login/logout/registro, cambios de rol, remoción de miembros, cambios de precio, ediciones de formulación y de tarifas — cada evento con su detalle específico visible en la tabla. Los inicios de sesión fallidos se pueden marcar como revisados (dejan de contar como alerta activa). Solo ADMIN. |
+| **Recuperar contraseña** | Flujo de dos fases (pedir código → confirmar) con código de 6 dígitos enviado por correo, expira a los 15 minutos y revoca todas las sesiones activas al usarse. |
 
 Guía paso a paso para el usuario final (sin jerga técnica, con capturas reales de cada
 pantalla): [`docs/usuario/guia-usuario.md`](docs/usuario/guia-usuario.md).
@@ -125,10 +126,12 @@ La API vive detrás de `/api/v1`; `/health` y `/ready` quedan fuera de ese prefi
 | Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Framer Motion |
 | Backend | NestJS 11, Prisma 7 (driver adapter `@prisma/adapter-pg`), class-validator |
 | Datos | PostgreSQL 16 |
-| Auth | JWT (access 15 min) + refresh token opaco rotatorio, Argon2, cookies httpOnly, RBAC por organización |
-| Observabilidad | pino-http (logs JSON estructurados + correlation id), `/health` y `/ready` |
-| Calidad | Jest (backend), Playwright + axe-core (E2E y accesibilidad, frontend) |
-| CI | GitHub Actions: tests + typecheck + lint + quality gate de cobertura (`test.yml`), gitleaks, `npm audit`, Dependabot (`security.yml`) |
+| Auth | JWT (access 15 min) + refresh token opaco rotatorio, Argon2, cookies httpOnly, RBAC por organización, recuperación de contraseña por código de un solo uso |
+| Almacenamiento | Disco local por defecto; Cloudflare R2 (S3-compatible) si están configuradas las 5 variables `R2_*` — sin código nuevo, solo env vars |
+| Correo | Resend para el código de recuperación; sin `RESEND_API_KEY` se loguea en vez de enviarse (desarrollo local no necesita cuenta) |
+| Observabilidad | pino-http (logs JSON estructurados + correlation id), `/health` y `/ready`, Sentry (frontend y backend) gateado por DSN — sin él, cero llamadas de red |
+| Calidad | Jest (backend), Vitest (frontend), Playwright + axe-core (E2E y accesibilidad) — más un hook de pre-push (husky) que corre todo eso antes de dejar pushear |
+| CI | GitHub Actions: tests + typecheck + lint + quality gate de cobertura (`test.yml`), gitleaks, `npm audit --omit=dev`, Dependabot con PRs agrupadas (`security.yml`) |
 
 > Redis está provisionado en `docker-compose.yml` para cuando se necesite cache o un store de rate-limiting distribuido, pero hoy no está conectado a ningún código — se documenta así en vez de aparentar que ya se usa.
 
@@ -156,11 +159,15 @@ Documentación interactiva de la API: `http://localhost:3000/api/docs` (Swagger)
 | `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` | `apps/backend/.env` | generar con `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | Firma de tokens |
 | `JWT_ACCESS_TTL` / `JWT_REFRESH_TTL_DAYS` | `apps/backend/.env` | `15m` / `30` | Vida de los tokens |
 | `COOKIE_SECURE` | `apps/backend/.env` | `false` en local, `true` en producción | Flag `Secure` de las cookies |
-| `UPLOADS_DIR` | `apps/backend/.env` | vacío = `./uploads` | Carpeta de imágenes subidas (editor de preparación) |
+| `UPLOADS_DIR` | `apps/backend/.env` | vacío = `./uploads` | Carpeta de imágenes subidas (editor de preparación); ignorado si las 5 `R2_*` están seteadas |
+| `SWAGGER_ENABLED` | `apps/backend/.env` | vacío en producción | `/api/docs` siempre disponible fuera de producción; en producción requiere `true` explícito |
+| `SENTRY_DSN` | `apps/backend/.env` | vacío = sin Sentry | Reporta excepciones no controladas del backend; opcional |
+| `RESEND_API_KEY` / `MAIL_FROM` | `apps/backend/.env` | vacío = loguea en vez de enviar | Envío real del código de recuperación de contraseña; opcional |
 | `NEXT_PUBLIC_API_URL` | raíz, `apps/frontend/.env.local` | `http://localhost:3000/api/v1` | Base de la API que consume el frontend |
+| `NEXT_PUBLIC_SENTRY_DSN` | raíz, `apps/frontend/.env.local` | vacío = sin Sentry | Reporta errores del frontend; opcional |
 | `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | raíz `.env` | `prodexa` | Credenciales del contenedor de Postgres |
 
-Copiar cada `.env.example` (raíz, `apps/backend/`, `apps/backend/.env.test.example`, `apps/frontend/`) al archivo real correspondiente antes de arrancar. El Postgres de Docker usa `55432` (no `5432`) para no chocar con una instalación local.
+Copiar cada `.env.example` (raíz, `apps/backend/`, `apps/backend/.env.test.example`, `apps/frontend/`) al archivo real correspondiente antes de arrancar. El Postgres de Docker usa `55432` (no `5432`) para no chocar con una instalación local. Tabla arriba: solo lo esencial para arrancar local — las 5 variables `R2_*` (almacenamiento) y el resto de las opcionales están documentadas con más detalle en cada `.env.example`.
 
 ### Docker y scripts
 
@@ -195,8 +202,10 @@ Scripts del monorepo (`package.json` raíz):
 **Frontend en [Vercel](https://vercel.com), backend en [Render](https://render.com)**
 (Web Service tipo Docker, desde `apps/backend/Dockerfile`), Postgres gestionado por
 Render. Detalle completo — variables de entorno de producción, el fix de cookies
-cross-site que hizo falta, migraciones en cada deploy, y las limitaciones reales del
-plan gratuito (cold start, uploads no persistentes) — en
+cross-site que hizo falta, por qué las migraciones se aplican a mano (no en cada
+deploy: el plan Free no soporta migrar + arrancar en un solo comando sin quedarse
+sin memoria) y las limitaciones reales del plan gratuito (cold start, uploads no
+persistentes) — en
 [`docs/deployment/roadmap-despliegue.md`](docs/deployment/roadmap-despliegue.md).
 
 ## Testing y cobertura
@@ -204,16 +213,16 @@ plan gratuito (cold start, uploads no persistentes) — en
 Pirámide de testing completa, cada nivel corriendo contra algo real (nunca solo mocks):
 
 ```bash
-npm run test:backend           # backend: 217 unit tests, Jest, contra Prisma mockeado
+npm run test:backend           # backend: 257 unit tests, Jest, contra Prisma mockeado
 npm run test:backend:e2e       # backend: 27 tests de integración contra Postgres real (prodexa_test)
-npm run test:frontend          # frontend: 42 unit tests, Vitest (lib/costing, lib/format, lib/export, lib/api, lib/calidad, lib/sanitize-html)
-npm run test:frontend:e2e      # frontend: 6 flujos E2E con Playwright + axe-core
+npm run test:frontend          # frontend: 43 unit tests, Vitest (lib/costing, lib/format, lib/export, lib/api, lib/calidad, lib/sanitize-html)
+npm run test:frontend:e2e      # frontend: 7 flujos E2E con Playwright + axe-core
 npm run test:coverage          # backend con reporte de cobertura (falla si baja de los umbrales, ver abajo)
 ```
 
 Detalle completo de la estrategia de testing, la convención de specs `_tmp-verify-*.spec.ts` de un solo uso, y qué corre cada workflow de CI en [`docs/testing/`](docs/testing/).
 
-**Quality gate real, no solo aspiracional:** `coverageThreshold` en `apps/backend/package.json` exige >=95% de statements/lines/functions y >=80% de branches. `.github/workflows/test.yml` corre unit + integration/e2e contra un Postgres de servicio + unit tests de frontend en cada push/PR a `main`, además de typecheck y lint en ambas apps.
+**Quality gate real, no solo aspiracional:** `coverageThreshold` en `apps/backend/package.json` exige >=95% de statements/lines/functions y >=80% de branches. `.github/workflows/test.yml` corre unit + integration/e2e contra un Postgres de servicio + unit tests de frontend en cada push/PR a `main`, además de typecheck y lint en ambas apps. Antes de eso, un hook de pre-push (husky, `scripts/pre-push-check.sh`) corre lo mismo en local — typecheck, lint, unit, integración y los 7 specs de Playwright reales — para que un push roto se descubra en la propia máquina en vez de en el log de Actions.
 
 ## Documentación adicional
 
