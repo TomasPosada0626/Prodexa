@@ -34,6 +34,7 @@ completos: Swagger en `/api/docs`.
 | POST | `/auth/logout` | público | Cerrar sesion y revocar el refresh token |
 | GET | `/auth/me` | — | Obtener el usuario autenticado actual |
 | PATCH | `/auth/me` | — | Actualizar el perfil del usuario autenticado |
+| DELETE | `/auth/me` | — | Eliminar (anonimizar) el perfil del usuario autenticado; sus formulaciones y ordenes de produccion se conservan para la empresa |
 | POST | `/auth/change-password` | — | Cambiar la contrasena del usuario autenticado |
 | POST | `/auth/forgot-password` | público | Solicitar un codigo de recuperacion de contrasena por correo |
 | POST | `/auth/reset-password` | público | Confirmar el codigo de recuperacion y establecer una nueva contrasena |
@@ -71,6 +72,7 @@ completos: Swagger en `/api/docs`.
 | POST | `/organizations/invitations` | ADMIN, COORDINADOR | Generar un link de invitacion para sumar gente a la empresa |
 | GET | `/organizations/invitations` | ADMIN, COORDINADOR | Listar las invitaciones vigentes de la empresa |
 | DELETE | `/organizations/invitations/:id` | ADMIN, COORDINADOR | Revocar una invitacion antes de que se use |
+| DELETE | `/organizations` | ADMIN | Eliminar la empresa completa y todos sus datos (irreversible). Solo ADMIN. |
 
 ## `production-orders`
 
