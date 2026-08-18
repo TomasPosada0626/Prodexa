@@ -100,11 +100,22 @@ export class AuthController {
       // correo si sea de un miembro real: se busca el userId solo para el log, nunca para la
       // respuesta al cliente (no revela si el correo existe).
       const userId = await this.authService.findUserIdByEmail(dto.email);
-      void this.auditService.log(AuditEvent.LOGIN_FAILED, {
-        ...auditContext,
-        userId,
-        metadata: { email: dto.email },
-      });
+      // .then() en vez de await: la respuesta de login no debe esperar ni al log ni a la
+      // posible alerta por correo. Encadenado (no en paralelo) porque
+      // notificarSiLoginsFallidosRepetidos cuenta la racha leyendo AuditLog de nuevo — tiene
+      // que arrancar despues de que el INSERT de este intento ya haya quedado escrito, o
+      // contaria un intento de menos.
+      void this.auditService
+        .log(AuditEvent.LOGIN_FAILED, {
+          ...auditContext,
+          userId,
+          metadata: { email: dto.email },
+        })
+        .then(() => {
+          if (userId) {
+            void this.auditService.notificarSiLoginsFallidosRepetidos(userId);
+          }
+        });
       throw error;
     }
   }

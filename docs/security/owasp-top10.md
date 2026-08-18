@@ -166,9 +166,16 @@ Donde algo no esta cubierto, se dice explicitamente y se deja como pendiente.
   reporta excepciones no capturadas, pero eso es error tracking general, no un
   consumidor de eventos de seguridad especificos — un intento de login fallido no
   lanza una excepcion, asi que Sentry no lo ve.
-- **Pendiente real:** no hay un consumidor automatizado que dispare una notificacion
-  proactiva (email, Slack) ante N logins fallidos seguidos — el ADMIN tiene que entrar
-  al Dashboard o a Auditoria para verlo, no se le avisa solo.
+- **Ya no esta pendiente (corregido 2026-08-18):** `AuditService.notificarSiLoginsFallidosRepetidos()`
+  envia un correo a los ADMIN activos de la empresa cuando una cuenta acumula
+  `FAILED_LOGIN_ALERT_THRESHOLD` (default 5) logins fallidos SEGUIDOS — ya no hace
+  falta que el ADMIN entre por su cuenta a Dashboard/Auditoria para enterarse. Dispara
+  exactamente una vez al cruzar el umbral (no en cada intento subsecuente, para no
+  saturar de correos durante un ataque de fuerza bruta en curso), es fire-and-forget
+  (nunca bloquea ni puede tumbar la respuesta de login) y usa el mismo `MailService`
+  gateado por `RESEND_API_KEY` que el resto de correos transaccionales. Verificado con
+  tests dedicados en `audit.service.spec.ts` (umbral exacto, corte por `LOGIN_SUCCESS`,
+  sin duplicar el aviso, y que nunca lanza si algo falla).
 
 ## A10:2021 — Server-Side Request Forgery (SSRF)
 
@@ -192,7 +199,7 @@ de nuevo si se agrega una funcionalidad de ese tipo.
 | A06 Vulnerable and Outdated Components | Cubierto (Dependabot + npm audit en CI) |
 | A07 Identification and Authentication Failures | Cubierto |
 | A08 Software and Data Integrity Failures | Parcial (sin firma de imagenes ni registry versionado) |
-| A09 Security Logging and Monitoring Failures | Cubierto, 16 tipos de evento; sin notificacion proactiva |
+| A09 Security Logging and Monitoring Failures | Cubierto, 16 tipos de evento, con notificacion proactiva por correo a ADMIN ante logins fallidos repetidos |
 | A10 SSRF | No aplica hoy |
 
 **Proxima revision recomendada:** si se agrega una funcionalidad que haga llamadas

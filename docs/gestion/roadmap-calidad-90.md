@@ -28,7 +28,16 @@ completo en [`docs/testing/load-testing.md`](../testing/load-testing.md). Escala
 Rendimiento pasan de 72/73 a **85/85** — ni el 90 que hubiera dado un resultado perfecto, ni
 el estancamiento de "sin medir": un número con evidencia real y un pendiente concreto.
 
-Con los tres ítems ya hechos, la nota de hoy sube de 82 a **~85/100**.
+**Actualización 2026-08-18 (4):** ítem 1.3 (Monitoreabilidad) también hecho — alerta
+proactiva real: `AuditService.notificarSiLoginsFallidosRepetidos()` avisa por correo a los
+ADMIN activos de la empresa al cruzar N logins fallidos seguidos (default 5, configurable
+via `FAILED_LOGIN_ALERT_THRESHOLD`), justo el pendiente que ya señalaba
+`docs/security/owasp-top10.md` (A09). Dispara una sola vez por racha (no satura de correos
+en medio de un ataque de fuerza bruta), fire-and-forget, y con 8 tests nuevos cubriendo el
+umbral exacto, el corte por login exitoso, y que nunca tumba el login si algo falla.
+Monitoreabilidad pasa de 78 a **85**.
+
+Con los cuatro ítems ya hechos, la nota de hoy sube de 82 a **~86/100**.
 
 ## Decisión: mientras el proyecto sea portafolio/pre-ingresos, gasto real = US$0
 
@@ -62,7 +71,7 @@ un solo pilar con un límite estructural que ningún truco gratuito cierra del t
 
 | | Hoy | Después de Fase 1 | Después de Fase 2 (techo sin gastar) |
 |---|:---:|:---:|:---:|
-| Nota general | **85 (B+)** — Legal, Testability y Escalabilidad/Rendimiento ya hechos | ~87 | **~89 (B+ alto)** |
+| Nota general | **86 (B+)** — Legal, Testability, Escalabilidad/Rendimiento y Monitoreabilidad ya hechos | ~87 | **~89 (B+ alto)** |
 
 Cifras estimadas por pilar, no una promesa exacta — algunas dependen del resultado real de
 una prueba de carga que todavía no corrió. El objetivo de este documento no es "maquillar"
@@ -75,7 +84,7 @@ autoevaluación.
 |---|---|---|:---:|---|
 | ~~1.1~~ | ~~Testability~~ | ~~Tests para `forecast.ts` y `sugerencias.ts` (0% de cobertura) + `coverageThreshold` real en `apps/frontend/vitest.config.ts`~~ | ~~85 → 92~~ | **Hecho — 16 tests nuevos, cobertura de `src/lib/` 40.7%→93.8% statements, gate real agregado** |
 | ~~1.2~~ | ~~Escalabilidad / Rendimiento~~ | ~~Script de carga (autocannon) contra el backend real, corrido de verdad, con resultados publicados~~ | ~~72 / 73 → 85 / 85~~ | **Hecho — `docs/testing/load-testing.md`: 720 req/s, 0 errores a 5x concurrencia, cuello de botella real encontrado (pool de conexiones sin `max`)** |
-| 1.3 | Monitoreabilidad | Alerta proactiva (correo al ADMIN) tras N logins fallidos seguidos — el pendiente que ya señalaba `docs/security/owasp-top10.md` (A09) | 78 → 85 | Feature real + test, no solo documentación |
+| ~~1.3~~ | ~~Monitoreabilidad~~ | ~~Alerta proactiva (correo al ADMIN) tras N logins fallidos seguidos~~ | ~~78 → 85~~ | **Hecho — `AuditService.notificarSiLoginsFallidosRepetidos()`, 8 tests nuevos, resuelve el pendiente de `docs/security/owasp-top10.md` A09** |
 | 1.4 | Compatibilidad | Política de versionado/deprecación de la API documentada + test de snapshot del schema OpenAPI (evita romper el contrato sin darse cuenta) | 80 → 88 | `docs/api/versioning.md` + test en CI |
 | 1.5 | Eficiencia de recursos | Medir y documentar tamaño real de las imágenes Docker + ajustar el pool de conexiones de Prisma/pg con datos, no con el default sin revisar | 84 → 89 | `docs/deployment/` actualizado con números reales |
 | 1.6 | Fiabilidad | Retry con backoff en las operaciones de Prisma que fallan por error transitorio de conexión — el mismo tipo de fallo que causó el incidente #1 de `docs/observability/known-gaps.md` | 87 → 90 | Código + test dedicado |
@@ -110,7 +119,7 @@ por fuera del ritmo de esta hoja de ruta (ver 3.2).
 
 Mismo criterio que ya usa el proyecto en [`docs/observability/overview.md`](../observability/overview.md) — no construir infraestructura sin un caso de uso real:
 
-- **Prometheus/Grafana / métricas técnicas.** Sin tráfico real que monitorear es infraestructura especulativa. Techo real de Monitoreabilidad hasta entonces: ~85 (ver 1.3). Se revisa cuando haya usuarios reales usando la plataforma a diario.
+- **Prometheus/Grafana / métricas técnicas.** Sin tráfico real que monitorear es infraestructura especulativa. Con la alerta proactiva de logins fallidos ya resuelta (1.3), Monitoreabilidad quedó en 85 — subir más de ahí sí requeriría este stack. Se revisa cuando haya usuarios reales usando la plataforma a diario.
 - **Múltiples instancias / balanceo de carga.** No tiene sentido decidirlo antes de saber si una sola instancia aguanta la carga real — por eso 1.2 va primero, no después.
 - **Certificación de compatibilidad hacia consumidores externos de la API.** Hoy no existen integradores externos. Documentar una política de versionado (1.4) es lo máximo que se puede hacer sin ellos; el techo real de Compatibilidad (~88) sube solo cuando exista al menos un consumidor real poniendo el contrato a prueba.
 

@@ -24,7 +24,10 @@ describe('AuthController', () => {
     revokeSession: jest.fn(),
     findUserIdByEmail: jest.fn(),
   };
-  const auditService = { log: jest.fn() };
+  const auditService = {
+    log: jest.fn(),
+    notificarSiLoginsFallidosRepetidos: jest.fn(),
+  };
   const user = {
     id: 'user-1',
     email: 'a@a.com',
@@ -44,8 +47,23 @@ describe('AuthController', () => {
     return { cookie: jest.fn(), clearCookie: jest.fn() };
   }
 
+  /** login() encadena auditService.log(...).then(...) sin awaitearlo (la respuesta HTTP no
+   * debe esperar al log ni a la alerta) — hay que dejar correr la cola de microtasks antes de
+   * poder verificar que notificarSiLoginsFallidosRepetidos ya se llamo. */
+  function flushMicrotasks() {
+    return new Promise((resolve) => setImmediate(resolve));
+  }
+
   beforeEach(async () => {
     jest.resetAllMocks();
+    // log() se encadena con .then() en el controller (ver login) para poder disparar
+    // notificarSiLoginsFallidosRepetidos solo despues de que el INSERT quede escrito -- el
+    // mock necesita devolver algo con .then real, no undefined, o cualquier login fallido
+    // rompe con un TypeError antes de llegar al assert.
+    auditService.log.mockResolvedValue(undefined);
+    auditService.notificarSiLoginsFallidosRepetidos.mockResolvedValue(
+      undefined,
+    );
     const module = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
@@ -121,6 +139,11 @@ describe('AuthController', () => {
         metadata: { email: 'a@a.com' },
       }),
     );
+
+    await flushMicrotasks();
+    expect(
+      auditService.notificarSiLoginsFallidosRepetidos,
+    ).toHaveBeenCalledWith('user-1');
   });
 
   it('login fallido contra un correo que no existe audita LOGIN_FAILED sin userId', async () => {
@@ -142,6 +165,11 @@ describe('AuthController', () => {
         metadata: { email: 'no-existe@a.com' },
       }),
     );
+
+    await flushMicrotasks();
+    expect(
+      auditService.notificarSiLoginsFallidosRepetidos,
+    ).not.toHaveBeenCalled();
   });
 
   it('refresh lanza UnauthorizedException si no hay cookie de refresh', async () => {

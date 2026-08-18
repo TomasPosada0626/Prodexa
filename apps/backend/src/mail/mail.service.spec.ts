@@ -75,4 +75,43 @@ describe('MailService', () => {
     ).resolves.toBeUndefined();
     expect(errorSpy).toHaveBeenCalled();
   });
+
+  describe('enviarAlertaLoginsFallidos', () => {
+    it('con RESEND_API_KEY configurada, envia la alerta al ADMIN con la cuenta afectada y el numero de intentos', async () => {
+      process.env.RESEND_API_KEY = 'clave-de-prueba';
+      sendMock.mockResolvedValue({ data: { id: 'abc' }, error: null });
+      const service = new MailService();
+
+      await service.enviarAlertaLoginsFallidos(
+        'admin@empresa.test',
+        'victima@empresa.test',
+        5,
+      );
+
+      expect(sendMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'admin@empresa.test',
+          subject: expect.stringContaining('5') as string,
+          text: expect.stringContaining('victima@empresa.test') as string,
+        }),
+      );
+    });
+
+    it('sin RESEND_API_KEY, loguea en vez de enviar', async () => {
+      delete process.env.RESEND_API_KEY;
+      const service = new MailService();
+      const logSpy = jest.spyOn(service['logger'], 'log').mockImplementation();
+
+      await service.enviarAlertaLoginsFallidos(
+        'admin@empresa.test',
+        'victima@empresa.test',
+        5,
+      );
+
+      expect(sendMock).not.toHaveBeenCalled();
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.stringContaining('victima@empresa.test'),
+      );
+    });
+  });
 });

@@ -33,6 +33,21 @@ export class MailService {
     );
   }
 
+  /** Alerta proactiva a un ADMIN cuando una cuenta de su empresa acumula varios intentos de
+   * login fallidos seguidos (ver AuditService.notificarSiLoginsFallidosRepetidos). Antes de
+   * esto, un ADMIN solo se enteraba si entraba por su cuenta a Auditoria o al Dashboard. */
+  async enviarAlertaLoginsFallidos(
+    destinatario: string,
+    correoAfectado: string,
+    intentos: number,
+  ): Promise<void> {
+    await this.enviar(
+      destinatario,
+      `Alerta de seguridad: ${intentos} inicios de sesion fallidos seguidos`,
+      `La cuenta ${correoAfectado} de tu empresa en Prodexa tuvo ${intentos} intentos de inicio de sesion fallidos seguidos.\n\nSi no fuiste vos, revisa la bitacora de Auditoria en Prodexa y considera pedirle a esa persona que cambie su contrasena.`,
+    );
+  }
+
   /**
    * Nunca debe tumbar el flujo principal (recuperacion de contrasena) si falla: se
    * atrapa y se loguea, pero no se relanza — mismo espiritu que AuditService.log.

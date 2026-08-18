@@ -36,7 +36,7 @@
   <img src="https://img.shields.io/badge/Playwright-E2E_%2B_axe--core-2EAD33?logo=playwright&logoColor=white" />
   <img src="https://img.shields.io/badge/ESLint-4B32C3?logo=eslint&logoColor=white" />
   <img src="https://img.shields.io/badge/pre--push_hook-husky-yellow" />
-  <img src="https://img.shields.io/badge/tests-372%20passing-brightgreen" />
+  <img src="https://img.shields.io/badge/tests-380%20passing-brightgreen" />
 </p>
 
 <p align="center"><sub><b>CUMPLIMIENTO</b></sub></p>
@@ -53,7 +53,7 @@
 
 | Statements                  | Branches                | Functions                 | Lines             |
 | :---------------------------: | :----------------------: | :-------------------------: | :------------------: |
-| ![Statements](https://img.shields.io/badge/statements-98.95%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-88.58%25-yellow.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-95.53%25-brightgreen.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-98.87%25-brightgreen.svg?style=flat) |
+| ![Statements](https://img.shields.io/badge/statements-98.97%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-88.67%25-yellow.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-95.62%25-brightgreen.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-98.9%25-brightgreen.svg?style=flat) |
 
 </div>
 
@@ -183,7 +183,7 @@ Calificación agregada: **83/100 (B+)**. Plan concreto para subirla, pilar por p
 | Atributo | Estado | Evidencia |
 |---|---|---|
 | **Eficiencia de recursos** | Cubierto | Imágenes Docker multi-stage sobre `node:22-alpine` para ambas apps (solo el runtime final se despliega, no las herramientas de build). Integraciones opcionales (Sentry, Resend, R2) con patrón fallback-a-no-op: sin la variable de entorno correspondiente, cero llamadas de red — no se paga el costo de una integración que no está en uso. Auth stateless evita un store de sesiones en memoria/DB adicional. |
-| **Capacidad de prueba (Testability)** | Cubierto | 278 tests unitarios de backend (Jest, Prisma mockeado) + 28 de integración contra Postgres real + 59 unitarios de frontend (Vitest) + 7 flujos E2E con Playwright y verificación de accesibilidad (`@axe-core/playwright`) — **372 tests en total**, ninguna capa probada solo contra mocks completos. Quality gate real en ambas apps: backend exige ≥95% statements/lines/functions y ≥80% branches (`apps/backend/package.json`); frontend exige ≥90% statements/lines, ≥80% functions y ≥75% branches sobre `src/lib/**` (`apps/frontend/vitest.config.ts`, agregado en agosto de 2026 — antes el frontend no tenía gate y dos módulos, `forecast.ts` y `sugerencias.ts`, tenían 0% de cobertura sin que nada lo bloqueara). `npm run test:cov` falla el build en cualquiera de las dos apps si la cobertura baja de ahí. Detalle en [`docs/testing/`](docs/testing/). |
+| **Capacidad de prueba (Testability)** | Cubierto | 286 tests unitarios de backend (Jest, Prisma mockeado) + 28 de integración contra Postgres real + 59 unitarios de frontend (Vitest) + 7 flujos E2E con Playwright y verificación de accesibilidad (`@axe-core/playwright`) — **380 tests en total**, ninguna capa probada solo contra mocks completos. Quality gate real en ambas apps: backend exige ≥95% statements/lines/functions y ≥80% branches (`apps/backend/package.json`); frontend exige ≥90% statements/lines, ≥80% functions y ≥75% branches sobre `src/lib/**` (`apps/frontend/vitest.config.ts`, agregado en agosto de 2026 — antes el frontend no tenía gate y dos módulos, `forecast.ts` y `sugerencias.ts`, tenían 0% de cobertura sin que nada lo bloqueara). `npm run test:cov` falla el build en cualquiera de las dos apps si la cobertura baja de ahí. Detalle en [`docs/testing/`](docs/testing/). |
 | **Portabilidad** | Cubierto | Todo el stack corre en contenedores (`docker-compose.yml`: Postgres, Redis, backend, frontend), configuración 100% por variables de entorno (patrón 12-factor), abstracción de almacenamiento que cambia de disco local a Cloudflare R2 solo con env vars (cero cambios de código). No es solo teoría: el proyecto está desplegado hoy en **dos proveedores cloud distintos** (Vercel para el frontend, Render para el backend y la base de datos). |
 | **Compatibilidad** | Cubierto | API REST versionada bajo `/api/v1` con documentación OpenAPI viva en `/api/docs` (Swagger), CORS con origin explícito y `credentials: true` (no wildcard), evolución de esquema que preserva integridad referencial hacia atrás (archivar en vez de borrar donde hay historial financiero, `onDelete: SetNull` en vez de `Cascade` donde el dato no debe desaparecer con su referencia). |
 
@@ -192,7 +192,7 @@ Calificación agregada: **83/100 (B+)**. Plan concreto para subirla, pilar por p
 | Atributo | Estado | Evidencia |
 |---|---|---|
 | **Usabilidad** | Cubierto | Pantallas clave auditadas con `@axe-core/playwright` (WCAG 2.1 AA) en modo claro y oscuro — violaciones de contraste encontradas y corregidas, no solo una revisión visual subjetiva. Sistema de diseño documentado con tokens de color/tipografía consistentes ([`DESIGN.md`](DESIGN.md)). Autoservicio para acciones sensibles (reseteo de contraseña, revocar sesiones, eliminar cuenta/empresa) sin depender de escribirle a soporte. Guía de usuario final con capturas reales de cada pantalla en [`docs/usuario/guia-usuario.md`](docs/usuario/guia-usuario.md). **Límite honesto:** la auditoría de accesibilidad es automatizada (axe-core), no incluye pruebas manuales con lector de pantalla. |
-| **Monitoreabilidad (Observabilidad)** | Cubierto, con alcance deliberadamente acotado | Logs JSON estructurados (`pino-http`) con redacción automática de credenciales/cookies, `X-Request-Id` de correlación presente tanto en logs como en el body de cualquier error, `/health`/`/ready` para orquestadores, Sentry (frontend y backend) gateado por DSN. Tabla `AuditLog` dedicada con 16 tipos de evento (login/logout, recuperación de contraseña, cambios de rol, eliminación de cuenta/empresa, etc.) — ver [`docs/observability/audit-log.md`](docs/observability/audit-log.md). `docs/observability/known-gaps.md` documenta a propósito qué se puede y qué no se puede inferir de un log, incluyendo dos incidentes reales ya resueltos. **Decisión explícita, no un olvido:** Prometheus/Grafana/alertas automáticas se evaluaron y no se construyeron — la escala real del despliegue (una instancia gratuita, sin tráfico de producción significativo) no justifica ese stack todavía; se revisaría si eso cambia. |
+| **Monitoreabilidad (Observabilidad)** | Cubierto, con alcance deliberadamente acotado | Logs JSON estructurados (`pino-http`) con redacción automática de credenciales/cookies, `X-Request-Id` de correlación presente tanto en logs como en el body de cualquier error, `/health`/`/ready` para orquestadores, Sentry (frontend y backend) gateado por DSN. Tabla `AuditLog` dedicada con 16 tipos de evento (login/logout, recuperación de contraseña, cambios de rol, eliminación de cuenta/empresa, etc.) — ver [`docs/observability/audit-log.md`](docs/observability/audit-log.md). **Alerta proactiva real:** `AuditService.notificarSiLoginsFallidosRepetidos()` avisa por correo a los ADMIN de la empresa al cruzar N logins fallidos seguidos (default 5) — ya no hace falta entrar a Auditoría para enterarse. `docs/observability/known-gaps.md` documenta a propósito qué se puede y qué no se puede inferir de un log, incluyendo dos incidentes reales ya resueltos. **Decisión explícita, no un olvido:** Prometheus/Grafana/métricas técnicas de infraestructura se evaluaron y no se construyeron — la escala real del despliegue (una instancia gratuita, sin tráfico de producción significativo) no justifica ese stack todavía; se revisaría si eso cambia. |
 | **Cumplimiento legal** | Cubierto | Ver la siguiente sección completa — [Cumplimiento legal y privacidad de datos](#cumplimiento-legal-y-privacidad-de-datos). |
 
 ## Cumplimiento legal y privacidad de datos
@@ -290,7 +290,7 @@ persistentes) — en
 Pirámide de testing completa, cada nivel corriendo contra algo real (nunca solo mocks):
 
 ```bash
-npm run test:backend           # backend: 278 unit tests, Jest, contra Prisma mockeado
+npm run test:backend           # backend: 286 unit tests, Jest, contra Prisma mockeado
 npm run test:backend:e2e       # backend: 28 tests de integración contra Postgres real (prodexa_test)
 npm run test:frontend          # frontend: 59 unit tests, Vitest (lib/costing, lib/format, lib/export, lib/api, lib/calidad, lib/sanitize-html, lib/forecast, lib/sugerencias)
 npm run test:frontend:e2e      # frontend: 7 flujos E2E con Playwright + axe-core
