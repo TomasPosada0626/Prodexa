@@ -165,6 +165,8 @@ La API vive detrás de `/api/v1`; `/health` y `/ready` quedan fuera de ese prefi
 
 Autoevaluación honesta contra 13 atributos de calidad de software, agrupados en 3 ejes. **Cubierto** significa que hay evidencia concreta y verificable en el repo (no una intención); donde existe un límite real, se dice explícitamente en vez de esconderlo — mismo criterio que ya usa [`docs/security/owasp-top10.md`](docs/security/owasp-top10.md) y [`docs/observability/known-gaps.md`](docs/observability/known-gaps.md).
 
+Calificación agregada: **83/100 (B+)**. Plan concreto para subirla, pilar por pilar, en [`docs/gestion/roadmap-calidad-90.md`](docs/gestion/roadmap-calidad-90.md).
+
 ### Pilares fundamentales
 
 | Atributo | Estado | Evidencia |
@@ -207,7 +209,7 @@ Prodexa entró en fase de pilotaje con clientes reales el 14 de agosto de 2026, 
 | **Revisión OWASP Top 10** | [`docs/security/owasp-top10.md`](docs/security/owasp-top10.md) | Autoevaluación pública, con hallazgos reales encontrados y resueltos documentados (ej. el XSS almacenado corregido con DOMPurify, ver `CHANGELOG.md` 0.2.1) en vez de una checklist marcada de más. |
 | **Licencia** | [`LICENSE`](LICENSE) | MIT. |
 
-**Nota de transparencia, publicada también en las dos páginas legales:** ambos documentos son un borrador preparado con apoyo de IA (Claude Code) el 14 de agosto de 2026, alineado de buena fe al marco normativo colombiano vigente. No sustituyen asesoría legal profesional — se recomienda revisión por un abogado antes de cobrar a un cliente real y antes de cualquier cambio material al tratamiento de datos.
+**Nota de transparencia, documentada en el comentario de cabecera de cada página legal (código, no visible en el render público):** ambos documentos se redactaron con apoyo de IA (Claude Code) el 14 de agosto de 2026, alineados de buena fe al marco normativo colombiano vigente, y **fueron revisados por asesoría legal externa el 14 de agosto de 2026, que aprobó el texto sin cambios**. Esa aprobación cubre esta versión — cualquier cambio material futuro al tratamiento de datos o a los términos necesita su propia revisión.
 
 ## Empezar en local
 

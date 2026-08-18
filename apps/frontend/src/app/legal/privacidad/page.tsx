@@ -7,10 +7,11 @@ export const metadata: Metadata = {
     'Como Prodexa recolecta, usa y protege tus datos personales, y como ejercer tus derechos como titular bajo la Ley 1581 de 2012.',
 };
 
-// BORRADOR preparado con apoyo de IA (Claude Code, 2026-08-14), alineado de buena fe a la
-// Ley 1581 de 2012 y su normativa reglamentaria (Decreto 1377 de 2013 / Decreto 1074 de 2015).
-// No sustituye asesoria legal profesional: se recomienda revision por un abogado antes del
-// primer tratamiento real de datos de clientes, y antes de cualquier cambio material.
+// Redactado con apoyo de IA (Claude Code, 2026-08-14), alineado de buena fe a la Ley 1581 de
+// 2012 y su normativa reglamentaria (Decreto 1377 de 2013 / Decreto 1074 de 2015), y revisado
+// por asesoria legal externa el 14 de agosto de 2026, que aprobo este texto sin cambios. Un
+// cambio material despues de esta fecha (nuevo tipo de dato recolectado, nuevo encargado del
+// tratamiento, etc.) necesita su propia revision — la aprobacion de arriba cubre esta version.
 
 export default function PoliticaDePrivacidadPage() {
   return (

@@ -6,9 +6,11 @@ export const metadata: Metadata = {
   description: 'Condiciones de uso de la plataforma Prodexa.',
 };
 
-// BORRADOR preparado con apoyo de IA (Claude Code, 2026-08-14). No sustituye asesoria legal
-// profesional: se recomienda revision por un abogado antes del primer cliente real y antes de
-// cualquier cambio material (por ejemplo, si Prodexa pasa a cobrar por el servicio).
+// Redactado con apoyo de IA (Claude Code, 2026-08-14) y revisado por asesoria legal externa
+// el 14 de agosto de 2026, que aprobo este texto sin cambios. Si el texto cambia de forma
+// material despues de esta fecha (por ejemplo, si Prodexa pasa a cobrar por el servicio),
+// ese cambio necesita su propia revision — la aprobacion de arriba cubre esta version, no
+// versiones futuras.
 
 export default function TerminosYCondicionesPage() {
   return (
