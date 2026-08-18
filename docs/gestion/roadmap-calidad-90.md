@@ -10,8 +10,16 @@ de ingeniería.
 revisó Términos y Política de Datos el 14 de agosto de 2026 y aprobó el texto sin cambios
 (ver la nota de transparencia en el [README](../../README.md#cumplimiento-legal-y-privacidad-de-datos)
 y el comentario de cabecera de cada página en `apps/frontend/src/app/legal/`). Cumplimiento
-legal pasa de 80 a **93**, y la nota general de hoy sube de 82 a **83/100**. Es el único ítem
-de la Fase 3 que ya no está diferido.
+legal pasa de 80 a **93**. Es el único ítem de la Fase 3 que ya no está diferido.
+
+**Actualización 2026-08-18 (2):** ítem 1.1 (Testability) también hecho — tests reales para
+`forecast.ts` y `sugerencias.ts` (0% → 100%/93% statements) y `coverage.thresholds` real en
+`apps/frontend/vitest.config.ts` (≥90% statements/lines, ≥80% functions, ≥75% branches).
+Cobertura del frontend pasó de 40.7% a 93.8% de statements. Testability pasa de 85 a **92**.
+
+Con los dos ítems ya hechos, la nota de hoy sube de 82 a **~83/100** (el resto de Fase 1
+todavía no se ejecuta, así que el salto real se ve completo recién cuando se cierre el resto
+de la fase — ver la tabla de abajo).
 
 ## Decisión: mientras el proyecto sea portafolio/pre-ingresos, gasto real = US$0
 
@@ -56,7 +64,7 @@ autoevaluación.
 
 | # | Pilar | Acción | Hoy → meta | Entregable |
 |---|---|---|:---:|---|
-| 1.1 | Testability | Tests para `forecast.ts` y `sugerencias.ts` (0% de cobertura hoy) + `coverageThreshold` real en `apps/frontend/vitest.config.ts` | 85 → 92 | PR con cobertura de frontend medida y con gate en CI, al mismo nivel de exigencia que el backend |
+| ~~1.1~~ | ~~Testability~~ | ~~Tests para `forecast.ts` y `sugerencias.ts` (0% de cobertura) + `coverageThreshold` real en `apps/frontend/vitest.config.ts`~~ | ~~85 → 92~~ | **Hecho — 16 tests nuevos, cobertura de `src/lib/` 40.7%→93.8% statements, gate real agregado** |
 | 1.2 | Escalabilidad / Rendimiento | Script de carga (k6 o autocannon) contra el stack de `docker-compose`, corrido de verdad, con resultados publicados | 72 / 73 → 83–90* | `docs/testing/load-testing.md` con números reales, no promesas |
 | 1.3 | Monitoreabilidad | Alerta proactiva (correo al ADMIN) tras N logins fallidos seguidos — el pendiente que ya señalaba `docs/security/owasp-top10.md` (A09) | 78 → 85 | Feature real + test, no solo documentación |
 | 1.4 | Compatibilidad | Política de versionado/deprecación de la API documentada + test de snapshot del schema OpenAPI (evita romper el contrato sin darse cuenta) | 80 → 88 | `docs/api/versioning.md` + test en CI |

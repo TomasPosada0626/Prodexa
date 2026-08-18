@@ -36,7 +36,7 @@
   <img src="https://img.shields.io/badge/Playwright-E2E_%2B_axe--core-2EAD33?logo=playwright&logoColor=white" />
   <img src="https://img.shields.io/badge/ESLint-4B32C3?logo=eslint&logoColor=white" />
   <img src="https://img.shields.io/badge/pre--push_hook-husky-yellow" />
-  <img src="https://img.shields.io/badge/tests-356%20passing-brightgreen" />
+  <img src="https://img.shields.io/badge/tests-372%20passing-brightgreen" />
 </p>
 
 <p align="center"><sub><b>CUMPLIMIENTO</b></sub></p>
@@ -183,7 +183,7 @@ Calificación agregada: **83/100 (B+)**. Plan concreto para subirla, pilar por p
 | Atributo | Estado | Evidencia |
 |---|---|---|
 | **Eficiencia de recursos** | Cubierto | Imágenes Docker multi-stage sobre `node:22-alpine` para ambas apps (solo el runtime final se despliega, no las herramientas de build). Integraciones opcionales (Sentry, Resend, R2) con patrón fallback-a-no-op: sin la variable de entorno correspondiente, cero llamadas de red — no se paga el costo de una integración que no está en uso. Auth stateless evita un store de sesiones en memoria/DB adicional. |
-| **Capacidad de prueba (Testability)** | Cubierto | 278 tests unitarios de backend (Jest, Prisma mockeado) + 28 de integración contra Postgres real + 43 unitarios de frontend (Vitest) + 7 flujos E2E con Playwright y verificación de accesibilidad (`@axe-core/playwright`) — **356 tests en total**, ninguna capa probada solo contra mocks completos. Quality gate real, no aspiracional: `coverageThreshold` en `apps/backend/package.json` exige ≥95% statements/lines/functions y ≥80% branches, y `npm run test:cov` falla el build si baja de ahí. Detalle en [`docs/testing/`](docs/testing/). |
+| **Capacidad de prueba (Testability)** | Cubierto | 278 tests unitarios de backend (Jest, Prisma mockeado) + 28 de integración contra Postgres real + 59 unitarios de frontend (Vitest) + 7 flujos E2E con Playwright y verificación de accesibilidad (`@axe-core/playwright`) — **372 tests en total**, ninguna capa probada solo contra mocks completos. Quality gate real en ambas apps: backend exige ≥95% statements/lines/functions y ≥80% branches (`apps/backend/package.json`); frontend exige ≥90% statements/lines, ≥80% functions y ≥75% branches sobre `src/lib/**` (`apps/frontend/vitest.config.ts`, agregado en agosto de 2026 — antes el frontend no tenía gate y dos módulos, `forecast.ts` y `sugerencias.ts`, tenían 0% de cobertura sin que nada lo bloqueara). `npm run test:cov` falla el build en cualquiera de las dos apps si la cobertura baja de ahí. Detalle en [`docs/testing/`](docs/testing/). |
 | **Portabilidad** | Cubierto | Todo el stack corre en contenedores (`docker-compose.yml`: Postgres, Redis, backend, frontend), configuración 100% por variables de entorno (patrón 12-factor), abstracción de almacenamiento que cambia de disco local a Cloudflare R2 solo con env vars (cero cambios de código). No es solo teoría: el proyecto está desplegado hoy en **dos proveedores cloud distintos** (Vercel para el frontend, Render para el backend y la base de datos). |
 | **Compatibilidad** | Cubierto | API REST versionada bajo `/api/v1` con documentación OpenAPI viva en `/api/docs` (Swagger), CORS con origin explícito y `credentials: true` (no wildcard), evolución de esquema que preserva integridad referencial hacia atrás (archivar en vez de borrar donde hay historial financiero, `onDelete: SetNull` en vez de `Cascade` donde el dato no debe desaparecer con su referencia). |
 
@@ -292,7 +292,7 @@ Pirámide de testing completa, cada nivel corriendo contra algo real (nunca solo
 ```bash
 npm run test:backend           # backend: 278 unit tests, Jest, contra Prisma mockeado
 npm run test:backend:e2e       # backend: 28 tests de integración contra Postgres real (prodexa_test)
-npm run test:frontend          # frontend: 43 unit tests, Vitest (lib/costing, lib/format, lib/export, lib/api, lib/calidad, lib/sanitize-html)
+npm run test:frontend          # frontend: 59 unit tests, Vitest (lib/costing, lib/format, lib/export, lib/api, lib/calidad, lib/sanitize-html, lib/forecast, lib/sugerencias)
 npm run test:frontend:e2e      # frontend: 7 flujos E2E con Playwright + axe-core
 npm run test:coverage          # backend con reporte de cobertura (falla si baja de los umbrales, ver abajo)
 ```
