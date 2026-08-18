@@ -24,6 +24,12 @@ Donde algo no esta cubierto, se dice explicitamente y se deja como pendiente.
   independiente en ese momento); se construyo despues cuando el modelo de negocio paso
   a requerir equipos multiusuario por empresa. Decision completa, con consecuencias, en
   [ADR-005](../adr/ADR-005-rbac-organizaciones-multiusuario.md).
+- Las acciones destructivas de autoservicio (`DELETE /auth/me`, `DELETE
+  /organizations`) exigen la contrasena actual del usuario como confirmacion —no
+  basta con la sesion activa—. `DELETE /organizations` ademas esta restringido a
+  `ADMIN` y exige re-escribir el nombre exacto de la empresa; `DELETE /auth/me` se
+  bloquea si el usuario es el unico miembro activo de su organizacion, o si es
+  ADMIN sin otro ADMIN activo (evita dejar un equipo sin nadie que lo administre).
 
 ## A02:2021 — Cryptographic Failures
 
@@ -143,11 +149,13 @@ Donde algo no esta cubierto, se dice explicitamente y se deja como pendiente.
 
 **Estado: cubierto, ampliado significativamente desde la revision anterior.**
 
-- Tabla `AuditLog` registrando 12 tipos de evento (`AuditEvent`, ver
+- Tabla `AuditLog` registrando 16 tipos de evento (`AuditEvent`, ver
   [`docs/observability/audit-log.md`](../observability/audit-log.md)): login/logout/
-  registro/cambio de contrasena, anulacion de lotes y pagos, cambios de rol, remocion
-  de miembros, cambios de precio de ingrediente, ediciones de formulacion y cambios de
-  tarifas de la organizacion — con `userId` (cuando aplica), IP y User-Agent.
+  registro/cambio de contrasena, solicitud y confirmacion de recuperacion de
+  contrasena, anulacion de lotes y pagos, cambios de rol, remocion de miembros,
+  cambios de precio de ingrediente, ediciones de formulacion, cambios de tarifas de
+  la organizacion, y eliminacion de cuenta/empresa (autoservicio) — con `userId`
+  (cuando aplica), IP y User-Agent.
 - El logging de auditoria nunca interrumpe el flujo principal si falla (se atrapa y
   se registra en el logger de la app, no se relanza) — verificado con test dedicado.
 - **Ya no esta pendiente (corregido desde la revision anterior):** el cambio de
@@ -184,7 +192,7 @@ de nuevo si se agrega una funcionalidad de ese tipo.
 | A06 Vulnerable and Outdated Components | Cubierto (Dependabot + npm audit en CI) |
 | A07 Identification and Authentication Failures | Cubierto |
 | A08 Software and Data Integrity Failures | Parcial (sin firma de imagenes ni registry versionado) |
-| A09 Security Logging and Monitoring Failures | Cubierto, 12 tipos de evento; sin notificacion proactiva |
+| A09 Security Logging and Monitoring Failures | Cubierto, 16 tipos de evento; sin notificacion proactiva |
 | A10 SSRF | No aplica hoy |
 
 **Proxima revision recomendada:** si se agrega una funcionalidad que haga llamadas
