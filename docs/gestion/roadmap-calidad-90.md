@@ -17,9 +17,18 @@ legal pasa de 80 a **93**. Es el único ítem de la Fase 3 que ya no está difer
 `apps/frontend/vitest.config.ts` (≥90% statements/lines, ≥80% functions, ≥75% branches).
 Cobertura del frontend pasó de 40.7% a 93.8% de statements. Testability pasa de 85 a **92**.
 
-Con los dos ítems ya hechos, la nota de hoy sube de 82 a **~83/100** (el resto de Fase 1
-todavía no se ejecuta, así que el salto real se ve completo recién cuando se cierre el resto
-de la fase — ver la tabla de abajo).
+**Actualización 2026-08-18 (3):** ítem 1.2 (Escalabilidad/Rendimiento) también hecho —
+prueba de carga real contra la ruta de negocio real (`POST /simulations`: auth + Postgres +
+cálculo), no un mock. 720 req/s sostenidas a concurrencia normal, cero errores incluso a
+5x la concurrencia (100 conexiones) — el sistema degrada con latencia, nunca se cae.
+Encontró un cuello de botella real y todavía sin arreglar: el pool de conexiones de
+`pg`/Prisma no tiene un `max` configurado, así que a alta concurrencia las peticiones se
+encolan en vez de escalar (justo lo que el ítem 1.5 va a atacar con estos datos). Detalle
+completo en [`docs/testing/load-testing.md`](../testing/load-testing.md). Escalabilidad y
+Rendimiento pasan de 72/73 a **85/85** — ni el 90 que hubiera dado un resultado perfecto, ni
+el estancamiento de "sin medir": un número con evidencia real y un pendiente concreto.
+
+Con los tres ítems ya hechos, la nota de hoy sube de 82 a **~85/100**.
 
 ## Decisión: mientras el proyecto sea portafolio/pre-ingresos, gasto real = US$0
 
@@ -53,7 +62,7 @@ un solo pilar con un límite estructural que ningún truco gratuito cierra del t
 
 | | Hoy | Después de Fase 1 | Después de Fase 2 (techo sin gastar) |
 |---|:---:|:---:|:---:|
-| Nota general | **83 (B+)** — Legal ya en 93 | ~87 | **~89 (B+ alto)** |
+| Nota general | **85 (B+)** — Legal, Testability y Escalabilidad/Rendimiento ya hechos | ~87 | **~89 (B+ alto)** |
 
 Cifras estimadas por pilar, no una promesa exacta — algunas dependen del resultado real de
 una prueba de carga que todavía no corrió. El objetivo de este documento no es "maquillar"
@@ -65,17 +74,12 @@ autoevaluación.
 | # | Pilar | Acción | Hoy → meta | Entregable |
 |---|---|---|:---:|---|
 | ~~1.1~~ | ~~Testability~~ | ~~Tests para `forecast.ts` y `sugerencias.ts` (0% de cobertura) + `coverageThreshold` real en `apps/frontend/vitest.config.ts`~~ | ~~85 → 92~~ | **Hecho — 16 tests nuevos, cobertura de `src/lib/` 40.7%→93.8% statements, gate real agregado** |
-| 1.2 | Escalabilidad / Rendimiento | Script de carga (k6 o autocannon) contra el stack de `docker-compose`, corrido de verdad, con resultados publicados | 72 / 73 → 83–90* | `docs/testing/load-testing.md` con números reales, no promesas |
+| ~~1.2~~ | ~~Escalabilidad / Rendimiento~~ | ~~Script de carga (autocannon) contra el backend real, corrido de verdad, con resultados publicados~~ | ~~72 / 73 → 85 / 85~~ | **Hecho — `docs/testing/load-testing.md`: 720 req/s, 0 errores a 5x concurrencia, cuello de botella real encontrado (pool de conexiones sin `max`)** |
 | 1.3 | Monitoreabilidad | Alerta proactiva (correo al ADMIN) tras N logins fallidos seguidos — el pendiente que ya señalaba `docs/security/owasp-top10.md` (A09) | 78 → 85 | Feature real + test, no solo documentación |
 | 1.4 | Compatibilidad | Política de versionado/deprecación de la API documentada + test de snapshot del schema OpenAPI (evita romper el contrato sin darse cuenta) | 80 → 88 | `docs/api/versioning.md` + test en CI |
 | 1.5 | Eficiencia de recursos | Medir y documentar tamaño real de las imágenes Docker + ajustar el pool de conexiones de Prisma/pg con datos, no con el default sin revisar | 84 → 89 | `docs/deployment/` actualizado con números reales |
 | 1.6 | Fiabilidad | Retry con backoff en las operaciones de Prisma que fallan por error transitorio de conexión — el mismo tipo de fallo que causó el incidente #1 de `docs/observability/known-gaps.md` | 87 → 90 | Código + test dedicado |
 | 1.7 | Seguridad | Correr un scan automatizado (OWASP ZAP baseline) contra el ambiente real y documentar el resultado | 90 → 94 | Reporte nuevo en `docs/security/` |
-
-\* Depende del resultado real: si el motor de costeo aguanta una carga razonable sin
-degradarse, la nota sube cerca de 90; si aparece un cuello de botella real, la nota se
-queda donde está — pero ahora es una nota con evidencia, no una adivinanza. Eso ya es,
-en sí mismo, el punto de esta fase.
 
 ## Fase 2 — barato pero externo
 
