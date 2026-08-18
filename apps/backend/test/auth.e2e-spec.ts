@@ -43,24 +43,13 @@ describe('Auth (e2e, DB real)', () => {
   });
 
   it('rechaza el registro con un correo ya usado (409)', async () => {
-    const email = uniqueEmail('duplicado');
-    emailsCreados.push(email);
-
+    // Reutiliza primaryEmail (ya creado en beforeAll) en vez de registrar uno
+    // nuevo: cada /auth/register cuenta contra el rate limit de 5/min, y este
+    // archivo ya esta al limite (ver comentario de arriba).
     await request(app.getHttpServer())
       .post('/api/v1/auth/register')
       .send({
-        email,
-        password,
-        nombre: 'Original',
-        nombreEmpresa: 'Empresa Original',
-        aceptaTerminos: true,
-      })
-      .expect(201);
-
-    await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send({
-        email,
+        email: primaryEmail,
         password,
         nombre: 'Repetido',
         nombreEmpresa: 'Empresa Repetida',
