@@ -19,7 +19,7 @@ export function SidebarLogo() {
           fill="none"
         />
       </svg>
-      <span className="font-heading text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
+      <span className="font-heading text-lg font-bold tracking-tight text-slate-900 dark:text-white">
         PRODEXA
       </span>
     </span>

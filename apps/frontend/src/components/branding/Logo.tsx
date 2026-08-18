@@ -25,7 +25,7 @@ export function Logo({ className }: LogoProps) {
           fill="none"
         />
       </svg>
-      <span className="font-heading text-lg font-extrabold tracking-tight text-white">PRODEXA</span>
+      <span className="font-heading text-lg font-bold tracking-tight text-white">PRODEXA</span>
     </span>
   );
 }
