@@ -7,13 +7,33 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RolOrganizacion } from '../auth/types';
+import { AuthService } from '../auth/auth.service';
 import { AuditService } from '../audit/audit.service';
 import { AuditEvent } from '../audit/audit.types';
+import { StorageService } from '../storage/storage.service';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 import { UpdateOrganizationSettingsDto } from './dto/update-organization-settings.dto';
+import { DeleteOrganizationDto } from './dto/delete-organization.dto';
 
 const INVITATION_TTL_DIAS = 7;
+
+/** Nombre de archivo que UploadsController genera (ver generarNombreArchivo): UUID v4 +
+ * extension de imagen conocida. Se usa para encontrar, dentro del HTML libre de
+ * preparacionHtml, solo las imagenes que nosotros mismos subimos (nunca URLs externas que
+ * un usuario haya pegado a mano) antes de purgarlas del storage al eliminar una empresa. */
+const IMAGEN_SUBIDA_REGEX =
+  /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(?:png|jpe?g|gif|webp)/gi;
+
+export function extraerNombresDeImagenSubida(
+  html: string | null | undefined,
+): string[] {
+  if (!html) {
+    return [];
+  }
+  const coincidencias = html.match(IMAGEN_SUBIDA_REGEX);
+  return coincidencias ? Array.from(new Set(coincidencias)) : [];
+}
 
 /** Codigo corto (8 hex) facil de compartir/escribir a mano, en vez de un cuid largo. */
 function generarTokenInvitacion(): string {
@@ -39,6 +59,8 @@ export class OrganizationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
+    private readonly authService: AuthService,
+    private readonly storageService: StorageService,
   ) {}
 
   listMembers(organizationId: string) {
@@ -209,6 +231,69 @@ export class OrganizationsService {
       throw new NotFoundException('No se encontro esa invitacion.');
     }
     await this.prisma.invitation.delete({ where: { id: invitationId } });
+  }
+
+  /**
+   * Elimina la empresa completa: TODO lo que cuelga de organizationId (usuarios,
+   * formulaciones, ingredientes, historial de versiones, ordenes de produccion, pagos,
+   * proveedores, invitaciones) se borra en cascada por el propio schema — a diferencia de
+   * eliminar un solo perfil, aca no hace falta anonimizar nada porque no queda nadie en el
+   * equipo para quien preservar el dato. Irreversible: solo ADMIN, con contrasena y el
+   * nombre exacto de la empresa escrito a mano como doble confirmacion.
+   */
+  async deleteOrganization(
+    organizationId: string,
+    requestingUserId: string,
+    dto: DeleteOrganizationDto,
+  ): Promise<{ nombre: string; miembrosEliminados: number }> {
+    await this.authService.verifyPassword(requestingUserId, dto.password);
+
+    const organization = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+    });
+    if (!organization) {
+      throw new NotFoundException('No se encontro la empresa.');
+    }
+    if (dto.confirmacion.trim() !== organization.nombre) {
+      throw new BadRequestException(
+        'El nombre escrito no coincide exactamente con el nombre de la empresa.',
+      );
+    }
+
+    const [miembrosEliminados, formulaciones] = await Promise.all([
+      this.prisma.user.count({ where: { organizationId, activo: true } }),
+      this.prisma.formulation.findMany({
+        where: { organizationId },
+        select: { preparacionHtml: true },
+      }),
+    ]);
+
+    const archivos = Array.from(
+      new Set(
+        formulaciones.flatMap((f) =>
+          extraerNombresDeImagenSubida(f.preparacionHtml),
+        ),
+      ),
+    );
+
+    await this.prisma.organization.delete({ where: { id: organizationId } });
+
+    // Best-effort y despues del delete: la base de datos ya quedo consistente sin estos
+    // archivos, asi que una falla aca (ej. R2 caido) deja como mucho un archivo huerfano
+    // en el storage, nunca un dato de negocio a medio borrar.
+    await Promise.allSettled(
+      archivos.map((filename) => this.storageService.delete(filename)),
+    );
+
+    void this.auditService.log(AuditEvent.ORGANIZATION_DELETED, {
+      metadata: {
+        organizacionNombre: organization.nombre,
+        miembrosEliminados,
+        archivosPurgados: archivos.length,
+      },
+    });
+
+    return { nombre: organization.nombre, miembrosEliminados };
   }
 
   private async findActiveMember(organizationId: string, memberId: string) {

@@ -20,6 +20,20 @@ describe('MailService', () => {
     process.env = ORIGINAL_ENV;
   });
 
+  it('en produccion sin RESEND_API_KEY, falla al construirse en vez de arrancar en modo inseguro', () => {
+    process.env.NODE_ENV = 'production';
+    delete process.env.RESEND_API_KEY;
+
+    expect(() => new MailService()).toThrow(/RESEND_API_KEY/);
+  });
+
+  it('en produccion CON RESEND_API_KEY, se construye normalmente', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.RESEND_API_KEY = 'clave-de-prueba';
+
+    expect(() => new MailService()).not.toThrow();
+  });
+
   it('sin RESEND_API_KEY, loguea el codigo en vez de enviarlo y no llama al SDK', async () => {
     delete process.env.RESEND_API_KEY;
     const service = new MailService();

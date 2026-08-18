@@ -19,6 +19,7 @@ async function registrarYLoguear(
       password,
       nombre: 'Test',
       nombreEmpresa: `Empresa ${email}`,
+      aceptaTerminos: true,
     })
     .expect(201);
   const res = await request(app.getHttpServer())

@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  Equals,
+  IsBoolean,
   IsEmail,
   IsNotEmpty,
   IsOptional,
@@ -55,4 +57,16 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   invitationToken?: string;
+
+  @ApiProperty({
+    description:
+      'Autorizacion expresa del titular para el tratamiento de datos personales (Ley 1581 de 2012). Debe ser true; el registro se rechaza si falta o es false.',
+    example: true,
+  })
+  @IsBoolean()
+  @Equals(true, {
+    message:
+      'Debes aceptar los Terminos y Condiciones y la Politica de Tratamiento de Datos Personales para crear una cuenta.',
+  })
+  aceptaTerminos!: boolean;
 }

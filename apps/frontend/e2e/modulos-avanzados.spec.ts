@@ -27,6 +27,7 @@ test.describe('Modulos avanzados: Analisis, Reportes, Proveedores, Configuracion
       await page.getByLabel('Nombre de tu empresa').fill('Empresa Avanzada');
       await page.getByLabel('Contrasena', { exact: true }).fill(password);
       await page.getByLabel('Repetir contrasena').fill(password);
+      await page.getByLabel(/Acepto los Terminos y Condiciones/).check();
       await page.getByRole('button', { name: 'Registrarse' }).click();
       await expect(page).toHaveURL(/\/login$/);
 

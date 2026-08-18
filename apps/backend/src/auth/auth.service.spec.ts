@@ -25,6 +25,7 @@ describe('AuthService', () => {
       findUnique: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      count: jest.fn(),
     },
     organization: {
       create: jest.fn(),
@@ -84,7 +85,11 @@ describe('AuthService', () => {
       prisma.user.findUnique.mockResolvedValue({ id: '1' });
 
       await expect(
-        service.register({ email: 'a@a.com', password: 'Contrasena123' }),
+        service.register({
+          email: 'a@a.com',
+          password: 'Contrasena123',
+          aceptaTerminos: true,
+        }),
       ).rejects.toThrow(ConflictException);
     });
 
@@ -111,6 +116,7 @@ describe('AuthService', () => {
         password: 'Contrasena123',
         nombre: 'Ana',
         nombreEmpresa: 'Empresa Test',
+        aceptaTerminos: true,
       });
 
       expect(prisma.user.create).toHaveBeenCalled();
@@ -168,6 +174,7 @@ describe('AuthService', () => {
         email: 'b@b.com',
         password: 'Contrasena123',
         invitationToken: '  ab12cd34  ',
+        aceptaTerminos: true,
       });
 
       expect(prisma.invitation.findUnique).toHaveBeenCalledWith({
@@ -184,6 +191,7 @@ describe('AuthService', () => {
           email: 'c@c.com',
           password: 'Contrasena123',
           invitationToken: 'DEADBEEF',
+          aceptaTerminos: true,
         }),
       ).rejects.toThrow('La invitacion no es valida o ya expiro');
     });
@@ -633,6 +641,146 @@ describe('AuthService', () => {
           'NuevaContrasena123!',
         ),
       ).toBe(true);
+    });
+  });
+
+  describe('verifyPassword', () => {
+    it('lanza UnauthorizedException si el usuario no existe', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(service.verifyPassword('user-1', 'x')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('lanza UnauthorizedException si la contrasena no coincide', async () => {
+      const passwordHash = await argon2.hash('correcta');
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-1', passwordHash });
+
+      await expect(
+        service.verifyPassword('user-1', 'incorrecta'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('no lanza si la contrasena coincide', async () => {
+      const passwordHash = await argon2.hash('correcta');
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-1', passwordHash });
+
+      await expect(
+        service.verifyPassword('user-1', 'correcta'),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe('deleteAccount', () => {
+    const baseUser = {
+      id: 'user-1',
+      organizationId: 'org-1',
+      email: 'yo@a.com',
+      nombre: 'Yo',
+      rol: 'MIEMBRO',
+    };
+
+    it('lanza UnauthorizedException si el usuario no existe', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.deleteAccount('user-1', { password: 'x' }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('lanza UnauthorizedException si la contrasena es incorrecta', async () => {
+      const passwordHash = await argon2.hash('correcta');
+      prisma.user.findUnique.mockResolvedValue({ ...baseUser, passwordHash });
+
+      await expect(
+        service.deleteAccount('user-1', { password: 'incorrecta' }),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('lanza ForbiddenException si es el unico miembro activo de su empresa', async () => {
+      const passwordHash = await argon2.hash('correcta');
+      prisma.user.findUnique.mockResolvedValue({ ...baseUser, passwordHash });
+      prisma.user.count.mockResolvedValue(0);
+
+      await expect(
+        service.deleteAccount('user-1', { password: 'correcta' }),
+      ).rejects.toThrow(ForbiddenException);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('lanza ForbiddenException si es ADMIN y el unico administrador activo', async () => {
+      const passwordHash = await argon2.hash('correcta');
+      prisma.user.findUnique.mockResolvedValue({
+        ...baseUser,
+        rol: 'ADMIN',
+        passwordHash,
+      });
+      // Hay otro miembro activo (pasa el primer check)...
+      prisma.user.count
+        .mockResolvedValueOnce(1)
+        // ...pero ningun otro ADMIN activo (falla el segundo check).
+        .mockResolvedValueOnce(0);
+
+      await expect(
+        service.deleteAccount('user-1', { password: 'correcta' }),
+      ).rejects.toThrow(ForbiddenException);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('anonimiza al MIEMBRO, revoca sus sesiones y retorna sus datos previos', async () => {
+      const passwordHash = await argon2.hash('correcta');
+      prisma.user.findUnique.mockResolvedValue({ ...baseUser, passwordHash });
+      prisma.user.count.mockResolvedValue(1);
+      prisma.user.update.mockResolvedValue({});
+      prisma.refreshToken.updateMany.mockResolvedValue({});
+
+      const result = await service.deleteAccount('user-1', {
+        password: 'correcta',
+      });
+
+      expect(result).toEqual({
+        email: 'yo@a.com',
+        nombre: 'Yo',
+        rol: 'MIEMBRO',
+      });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const updateCall = prisma.user.update.mock.calls[0][0] as {
+        where: { id: string };
+        data: {
+          email: string;
+          nombre: string;
+          passwordHash: string;
+          activo: boolean;
+        };
+      };
+      expect(updateCall.where).toEqual({ id: 'user-1' });
+      expect(updateCall.data.email).toBe('eliminado-user-1@prodexa.invalid');
+      expect(updateCall.data.nombre).toBe('Usuario eliminado');
+      expect(updateCall.data.activo).toBe(false);
+      expect(updateCall.data.passwordHash).not.toBe(passwordHash);
+      expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { userId: 'user-1', revokedAt: null },
+        }),
+      );
+    });
+
+    it('permite a un ADMIN eliminar su perfil si hay otro ADMIN activo en el equipo', async () => {
+      const passwordHash = await argon2.hash('correcta');
+      prisma.user.findUnique.mockResolvedValue({
+        ...baseUser,
+        rol: 'ADMIN',
+        passwordHash,
+      });
+      prisma.user.count.mockResolvedValueOnce(2).mockResolvedValueOnce(1);
+      prisma.user.update.mockResolvedValue({});
+      prisma.refreshToken.updateMany.mockResolvedValue({});
+
+      await expect(
+        service.deleteAccount('user-1', { password: 'correcta' }),
+      ).resolves.toEqual({ email: 'yo@a.com', nombre: 'Yo', rol: 'ADMIN' });
     });
   });
 

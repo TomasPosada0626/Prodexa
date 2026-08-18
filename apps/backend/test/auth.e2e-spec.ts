@@ -32,6 +32,7 @@ describe('Auth (e2e, DB real)', () => {
         password,
         nombre: 'Cuenta Primaria',
         nombreEmpresa: 'Empresa Primaria',
+        aceptaTerminos: true,
       })
       .expect(201);
   });
@@ -52,6 +53,7 @@ describe('Auth (e2e, DB real)', () => {
         password,
         nombre: 'Original',
         nombreEmpresa: 'Empresa Original',
+        aceptaTerminos: true,
       })
       .expect(201);
 
@@ -62,6 +64,7 @@ describe('Auth (e2e, DB real)', () => {
         password,
         nombre: 'Repetido',
         nombreEmpresa: 'Empresa Repetida',
+        aceptaTerminos: true,
       })
       .expect(409);
   });
@@ -74,6 +77,7 @@ describe('Auth (e2e, DB real)', () => {
         password: '123',
         nombre: 'Debil',
         nombreEmpresa: 'Empresa Debil',
+        aceptaTerminos: true,
       })
       .expect(400);
   });
@@ -85,6 +89,20 @@ describe('Auth (e2e, DB real)', () => {
         email: uniqueEmail('sin-empresa'),
         password,
         nombre: 'Sin Empresa',
+        aceptaTerminos: true,
+      })
+      .expect(400);
+  });
+
+  it('rechaza el registro sin aceptar terminos/politica de datos (400)', async () => {
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({
+        email: uniqueEmail('sin-terminos'),
+        password,
+        nombre: 'Sin Terminos',
+        nombreEmpresa: 'Empresa Sin Terminos',
+        aceptaTerminos: false,
       })
       .expect(400);
   });

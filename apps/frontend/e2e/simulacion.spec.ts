@@ -17,6 +17,7 @@ test.describe('Flujo completo de simulacion de costos', () => {
       await page.getByLabel('Nombre de tu empresa').fill('Empresa Simulacion');
       await page.getByLabel('Contrasena', { exact: true }).fill(password);
       await page.getByLabel('Repetir contrasena').fill(password);
+      await page.getByLabel(/Acepto los Terminos y Condiciones/).check();
       await page.getByRole('button', { name: 'Registrarse' }).click();
       await expect(page).toHaveURL(/\/login$/);
 

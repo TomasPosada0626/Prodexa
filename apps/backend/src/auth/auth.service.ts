@@ -15,6 +15,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { DeleteAccountDto } from './dto/delete-account.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AuthTokens, AuthenticatedUser, RolOrganizacion } from './types';
@@ -262,6 +263,102 @@ export class AuthService {
       where: { id: userId },
       data: { passwordHash },
     });
+  }
+
+  /** Verifica la contrasena actual del usuario sin hacer ningun otro cambio. Usado por
+   * acciones destructivas de otros modulos (ej. eliminar la empresa completa) que
+   * necesitan la misma confirmacion que cambiar la contrasena o eliminar el perfil. */
+  async verifyPassword(userId: string, password: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException('Usuario no encontrado.');
+    }
+    const passwordValida = await argon2.verify(user.passwordHash, password);
+    if (!passwordValida) {
+      throw new UnauthorizedException('La contrasena no es correcta.');
+    }
+  }
+
+  /**
+   * "Eliminar mi perfil" para un usuario que NO es el unico miembro de su empresa: en vez
+   * de borrar la fila (lo que arrastraria en cascada las formulaciones/ordenes que este
+   * usuario creo, aunque le pertenecen a la empresa y el resto del equipo las sigue
+   * usando), se anonimiza en el lugar — mismo espiritu que removeMember en
+   * OrganizationsService, un paso mas alla: ahi solo se desactiva, aca ademas se borran
+   * los datos personales de verdad (email, nombre, password), que es lo que Habeas Data
+   * exige poder pedir. La formulacion sigue existiendo, con el autor anonimizado.
+   *
+   * Si el usuario es el unico miembro activo de su empresa, no aplica: no hay "equipo"
+   * que siga usando sus datos, y anonimizar dejaria una empresa zombie sin nadie que
+   * pueda volver a entrar. Para ese caso existe eliminar la empresa completa.
+   */
+  async deleteAccount(
+    userId: string,
+    dto: DeleteAccountDto,
+  ): Promise<{ email: string; nombre: string | null; rol: string }> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException('Usuario no encontrado.');
+    }
+
+    const passwordValida = await argon2.verify(user.passwordHash, dto.password);
+    if (!passwordValida) {
+      throw new UnauthorizedException('La contrasena no es correcta.');
+    }
+
+    const otrosMiembrosActivos = await this.prisma.user.count({
+      where: {
+        organizationId: user.organizationId,
+        activo: true,
+        id: { not: userId },
+      },
+    });
+
+    if (otrosMiembrosActivos === 0) {
+      throw new ForbiddenException(
+        'Eres el unico miembro de tu empresa: no hay equipo que siga usando estos datos. Para eliminar tu cuenta, elimina la empresa completa desde Configuracion.',
+      );
+    }
+
+    if (user.rol === ('ADMIN' satisfies RolOrganizacion)) {
+      const otrosAdmins = await this.prisma.user.count({
+        where: {
+          organizationId: user.organizationId,
+          activo: true,
+          rol: 'ADMIN' satisfies RolOrganizacion,
+          id: { not: userId },
+        },
+      });
+      if (otrosAdmins === 0) {
+        throw new ForbiddenException(
+          'Eres el unico administrador de tu empresa. Transfiere el rol de ADMIN a otro miembro del equipo antes de eliminar tu perfil, o elimina la empresa completa en su lugar.',
+        );
+      }
+    }
+
+    // Hash aleatorio, no derivado de nada reutilizable: la contrasena original queda
+    // irrecuperable incluso si alguien mas tarde leyera la fila directo de la base de datos.
+    const passwordHashAnonimo = await argon2.hash(
+      randomBytes(32).toString('hex'),
+    );
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          email: `eliminado-${userId}@prodexa.invalid`,
+          nombre: 'Usuario eliminado',
+          passwordHash: passwordHashAnonimo,
+          activo: false,
+        },
+      }),
+      this.prisma.refreshToken.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      }),
+    ]);
+
+    return { email: user.email, nombre: user.nombre, rol: user.rol };
   }
 
   /**

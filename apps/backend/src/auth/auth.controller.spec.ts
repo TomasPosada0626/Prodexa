@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { AuditService } from '../audit/audit.service';
 import { AuditEvent } from '../audit/audit.types';
 import { REFRESH_TOKEN_COOKIE } from './cookie.util';
+import { LEGAL_POLICY_VERSION } from './legal.constants';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -16,6 +17,7 @@ describe('AuthController', () => {
     me: jest.fn(),
     updateProfile: jest.fn(),
     changePassword: jest.fn(),
+    deleteAccount: jest.fn(),
     forgotPassword: jest.fn(),
     resetPassword: jest.fn(),
     listSessions: jest.fn(),
@@ -55,16 +57,26 @@ describe('AuthController', () => {
     controller = module.get(AuthController);
   });
 
-  it('register audita REGISTER con el userId creado', async () => {
+  it('register audita REGISTER con el userId creado y la evidencia de autorizacion', async () => {
     authService.register.mockResolvedValue({ id: 'user-1' });
-    const dto = { email: 'a@a.com', password: 'Contrasena123!' };
+    const dto = {
+      email: 'a@a.com',
+      password: 'Contrasena123!',
+      aceptaTerminos: true,
+    };
 
     const result = await controller.register(dto, mockRequest());
 
     expect(result).toEqual({ id: 'user-1' });
     expect(auditService.log).toHaveBeenCalledWith(
       AuditEvent.REGISTER,
-      expect.objectContaining({ userId: 'user-1' }),
+      expect.objectContaining({
+        userId: 'user-1',
+        metadata: {
+          terminosAceptados: true,
+          versionPoliticas: LEGAL_POLICY_VERSION,
+        },
+      }),
     );
   });
 
@@ -200,6 +212,40 @@ describe('AuthController', () => {
       AuditEvent.CHANGE_PASSWORD,
       expect.objectContaining({ userId: 'user-1' }),
     );
+  });
+
+  it('deleteAccount limpia cookies y audita ACCOUNT_DELETED con los datos previos a anonimizar', async () => {
+    authService.deleteAccount.mockResolvedValue({
+      email: 'antes@a.com',
+      nombre: 'Nombre Anterior',
+      rol: 'MIEMBRO',
+    });
+    const res = mockResponse();
+
+    const result = await controller.deleteAccount(
+      user,
+      { password: 'x' },
+      mockRequest(),
+      res as never,
+    );
+
+    expect(authService.deleteAccount).toHaveBeenCalledWith('user-1', {
+      password: 'x',
+    });
+    expect(res.clearCookie).toHaveBeenCalled();
+    expect(auditService.log).toHaveBeenCalledWith(
+      AuditEvent.ACCOUNT_DELETED,
+      expect.objectContaining({
+        userId: 'user-1',
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        metadata: expect.objectContaining({
+          emailAnterior: 'antes@a.com',
+          nombreAnterior: 'Nombre Anterior',
+          rol: 'MIEMBRO',
+        }),
+      }),
+    );
+    expect(result).toEqual({ message: 'Tu perfil fue eliminado.' });
   });
 
   it('forgotPassword audita PASSWORD_RESET_REQUESTED cuando el correo pertenece a una cuenta real', async () => {

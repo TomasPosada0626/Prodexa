@@ -51,6 +51,7 @@ test.describe('Recuperacion de contrasena', () => {
       await page.getByLabel('Nombre de tu empresa').fill('Empresa Recuperacion');
       await page.getByLabel('Contrasena', { exact: true }).fill(passwordOriginal);
       await page.getByLabel('Repetir contrasena').fill(passwordOriginal);
+      await page.getByLabel(/Acepto los Terminos y Condiciones/).check();
       await page.getByRole('button', { name: 'Registrarse' }).click();
       await expect(page).toHaveURL(/\/login$/);
     });

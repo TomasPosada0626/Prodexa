@@ -283,6 +283,8 @@ export interface RegisterInput {
   nombre?: string;
   nombreEmpresa?: string;
   invitationToken?: string;
+  /** Autorizacion expresa del titular para el tratamiento de datos personales (Ley 1581 de 2012). */
+  aceptaTerminos: boolean;
 }
 
 export interface LoginInput {
@@ -430,6 +432,25 @@ export function updateOrganizationSettings(
 
 export async function changePassword(input: ChangePasswordInput): Promise<void> {
   await request<void>('/auth/change-password', { method: 'POST', body: JSON.stringify(input) });
+}
+
+/** "Eliminar mi perfil": si sos el unico miembro activo de tu empresa, el backend rechaza esto
+ * (no hay equipo para el que preservar los datos) — usa deleteOrganization en ese caso. Si sos
+ * ADMIN y hay otros miembros pero ningun otro ADMIN, tambien lo rechaza: primero hay que
+ * transferir el rol de ADMIN a alguien mas desde "Mi equipo". */
+export function deleteAccount(password: string): Promise<{ message: string }> {
+  return request<{ message: string }>('/auth/me', {
+    method: 'DELETE',
+    body: JSON.stringify({ password }),
+  });
+}
+
+/** Elimina la empresa completa y todos sus datos (irreversible). Solo ADMIN. */
+export function deleteOrganization(password: string, confirmacion: string): Promise<{ message: string }> {
+  return request<{ message: string }>('/organizations', {
+    method: 'DELETE',
+    body: JSON.stringify({ password, confirmacion }),
+  });
 }
 
 export function forgotPassword(input: ForgotPasswordInput): Promise<{ message: string }> {
