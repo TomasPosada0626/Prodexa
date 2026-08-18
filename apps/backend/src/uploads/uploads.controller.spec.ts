@@ -20,6 +20,7 @@ describe('UploadsController', () => {
   let controller: UploadsController;
   const storageService = {
     upload: jest.fn(),
+    delete: jest.fn(),
   };
 
   beforeEach(() => {
