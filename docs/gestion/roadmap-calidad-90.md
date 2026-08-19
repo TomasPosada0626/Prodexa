@@ -47,7 +47,15 @@ con un diff legible del contrato roto. Compatibilidad pasa de 80 a **88**.
 
 Con los cinco ítems ya hechos, la nota de hoy sube de 82 a **~86/100**.
 
-## Pausa de sesión — 2026-08-18, retomar desde acá
+**Actualización 2026-08-19:** ítem 1.5 cerrado del todo (ver el detalle en la sección de
+pausa de sesión, abajo, ahora resuelta) y confirmado también que 1.6 (Fiabilidad, retry
+con backoff en Prisma) y 1.8 (backup diario a R2 + keep-warm) ya estaban committeados y
+pusheados. Con Legal, 1.1-1.6 y 1.8 hechos, y solo 1.7 (Seguridad) sin arrancar en Fase 1,
+la nota general sube de 86 a **~87/100** — calculada como el promedio de los 13 pilares
+individuales que ya trae este documento y el README, no un número nuevo inventado.
+Propagado al README en la misma sesión.
+
+## Pausa de sesión — 2026-08-18, retomar desde acá (resuelta 2026-08-19)
 
 La máquina quedó saturada (~10 contenedores de otro proyecto corriendo en paralelo, más
 todo lo de hoy) y el build de Docker del ítem 1.5 falló por timeout de red
@@ -68,14 +76,15 @@ para liberar recursos. Estado exacto para retomar sin perder contexto:
     cualquier efecto real del pool). No vale la pena repetir esta comparación en esta
     máquina; si se quiere un número confiable, correrla contra el ambiente real de Render
     o una máquina sin otras cargas.
-  - ❌ **Sigue pendiente:** medir el tamaño real de las imágenes Docker (`docker build -f
-    apps/backend/Dockerfile -t prodexa-backend:size-check .` y lo mismo para frontend,
-    ambos desde la raíz del repo) y documentar los números en `docs/deployment/docker.md`.
-    Reintentar cuando la máquina esté descargada — es la única parte de 1.5 que sigue sin
-    evidencia real, y el único motivo de que 1.5 no esté tachado todavía.
-  - Al terminar 1.5: actualizar este archivo (marcar 1.5 con `~~tachado~~` como 1.1-1.4),
-    el README (fila "Eficiencia de recursos", 84→89), el badge/conteo de tests si aplica, y
-    republicar el scorecard (artifact `https://claude.ai/code/artifact/2db5d67e-c364-4336-a7cd-f7c4a35b6cca`).
+  - ✅ **Hecho (2026-08-19):** tamaño real de las imágenes Docker medido en una corrida
+    limpia — backend 1.13 GB → 896 MB (`npm prune --omit=dev` en el Dockerfile, poda 209 MB
+    de `node_modules` y 234 MB de la imagen total), frontend 391 MB sin cambios necesarios
+    (ya usa `output: standalone`). Documentado en
+    [`docs/deployment/docker.md`](../deployment/docker.md), commit `6c4258d`.
+  - Con eso, **1.5 queda cerrado** — ver ~~1.5~~ en la tabla de Fase 1 abajo. README (fila
+    "Eficiencia de recursos") y la nota general ya actualizados en esta misma sesión. El
+    scorecard publicado (artifact `https://claude.ai/code/artifact/2db5d67e-c364-4336-a7cd-f7c4a35b6cca`)
+    sigue pendiente de republicar con el 87/100 nuevo.
 
 **Actualización 2026-08-18 (6):** al retomar la sesión, `npm audit --omit=dev` (CI de
 Seguridad) llevaba varios pushes en rojo — `@prisma/config` (dependencia de `prisma`) trae
@@ -128,7 +137,7 @@ un solo pilar con un límite estructural que ningún truco gratuito cierra del t
 
 | | Hoy | Después de Fase 1 | Después de Fase 2 (techo sin gastar) |
 |---|:---:|:---:|:---:|
-| Nota general | **86 (B+)** — Legal, Testability, Escalabilidad/Rendimiento, Monitoreabilidad y Compatibilidad ya hechos | ~87 | **~89 (B+ alto)** |
+| Nota general | **87 (B+)** — Legal, Testability, Escalabilidad/Rendimiento, Monitoreabilidad, Compatibilidad, Eficiencia de recursos y Fiabilidad ya hechos; solo 1.7 (Seguridad) queda en Fase 1 | ~87-88 | **~89 (B+ alto)** |
 
 Cifras estimadas por pilar, no una promesa exacta — algunas dependen del resultado real de
 una prueba de carga que todavía no corrió. El objetivo de este documento no es "maquillar"
