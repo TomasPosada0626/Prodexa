@@ -20,7 +20,17 @@ import { SuppliersModule } from './suppliers/suppliers.module';
   imports: [
     SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 60 }]),
+    // GLOBAL_THROTTLE_LIMIT existe solo para poder correr una prueba de carga real
+    // (docs/testing/load-testing.md) sin que el limite global de 60/min por IP la tape
+    // antes de medir nada -- mismo patron que AUTH_THROTTLE_LIMIT en auth.controller.ts.
+    // Sin la variable, el default de produccion sigue siendo 60, sin cambios.
+    ThrottlerModule.forRoot([
+      {
+        name: 'default',
+        ttl: 60_000,
+        limit: Number(process.env.GLOBAL_THROTTLE_LIMIT ?? 60),
+      },
+    ]),
     PrismaModule,
     AuditModule,
     AuthModule,

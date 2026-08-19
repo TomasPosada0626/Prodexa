@@ -38,6 +38,7 @@ describe('Organizations (e2e, DB real): equipo, roles e invitaciones', () => {
         password,
         nombre: 'Admin',
         nombreEmpresa: 'Empresa Organizations Test',
+        aceptaTerminos: true,
       })
       .expect(201);
 
@@ -89,6 +90,7 @@ describe('Organizations (e2e, DB real): equipo, roles e invitaciones', () => {
         password,
         nombre: 'Miembro',
         invitationToken: invitation.token,
+        aceptaTerminos: true,
       })
       .expect(201);
 
@@ -109,6 +111,7 @@ describe('Organizations (e2e, DB real): equipo, roles e invitaciones', () => {
         email: uniqueEmail('token-invalido'),
         password,
         invitationToken: 'token-que-no-existe',
+        aceptaTerminos: true,
       })
       .expect(400);
   });
@@ -131,6 +134,7 @@ describe('Organizations (e2e, DB real): equipo, roles e invitaciones', () => {
         password,
         nombre: 'Lector',
         invitationToken: invitation.token,
+        aceptaTerminos: true,
       })
       .expect(201);
 
@@ -180,6 +184,7 @@ describe('Organizations (e2e, DB real): equipo, roles e invitaciones', () => {
         password,
         nombre: 'Ascendido',
         invitationToken: invitation.token,
+        aceptaTerminos: true,
       })
       .expect(201);
 

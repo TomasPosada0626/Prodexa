@@ -1,0 +1,1846 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Contrato de la API (schema OpenAPI) coincide con el snapshot committeado -- si falla, ver docs/api/versioning.md: paths 1`] = `
+{
+  "/api/v1": {
+    "get": {
+      "operationId": "AppController_getHealth",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "tags": [
+        "App",
+      ],
+    },
+  },
+  "/api/v1/audit-log": {
+    "get": {
+      "operationId": "AuditController_list",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Listar eventos de seguridad de la empresa (login, logout, registro, cambio de contrasena)",
+      "tags": [
+        "audit",
+      ],
+    },
+  },
+  "/api/v1/audit-log/{id}/revisar": {
+    "patch": {
+      "operationId": "AuditController_revisar",
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "responses": {
+        "204": {
+          "description": "",
+        },
+      },
+      "summary": "Marcar un inicio de sesion fallido como revisado",
+      "tags": [
+        "audit",
+      ],
+    },
+  },
+  "/api/v1/auth/change-password": {
+    "post": {
+      "operationId": "AuthController_changePassword",
+      "parameters": [],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ChangePasswordDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "204": {
+          "description": "",
+        },
+      },
+      "summary": "Cambiar la contrasena del usuario autenticado",
+      "tags": [
+        "auth",
+      ],
+    },
+  },
+  "/api/v1/auth/forgot-password": {
+    "post": {
+      "operationId": "AuthController_forgotPassword",
+      "parameters": [],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ForgotPasswordDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Solicitar un codigo de recuperacion de contrasena por correo",
+      "tags": [
+        "auth",
+      ],
+    },
+  },
+  "/api/v1/auth/login": {
+    "post": {
+      "operationId": "AuthController_login",
+      "parameters": [],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/LoginDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Iniciar sesion",
+      "tags": [
+        "auth",
+      ],
+    },
+  },
+  "/api/v1/auth/logout": {
+    "post": {
+      "operationId": "AuthController_logout",
+      "parameters": [],
+      "responses": {
+        "204": {
+          "description": "",
+        },
+      },
+      "summary": "Cerrar sesion y revocar el refresh token",
+      "tags": [
+        "auth",
+      ],
+    },
+  },
+  "/api/v1/auth/me": {
+    "delete": {
+      "operationId": "AuthController_deleteAccount",
+      "parameters": [],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DeleteAccountDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Eliminar (anonimizar) el perfil del usuario autenticado; sus formulaciones y ordenes de produccion se conservan para la empresa",
+      "tags": [
+        "auth",
+      ],
+    },
+    "get": {
+      "operationId": "AuthController_me",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Obtener el usuario autenticado actual",
+      "tags": [
+        "auth",
+      ],
+    },
+    "patch": {
+      "operationId": "AuthController_updateProfile",
+      "parameters": [],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UpdateProfileDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Actualizar el perfil del usuario autenticado",
+      "tags": [
+        "auth",
+      ],
+    },
+  },
+  "/api/v1/auth/refresh": {
+    "post": {
+      "operationId": "AuthController_refresh",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Renovar sesion usando el refresh token rotatorio",
+      "tags": [
+        "auth",
+      ],
+    },
+  },
+  "/api/v1/auth/register": {
+    "post": {
+      "operationId": "AuthController_register",
+      "parameters": [],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/RegisterDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "201": {
+          "description": "",
+        },
+      },
+      "summary": "Registrar una nueva cuenta (no inicia sesion automaticamente)",
+      "tags": [
+        "auth",
+      ],
+    },
+  },
+  "/api/v1/auth/reset-password": {
+    "post": {
+      "operationId": "AuthController_resetPassword",
+      "parameters": [],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ResetPasswordDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "204": {
+          "description": "",
+        },
+      },
+      "summary": "Confirmar el codigo de recuperacion y establecer una nueva contrasena",
+      "tags": [
+        "auth",
+      ],
+    },
+  },
+  "/api/v1/auth/sessions": {
+    "get": {
+      "operationId": "AuthController_listSessions",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Listar las sesiones activas del usuario autenticado",
+      "tags": [
+        "auth",
+      ],
+    },
+  },
+  "/api/v1/auth/sessions/{id}": {
+    "delete": {
+      "operationId": "AuthController_revokeSession",
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "responses": {
+        "204": {
+          "description": "",
+        },
+      },
+      "summary": "Revocar una sesion activa (cierra esa sesion en particular)",
+      "tags": [
+        "auth",
+      ],
+    },
+  },
+  "/api/v1/formulations": {
+    "get": {
+      "operationId": "FormulationsController_findAll",
+      "parameters": [
+        {
+          "description": "Si es "true", incluye tambien las formulaciones archivadas",
+          "in": "query",
+          "name": "incluirArchivadas",
+          "required": false,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Listar las formulaciones de la empresa del usuario autenticado",
+      "tags": [
+        "formulations",
+      ],
+    },
+    "post": {
+      "operationId": "FormulationsController_create",
+      "parameters": [],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CreateFormulationDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "201": {
+          "description": "Formulacion creada",
+        },
+      },
+      "summary": "Crear una nueva formulacion con sus ingredientes y preparacion",
+      "tags": [
+        "formulations",
+      ],
+    },
+  },
+  "/api/v1/formulations/{id}": {
+    "delete": {
+      "operationId": "FormulationsController_remove",
+      "parameters": [
+        {
+          "description": "Id de la formulacion",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "responses": {
+        "404": {
+          "description": "Formulacion no encontrada",
+        },
+      },
+      "summary": "Eliminar una formulacion",
+      "tags": [
+        "formulations",
+      ],
+    },
+    "get": {
+      "operationId": "FormulationsController_findOne",
+      "parameters": [
+        {
+          "description": "Id de la formulacion",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "responses": {
+        "404": {
+          "description": "Formulacion no encontrada",
+        },
+      },
+      "summary": "Obtener una formulacion por id",
+      "tags": [
+        "formulations",
+      ],
+    },
+    "patch": {
+      "operationId": "FormulationsController_update",
+      "parameters": [
+        {
+          "description": "Id de la formulacion",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UpdateFormulationDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "404": {
+          "description": "Formulacion no encontrada",
+        },
+      },
+      "summary": "Actualizar nombre, registro sanitario, preparacion o margenes de una formulacion",
+      "tags": [
+        "formulations",
+      ],
+    },
+  },
+  "/api/v1/formulations/{id}/ingredients/{ingredientId}/price": {
+    "patch": {
+      "operationId": "FormulationsController_updateIngredientPrice",
+      "parameters": [
+        {
+          "description": "Id de la formulacion",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+        {
+          "description": "Id del ingrediente",
+          "in": "path",
+          "name": "ingredientId",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UpdateIngredientPriceDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "404": {
+          "description": "Formulacion o ingrediente no encontrado",
+        },
+      },
+      "summary": "Actualizar el precio de un ingrediente (registra el cambio en el historial)",
+      "tags": [
+        "formulations",
+      ],
+    },
+  },
+  "/api/v1/formulations/{id}/ingredients/{ingredientId}/price-history": {
+    "get": {
+      "operationId": "FormulationsController_getIngredientPriceHistory",
+      "parameters": [
+        {
+          "description": "Id de la formulacion",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+        {
+          "description": "Id del ingrediente",
+          "in": "path",
+          "name": "ingredientId",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "responses": {
+        "404": {
+          "description": "Formulacion o ingrediente no encontrado",
+        },
+      },
+      "summary": "Historial de precios de un ingrediente",
+      "tags": [
+        "formulations",
+      ],
+    },
+  },
+  "/api/v1/formulations/{id}/versions": {
+    "get": {
+      "operationId": "FormulationsController_getVersions",
+      "parameters": [
+        {
+          "description": "Id de la formulacion",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "responses": {
+        "404": {
+          "description": "Formulacion no encontrada",
+        },
+      },
+      "summary": "Historial de versiones (snapshots completos) de una formulacion",
+      "tags": [
+        "formulations",
+      ],
+    },
+  },
+  "/api/v1/organizations": {
+    "delete": {
+      "operationId": "OrganizationsController_deleteOrganization",
+      "parameters": [],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DeleteOrganizationDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Eliminar la empresa completa y todos sus datos (irreversible). Solo ADMIN.",
+      "tags": [
+        "organizations",
+      ],
+    },
+  },
+  "/api/v1/organizations/invitations": {
+    "get": {
+      "operationId": "OrganizationsController_listPendingInvitations",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Listar las invitaciones vigentes de la empresa",
+      "tags": [
+        "organizations",
+      ],
+    },
+    "post": {
+      "operationId": "OrganizationsController_createInvitation",
+      "parameters": [],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CreateInvitationDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "201": {
+          "description": "",
+        },
+      },
+      "summary": "Generar un link de invitacion para sumar gente a la empresa",
+      "tags": [
+        "organizations",
+      ],
+    },
+  },
+  "/api/v1/organizations/invitations/{id}": {
+    "delete": {
+      "operationId": "OrganizationsController_revokeInvitation",
+      "parameters": [
+        {
+          "description": "Id de la invitacion",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "responses": {
+        "204": {
+          "description": "",
+        },
+      },
+      "summary": "Revocar una invitacion antes de que se use",
+      "tags": [
+        "organizations",
+      ],
+    },
+  },
+  "/api/v1/organizations/members": {
+    "get": {
+      "operationId": "OrganizationsController_listMembers",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Listar los miembros activos de la empresa",
+      "tags": [
+        "organizations",
+      ],
+    },
+  },
+  "/api/v1/organizations/members/{id}": {
+    "delete": {
+      "operationId": "OrganizationsController_removeMember",
+      "parameters": [
+        {
+          "description": "Id del usuario miembro",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "responses": {
+        "204": {
+          "description": "",
+        },
+      },
+      "summary": "Remover a un miembro de la empresa",
+      "tags": [
+        "organizations",
+      ],
+    },
+  },
+  "/api/v1/organizations/members/{id}/role": {
+    "patch": {
+      "operationId": "OrganizationsController_updateMemberRole",
+      "parameters": [
+        {
+          "description": "Id del usuario miembro",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UpdateMemberRoleDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Cambiar el rol de un miembro de la empresa",
+      "tags": [
+        "organizations",
+      ],
+    },
+  },
+  "/api/v1/organizations/settings": {
+    "patch": {
+      "operationId": "OrganizationsController_updateSettings",
+      "parameters": [],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UpdateOrganizationSettingsDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Actualizar las tarifas por hora (mano de obra, energia) de la empresa",
+      "tags": [
+        "organizations",
+      ],
+    },
+  },
+  "/api/v1/production-orders": {
+    "get": {
+      "operationId": "ProductionOrdersController_findAll",
+      "parameters": [
+        {
+          "in": "query",
+          "name": "formulationId",
+          "required": false,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Listar ordenes de produccion de la empresa, mas reciente primero",
+      "tags": [
+        "production-orders",
+      ],
+    },
+    "post": {
+      "operationId": "ProductionOrdersController_create",
+      "parameters": [],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CreateProductionOrderDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "201": {
+          "description": "",
+        },
+      },
+      "summary": "Registrar una orden de produccion (lote realmente producido)",
+      "tags": [
+        "production-orders",
+      ],
+    },
+  },
+  "/api/v1/production-orders/{id}": {
+    "delete": {
+      "operationId": "ProductionOrdersController_remove",
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "responses": {
+        "204": {
+          "description": "",
+        },
+      },
+      "summary": "Anular una orden de produccion registrada por error",
+      "tags": [
+        "production-orders",
+      ],
+    },
+    "patch": {
+      "operationId": "ProductionOrdersController_update",
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UpdateProductionOrderDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Corregir una orden de produccion ya registrada",
+      "tags": [
+        "production-orders",
+      ],
+    },
+  },
+  "/api/v1/production-orders/{id}/pagos": {
+    "get": {
+      "operationId": "ProductionOrdersController_listPagos",
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Listar los abonos registrados de un lote",
+      "tags": [
+        "production-orders",
+      ],
+    },
+    "post": {
+      "operationId": "ProductionOrdersController_addPago",
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CreatePagoDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "201": {
+          "description": "",
+        },
+      },
+      "summary": "Registrar un abono/pago parcial contra un lote (recalcula PENDIENTE/PARCIAL/PAGADO)",
+      "tags": [
+        "production-orders",
+      ],
+    },
+  },
+  "/api/v1/production-orders/{id}/pagos/{pagoId}": {
+    "delete": {
+      "operationId": "ProductionOrdersController_removePago",
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+        {
+          "in": "path",
+          "name": "pagoId",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Borrar un abono mal ingresado (recalcula el estado del lote)",
+      "tags": [
+        "production-orders",
+      ],
+    },
+  },
+  "/api/v1/simulations": {
+    "post": {
+      "operationId": "SimulationController_simulate",
+      "parameters": [],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/SimulateCostDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "201": {
+          "description": "",
+        },
+      },
+      "summary": "Simular costo y precio de venta al escalar una formulacion a una cantidad objetivo",
+      "tags": [
+        "simulation",
+      ],
+    },
+  },
+  "/api/v1/suppliers": {
+    "get": {
+      "operationId": "SuppliersController_findAll",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Listar los proveedores de la empresa con su historial de precios, para comparar cual conviene",
+      "tags": [
+        "suppliers",
+      ],
+    },
+    "post": {
+      "operationId": "SuppliersController_create",
+      "parameters": [],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CreateSupplierDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "201": {
+          "description": "",
+        },
+      },
+      "summary": "Crear un proveedor manualmente (antes de tener un precio registrado)",
+      "tags": [
+        "suppliers",
+      ],
+    },
+  },
+  "/api/v1/suppliers/{id}": {
+    "delete": {
+      "operationId": "SuppliersController_remove",
+      "parameters": [
+        {
+          "description": "Id del proveedor",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "responses": {
+        "204": {
+          "description": "",
+        },
+      },
+      "summary": "Eliminar un proveedor (su historial de precios se conserva, solo pierde el enlace formal)",
+      "tags": [
+        "suppliers",
+      ],
+    },
+    "patch": {
+      "operationId": "SuppliersController_rename",
+      "parameters": [
+        {
+          "description": "Id del proveedor",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+          },
+        },
+      ],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UpdateSupplierDto",
+            },
+          },
+        },
+        "required": true,
+      },
+      "responses": {
+        "200": {
+          "description": "",
+        },
+      },
+      "summary": "Renombrar un proveedor",
+      "tags": [
+        "suppliers",
+      ],
+    },
+  },
+  "/api/v1/uploads/images": {
+    "post": {
+      "operationId": "UploadsController_uploadImage",
+      "parameters": [],
+      "responses": {
+        "201": {
+          "description": "",
+        },
+      },
+      "summary": "Subir una imagen (usada por el editor de preparacion de formulaciones)",
+      "tags": [
+        "uploads",
+      ],
+    },
+  },
+}
+`;
+
+exports[`Contrato de la API (schema OpenAPI) coincide con el snapshot committeado -- si falla, ver docs/api/versioning.md: schemas 1`] = `
+{
+  "ChangePasswordDto": {
+    "properties": {
+      "currentPassword": {
+        "description": "Contrasena actual del usuario",
+        "type": "string",
+      },
+      "newPassword": {
+        "description": "Nueva contrasena: minimo 8 caracteres, con al menos una mayuscula, una minuscula, un numero y un caracter especial",
+        "example": "ContrasenaSegura123!",
+        "type": "string",
+      },
+    },
+    "required": [
+      "currentPassword",
+      "newPassword",
+    ],
+    "type": "object",
+  },
+  "CreateFormulationDto": {
+    "properties": {
+      "cantidadBaseKg": {
+        "description": "Cantidad en kg que produce esta formulacion (el lote base). Es la referencia que se usa luego en Produccion para escalar a cualquier cantidad objetivo.",
+        "example": 5,
+        "type": "number",
+      },
+      "categoria": {
+        "description": "Categoria del producto (ej. Salsas, Cremas)",
+        "type": "string",
+      },
+      "impuestoPorcentaje": {
+        "default": 19,
+        "description": "Impuesto aplicable a la formulacion, en porcentaje. Es el IVA fijo (19%), no un valor libre por producto.",
+        "example": 19,
+        "type": "number",
+      },
+      "ingredientes": {
+        "description": "Ingredientes de la formulacion",
+        "items": {
+          "$ref": "#/components/schemas/IngredientDto",
+        },
+        "type": "array",
+      },
+      "margenPorcentaje": {
+        "default": 30,
+        "description": "Margen de ganancia por defecto de la formulacion, en porcentaje",
+        "example": 30,
+        "type": "number",
+      },
+      "nombreProducto": {
+        "description": "Nombre del producto formulado",
+        "type": "string",
+      },
+      "preparacionHtml": {
+        "description": "Preparacion en formato HTML enriquecido (negrita, cursiva, listas, etc.)",
+        "type": "string",
+      },
+      "registroSanitario": {
+        "description": "Registro sanitario del producto. Enviar null para borrarlo.",
+        "nullable": true,
+        "type": "object",
+      },
+      "registroSanitarioEstado": {
+        "description": "Override manual del estado de cumplimiento cuando la fecha de vencimiento no representa la realidad (ej. tramite de renovacion en curso). Enviar null para volver al calculo automatico por fecha.",
+        "enum": [
+          "EN_TRAMITE",
+          "SUSPENDIDO",
+        ],
+        "nullable": true,
+        "type": "string",
+      },
+      "registroSanitarioVencimiento": {
+        "description": "Fecha de vencimiento del registro sanitario (ISO 8601). Enviar null para borrarla.",
+        "example": "2027-01-31",
+        "nullable": true,
+        "type": "object",
+      },
+      "tiempoProduccionHoras": {
+        "description": "Horas estimadas para producir cantidadBaseKg. Se escala proporcionalmente en cada orden y se usa para calcular automaticamente mano de obra propia y energia en Produccion.",
+        "example": 2,
+        "type": "number",
+      },
+      "vidaUtilDias": {
+        "description": "Vida util del producto en dias desde que se produce. Se usa para sugerir automaticamente la fecha de vencimiento de cada lote en Produccion.",
+        "example": 180,
+        "type": "number",
+      },
+    },
+    "required": [
+      "nombreProducto",
+      "cantidadBaseKg",
+      "ingredientes",
+    ],
+    "type": "object",
+  },
+  "CreateInvitationDto": {
+    "properties": {
+      "rol": {
+        "description": "Rol con el que se unira la persona invitada",
+        "enum": [
+          "ADMIN",
+          "COORDINADOR",
+          "MIEMBRO",
+        ],
+        "example": "MIEMBRO",
+        "type": "string",
+      },
+    },
+    "required": [
+      "rol",
+    ],
+    "type": "object",
+  },
+  "CreatePagoDto": {
+    "properties": {
+      "fecha": {
+        "description": "Fecha del abono. Si no se envia, se usa la fecha actual.",
+        "type": "string",
+      },
+      "monto": {
+        "description": "Monto abonado a este lote",
+        "example": 50000,
+        "type": "number",
+      },
+    },
+    "required": [
+      "monto",
+    ],
+    "type": "object",
+  },
+  "CreateProductionOrderDto": {
+    "properties": {
+      "cantidadObjetivoKg": {
+        "description": "Cantidad producida, en kg",
+        "example": 5,
+        "type": "number",
+      },
+      "costoEmpaque": {
+        "description": "Costo real de empaque (envase) de este lote",
+        "example": 0,
+        "type": "number",
+      },
+      "costoEnergia": {
+        "description": "Costo real de energia/gas de este lote (tiempoProduccionHoras x tarifaEnergiaHora)",
+        "example": 0,
+        "type": "number",
+      },
+      "costoEtiqueta": {
+        "description": "Costo real de etiqueta de este lote",
+        "example": 0,
+        "type": "number",
+      },
+      "costoGastosGenerales": {
+        "description": "Prorrateo de gastos generales de la empresa para este lote (gastoGeneralMensual / capacidad mensual promedio calculada x cantidadObjetivoKg)",
+        "example": 0,
+        "type": "number",
+      },
+      "costoManoObra": {
+        "description": "Costo real de mano de obra de este lote: monto de maquila si esMaquila es true, o calculado (tiempoProduccionHoras x tarifaManoObraHora) si es false",
+        "example": 0,
+        "type": "number",
+      },
+      "costoMermas": {
+        "description": "Costo real de mermas/desperdicio de este lote",
+        "example": 0,
+        "type": "number",
+      },
+      "costoTransporte": {
+        "description": "Costo real de transporte de este lote",
+        "example": 0,
+        "type": "number",
+      },
+      "esMaquila": {
+        "description": "true si este lote se mando a maquilar con un tercero (costoManoObra es lo que cobro el maquilador); false si se calculo solo (tiempoProduccionHoras x tarifaManoObraHora)",
+        "example": false,
+        "type": "boolean",
+      },
+      "estadoPago": {
+        "description": "Estado de cobro del lote",
+        "enum": [
+          "PENDIENTE",
+          "PARCIAL",
+          "PAGADO",
+        ],
+        "type": "string",
+      },
+      "estadoProduccion": {
+        "description": "Estado del flujo fisico del lote (no de cobro). Si no se envia, arranca en PLANIFICADO.",
+        "enum": [
+          "PLANIFICADO",
+          "EN_PROCESO",
+          "EN_CALIDAD",
+          "TERMINADO",
+          "RECHAZADO",
+        ],
+        "type": "string",
+      },
+      "fechaPago": {
+        "description": "Fecha en que se cobro el lote",
+        "type": "string",
+      },
+      "fechaVencimiento": {
+        "description": "Fecha de vencimiento del lote. Si no se envia y la formulacion tiene vidaUtilDias configurada, se calcula automaticamente.",
+        "type": "string",
+      },
+      "formulationId": {
+        "description": "Id de la formulacion producida",
+        "type": "string",
+      },
+      "impuestoPorcentaje": {
+        "description": "Impuesto usado para esta orden (si no se envia, se usa el de la formulacion)",
+        "type": "number",
+      },
+      "maquilaIncluyeEmpaque": {
+        "description": "Solo aplica si esMaquila es true: si la tarifa del maquilador ya incluye empacar y etiquetar el producto terminado (entrega llave en mano)",
+        "example": false,
+        "type": "boolean",
+      },
+      "margenPorcentaje": {
+        "description": "Margen usado para esta orden (si no se envia, se usa el de la formulacion)",
+        "type": "number",
+      },
+      "notasCalidad": {
+        "description": "Notas de control de calidad (ej. motivo de un rechazo)",
+        "type": "string",
+      },
+      "numeroLote": {
+        "description": "Numero de lote para trazabilidad. Si no se envia, se genera automaticamente.",
+        "type": "string",
+      },
+      "precioVentaReal": {
+        "description": "Precio de venta real cobrado (si se conoce); si no se envia, se usa el sugerido como estimado",
+        "type": "number",
+      },
+      "tamanoPresentacion": {
+        "description": "Tamano de la presentacion/envase de este lote (solo informativo, no afecta el costeo)",
+        "example": 500,
+        "type": "number",
+      },
+      "tiempoProduccionHoras": {
+        "description": "Horas estimadas de produccion de este lote (snapshot de tiempoProduccionHoras de la formulacion, escalado a la cantidad)",
+        "example": 2,
+        "type": "number",
+      },
+      "unidadPresentacion": {
+        "description": "Unidad del tamano de presentacion",
+        "enum": [
+          "ml",
+          "L",
+          "g",
+          "kg",
+        ],
+        "type": "string",
+      },
+    },
+    "required": [
+      "formulationId",
+      "cantidadObjetivoKg",
+    ],
+    "type": "object",
+  },
+  "CreateSupplierDto": {
+    "properties": {
+      "nombre": {
+        "description": "Nombre del proveedor",
+        "example": "Distribuidora XYZ",
+        "type": "string",
+      },
+    },
+    "required": [
+      "nombre",
+    ],
+    "type": "object",
+  },
+  "DeleteAccountDto": {
+    "properties": {
+      "password": {
+        "description": "Contrasena actual del usuario, para confirmar la eliminacion.",
+        "type": "string",
+      },
+    },
+    "required": [
+      "password",
+    ],
+    "type": "object",
+  },
+  "DeleteOrganizationDto": {
+    "properties": {
+      "confirmacion": {
+        "description": "Nombre exacto de la empresa, escrito por el usuario para confirmar que quiere eliminarla por completo.",
+        "type": "string",
+      },
+      "password": {
+        "description": "Contrasena actual del ADMIN, para confirmar la eliminacion.",
+        "type": "string",
+      },
+    },
+    "required": [
+      "password",
+      "confirmacion",
+    ],
+    "type": "object",
+  },
+  "ForgotPasswordDto": {
+    "properties": {
+      "email": {
+        "description": "Correo de la cuenta a recuperar",
+        "type": "string",
+      },
+    },
+    "required": [
+      "email",
+    ],
+    "type": "object",
+  },
+  "IngredientDto": {
+    "properties": {
+      "cantidadGramosBase": {
+        "description": "Cantidad en gramos para el lote base",
+        "type": "number",
+      },
+      "cantidadKg": {
+        "description": "Cantidad en kg para el lote base",
+        "type": "number",
+      },
+      "nombre": {
+        "description": "Nombre del ingrediente",
+        "type": "string",
+      },
+      "porcentaje": {
+        "description": "Porcentaje del ingrediente en la formula",
+        "example": 12.5,
+        "type": "number",
+      },
+      "precioKg": {
+        "description": "Precio por kg del ingrediente",
+        "type": "number",
+      },
+      "precioTotal": {
+        "description": "Precio total del ingrediente en el lote base",
+        "type": "number",
+      },
+    },
+    "required": [
+      "nombre",
+      "porcentaje",
+      "cantidadGramosBase",
+      "cantidadKg",
+      "precioKg",
+      "precioTotal",
+    ],
+    "type": "object",
+  },
+  "LoginDto": {
+    "properties": {
+      "email": {
+        "description": "Correo del usuario",
+        "type": "string",
+      },
+      "password": {
+        "description": "Contrasena",
+        "type": "string",
+      },
+    },
+    "required": [
+      "email",
+      "password",
+    ],
+    "type": "object",
+  },
+  "RegisterDto": {
+    "properties": {
+      "aceptaTerminos": {
+        "description": "Autorizacion expresa del titular para el tratamiento de datos personales (Ley 1581 de 2012). Debe ser true; el registro se rechaza si falta o es false.",
+        "example": true,
+        "type": "boolean",
+      },
+      "email": {
+        "description": "Correo del usuario",
+        "example": "usuario@ejemplo.com",
+        "type": "string",
+      },
+      "invitationToken": {
+        "description": "Token de invitacion para unirte a una empresa existente en vez de crear una nueva.",
+        "type": "string",
+      },
+      "nombre": {
+        "description": "Nombre completo del usuario",
+        "type": "string",
+      },
+      "nombreEmpresa": {
+        "description": "Nombre de la empresa a crear. Obligatorio si no se envia un token de invitacion (en ese caso te unes a la empresa de la invitacion en vez de crear una nueva).",
+        "type": "string",
+      },
+      "password": {
+        "description": "Contrasena: minimo 8 caracteres, con al menos una mayuscula, una minuscula, un numero y un caracter especial",
+        "example": "ContrasenaSegura123!",
+        "type": "string",
+      },
+    },
+    "required": [
+      "email",
+      "password",
+      "aceptaTerminos",
+    ],
+    "type": "object",
+  },
+  "ResetPasswordDto": {
+    "properties": {
+      "code": {
+        "description": "Codigo de 6 digitos enviado por correo",
+        "type": "string",
+      },
+      "email": {
+        "description": "Correo de la cuenta a recuperar",
+        "type": "string",
+      },
+      "newPassword": {
+        "description": "Nueva contrasena: minimo 8 caracteres, con al menos una mayuscula, una minuscula, un numero y un caracter especial",
+        "example": "ContrasenaSegura123!",
+        "type": "string",
+      },
+    },
+    "required": [
+      "email",
+      "code",
+      "newPassword",
+    ],
+    "type": "object",
+  },
+  "SimulateCostDto": {
+    "properties": {
+      "cantidadObjetivoKg": {
+        "description": "Cantidad objetivo a producir, en kg",
+        "example": 10,
+        "type": "number",
+      },
+      "costoEmpaque": {
+        "description": "Costo operativo estimado de empaque para la cantidad objetivo (para que el precio sugerido y la utilidad reflejen el costo total, no solo ingredientes)",
+        "example": 0,
+        "type": "number",
+      },
+      "costoEnergia": {
+        "description": "Costo estimado de energia/gas para la cantidad objetivo (tiempo estimado de produccion x tarifa/hora de energia de la empresa)",
+        "example": 0,
+        "type": "number",
+      },
+      "costoEtiqueta": {
+        "description": "Costo operativo estimado de etiqueta para la cantidad objetivo",
+        "example": 0,
+        "type": "number",
+      },
+      "costoGastosGenerales": {
+        "description": "Prorrateo estimado de gastos generales de la empresa para la cantidad objetivo",
+        "example": 0,
+        "type": "number",
+      },
+      "costoManoObra": {
+        "description": "Costo estimado de mano de obra para la cantidad objetivo (tiempo estimado de produccion x tarifa/hora de la empresa)",
+        "example": 0,
+        "type": "number",
+      },
+      "costoMermas": {
+        "description": "Costo operativo estimado de mermas para la cantidad objetivo (ya calculado en $, no en %)",
+        "example": 0,
+        "type": "number",
+      },
+      "costoTransporte": {
+        "description": "Costo operativo estimado de transporte para la cantidad objetivo",
+        "example": 0,
+        "type": "number",
+      },
+      "descuentoMayoristaPorcentaje": {
+        "description": "Descuento por venta mayorista, en porcentaje, aplicado sobre el precio final",
+        "example": 10,
+        "type": "number",
+      },
+      "formulationId": {
+        "description": "Id de la formulacion sobre la que se simula el costo",
+        "type": "string",
+      },
+      "impuestoPorcentaje": {
+        "description": "Impuesto a usar, en porcentaje. Si se omite, se usa el impuesto guardado en la formulacion.",
+        "example": 19,
+        "type": "number",
+      },
+      "margenPorcentaje": {
+        "description": "Margen de ganancia a usar, en porcentaje (0-100). Si se omite, se usa el margen guardado en la formulacion.",
+        "example": 35,
+        "type": "number",
+      },
+    },
+    "required": [
+      "formulationId",
+      "cantidadObjetivoKg",
+    ],
+    "type": "object",
+  },
+  "UpdateFormulationDto": {
+    "properties": {
+      "activa": {
+        "description": "Archivar (false) deja de ofrecer la formulacion en Preparar/Costos sin borrar nada; activar (true) la vuelve a mostrar",
+        "example": false,
+        "type": "boolean",
+      },
+      "cantidadBaseKg": {
+        "description": "Cantidad en kg que produce esta formulacion (el lote base). Es la referencia que se usa luego en Produccion para escalar a cualquier cantidad objetivo.",
+        "example": 5,
+        "type": "number",
+      },
+      "categoria": {
+        "description": "Categoria del producto (ej. Salsas, Cremas)",
+        "type": "string",
+      },
+      "impuestoPorcentaje": {
+        "default": 19,
+        "description": "Impuesto aplicable a la formulacion, en porcentaje. Es el IVA fijo (19%), no un valor libre por producto.",
+        "example": 19,
+        "type": "number",
+      },
+      "ingredientes": {
+        "description": "Ingredientes de la formulacion",
+        "items": {
+          "$ref": "#/components/schemas/IngredientDto",
+        },
+        "type": "array",
+      },
+      "margenPorcentaje": {
+        "default": 30,
+        "description": "Margen de ganancia por defecto de la formulacion, en porcentaje",
+        "example": 30,
+        "type": "number",
+      },
+      "nombreProducto": {
+        "description": "Nombre del producto formulado",
+        "type": "string",
+      },
+      "preparacionHtml": {
+        "description": "Preparacion en formato HTML enriquecido (negrita, cursiva, listas, etc.)",
+        "type": "string",
+      },
+      "registroSanitario": {
+        "description": "Registro sanitario del producto. Enviar null para borrarlo.",
+        "nullable": true,
+        "type": "object",
+      },
+      "registroSanitarioEstado": {
+        "description": "Override manual del estado de cumplimiento cuando la fecha de vencimiento no representa la realidad (ej. tramite de renovacion en curso). Enviar null para volver al calculo automatico por fecha.",
+        "enum": [
+          "EN_TRAMITE",
+          "SUSPENDIDO",
+        ],
+        "nullable": true,
+        "type": "string",
+      },
+      "registroSanitarioVencimiento": {
+        "description": "Fecha de vencimiento del registro sanitario (ISO 8601). Enviar null para borrarla.",
+        "example": "2027-01-31",
+        "nullable": true,
+        "type": "object",
+      },
+      "tiempoProduccionHoras": {
+        "description": "Horas estimadas para producir cantidadBaseKg. Se escala proporcionalmente en cada orden y se usa para calcular automaticamente mano de obra propia y energia en Produccion.",
+        "example": 2,
+        "type": "number",
+      },
+      "vidaUtilDias": {
+        "description": "Vida util del producto en dias desde que se produce. Se usa para sugerir automaticamente la fecha de vencimiento de cada lote en Produccion.",
+        "example": 180,
+        "type": "number",
+      },
+    },
+    "type": "object",
+  },
+  "UpdateIngredientPriceDto": {
+    "properties": {
+      "precioKg": {
+        "description": "Nuevo precio por kg del ingrediente",
+        "example": 1650,
+        "type": "number",
+      },
+      "proveedor": {
+        "description": "Proveedor asociado a este precio. Obligatorio para poder comparar y cambiar de proveedor con trazabilidad.",
+        "example": "Distribuidora XYZ",
+        "type": "string",
+      },
+    },
+    "required": [
+      "precioKg",
+      "proveedor",
+    ],
+    "type": "object",
+  },
+  "UpdateMemberRoleDto": {
+    "properties": {
+      "rol": {
+        "description": "Nuevo rol del miembro dentro de la empresa",
+        "enum": [
+          "ADMIN",
+          "COORDINADOR",
+          "MIEMBRO",
+        ],
+        "example": "COORDINADOR",
+        "type": "string",
+      },
+    },
+    "required": [
+      "rol",
+    ],
+    "type": "object",
+  },
+  "UpdateOrganizationSettingsDto": {
+    "properties": {
+      "gastoGeneralMensual": {
+        "description": "Gastos generales/indirectos mensuales de la empresa (arriendo, nomina administrativa, software, etc.)",
+        "example": 2000000,
+        "type": "number",
+      },
+      "tarifaEnergiaHora": {
+        "description": "Costo por hora de energia/gas durante la produccion, para toda la empresa",
+        "example": 5000,
+        "type": "number",
+      },
+      "tarifaManoObraHora": {
+        "description": "Costo por hora de mano de obra propia, usado para calcular automaticamente el costo de produccion de cualquier lote de la empresa cuando una orden no se marca como maquila",
+        "example": 15000,
+        "type": "number",
+      },
+    },
+    "type": "object",
+  },
+  "UpdateProductionOrderDto": {
+    "properties": {
+      "cantidadObjetivoKg": {
+        "description": "Cantidad producida, en kg",
+        "example": 5,
+        "type": "number",
+      },
+      "costoEmpaque": {
+        "description": "Costo real de empaque (envase) de este lote",
+        "example": 0,
+        "type": "number",
+      },
+      "costoEnergia": {
+        "description": "Costo real de energia/gas de este lote (tiempoProduccionHoras x tarifaEnergiaHora)",
+        "example": 0,
+        "type": "number",
+      },
+      "costoEtiqueta": {
+        "description": "Costo real de etiqueta de este lote",
+        "example": 0,
+        "type": "number",
+      },
+      "costoGastosGenerales": {
+        "description": "Prorrateo de gastos generales de la empresa para este lote (gastoGeneralMensual / capacidad mensual promedio calculada x cantidadObjetivoKg)",
+        "example": 0,
+        "type": "number",
+      },
+      "costoManoObra": {
+        "description": "Costo real de mano de obra de este lote: monto de maquila si esMaquila es true, o calculado (tiempoProduccionHoras x tarifaManoObraHora) si es false",
+        "example": 0,
+        "type": "number",
+      },
+      "costoMermas": {
+        "description": "Costo real de mermas/desperdicio de este lote",
+        "example": 0,
+        "type": "number",
+      },
+      "costoTransporte": {
+        "description": "Costo real de transporte de este lote",
+        "example": 0,
+        "type": "number",
+      },
+      "esMaquila": {
+        "description": "true si este lote se mando a maquilar con un tercero (costoManoObra es lo que cobro el maquilador); false si se calculo solo (tiempoProduccionHoras x tarifaManoObraHora)",
+        "example": false,
+        "type": "boolean",
+      },
+      "estadoPago": {
+        "description": "Estado de cobro del lote",
+        "enum": [
+          "PENDIENTE",
+          "PARCIAL",
+          "PAGADO",
+        ],
+        "type": "string",
+      },
+      "estadoProduccion": {
+        "description": "Estado del flujo fisico del lote (no de cobro). Si no se envia, arranca en PLANIFICADO.",
+        "enum": [
+          "PLANIFICADO",
+          "EN_PROCESO",
+          "EN_CALIDAD",
+          "TERMINADO",
+          "RECHAZADO",
+        ],
+        "type": "string",
+      },
+      "fechaPago": {
+        "description": "Fecha en que se cobro el lote",
+        "type": "string",
+      },
+      "fechaVencimiento": {
+        "description": "Fecha de vencimiento del lote. Si no se envia y la formulacion tiene vidaUtilDias configurada, se calcula automaticamente.",
+        "type": "string",
+      },
+      "impuestoPorcentaje": {
+        "description": "Impuesto usado para esta orden (si no se envia, se usa el de la formulacion)",
+        "type": "number",
+      },
+      "maquilaIncluyeEmpaque": {
+        "description": "Solo aplica si esMaquila es true: si la tarifa del maquilador ya incluye empacar y etiquetar el producto terminado (entrega llave en mano)",
+        "example": false,
+        "type": "boolean",
+      },
+      "margenPorcentaje": {
+        "description": "Margen usado para esta orden (si no se envia, se usa el de la formulacion)",
+        "type": "number",
+      },
+      "notasCalidad": {
+        "description": "Notas de control de calidad (ej. motivo de un rechazo)",
+        "type": "string",
+      },
+      "numeroLote": {
+        "description": "Numero de lote para trazabilidad. Si no se envia, se genera automaticamente.",
+        "type": "string",
+      },
+      "precioVentaReal": {
+        "description": "Precio de venta real cobrado (si se conoce); si no se envia, se usa el sugerido como estimado",
+        "type": "number",
+      },
+      "tamanoPresentacion": {
+        "description": "Tamano de la presentacion/envase de este lote (solo informativo, no afecta el costeo)",
+        "example": 500,
+        "type": "number",
+      },
+      "tiempoProduccionHoras": {
+        "description": "Horas estimadas de produccion de este lote (snapshot de tiempoProduccionHoras de la formulacion, escalado a la cantidad)",
+        "example": 2,
+        "type": "number",
+      },
+      "unidadPresentacion": {
+        "description": "Unidad del tamano de presentacion",
+        "enum": [
+          "ml",
+          "L",
+          "g",
+          "kg",
+        ],
+        "type": "string",
+      },
+    },
+    "type": "object",
+  },
+  "UpdateProfileDto": {
+    "properties": {
+      "margenPorDefecto": {
+        "description": "Margen (%) que se propone por defecto al crear una formulacion nueva",
+        "example": 30,
+        "type": "number",
+      },
+      "nombre": {
+        "description": "Nombre completo del usuario",
+        "type": "string",
+      },
+    },
+    "type": "object",
+  },
+  "UpdateSupplierDto": {
+    "properties": {
+      "nombre": {
+        "description": "Nombre del proveedor",
+        "example": "Distribuidora XYZ",
+        "type": "string",
+      },
+    },
+    "required": [
+      "nombre",
+    ],
+    "type": "object",
+  },
+}
+`;

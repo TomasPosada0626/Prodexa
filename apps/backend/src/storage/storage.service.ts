@@ -7,4 +7,8 @@ export abstract class StorageService {
     filename: string,
     mimetype: string,
   ): Promise<string>;
+
+  /** Best-effort: usado al purgar archivos de una empresa eliminada. No debe lanzar
+   * si el archivo ya no existe. */
+  abstract delete(filename: string): Promise<void>;
 }

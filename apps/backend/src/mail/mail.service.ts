@@ -4,9 +4,23 @@ import { Resend } from 'resend';
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
-  private readonly resend = process.env.RESEND_API_KEY
-    ? new Resend(process.env.RESEND_API_KEY)
-    : null;
+  private readonly resend: Resend | null;
+
+  constructor() {
+    // Mismo espiritu que StorageModule con las variables de R2: mejor fallar fuerte al
+    // iniciar que caer en silencio al fallback de mas abajo (loguear en vez de enviar) en
+    // produccion — ese fallback escribe el codigo real de recuperacion de contrasena en
+    // texto plano en los logs, que en produccion cualquiera con acceso a logs podria leer
+    // y usar para tomar una cuenta ajena.
+    if (process.env.NODE_ENV === 'production' && !process.env.RESEND_API_KEY) {
+      throw new Error(
+        'RESEND_API_KEY es obligatoria en produccion: sin ella, los codigos de recuperacion de contrasena quedarian en texto plano en los logs en vez de enviarse por correo.',
+      );
+    }
+    this.resend = process.env.RESEND_API_KEY
+      ? new Resend(process.env.RESEND_API_KEY)
+      : null;
+  }
 
   async enviarCodigoRecuperacion(
     destinatario: string,
@@ -16,6 +30,21 @@ export class MailService {
       destinatario,
       'Recupera tu contrasena en Prodexa',
       `Tu codigo de recuperacion es: ${codigo}\n\nVence en 15 minutos. Si no pediste esto, ignora este correo.`,
+    );
+  }
+
+  /** Alerta proactiva a un ADMIN cuando una cuenta de su empresa acumula varios intentos de
+   * login fallidos seguidos (ver AuditService.notificarSiLoginsFallidosRepetidos). Antes de
+   * esto, un ADMIN solo se enteraba si entraba por su cuenta a Auditoria o al Dashboard. */
+  async enviarAlertaLoginsFallidos(
+    destinatario: string,
+    correoAfectado: string,
+    intentos: number,
+  ): Promise<void> {
+    await this.enviar(
+      destinatario,
+      `Alerta de seguridad: ${intentos} inicios de sesion fallidos seguidos`,
+      `La cuenta ${correoAfectado} de tu empresa en Prodexa tuvo ${intentos} intentos de inicio de sesion fallidos seguidos.\n\nSi no fuiste vos, revisa la bitacora de Auditoria en Prodexa y considera pedirle a esa persona que cambie su contrasena.`,
     );
   }
 

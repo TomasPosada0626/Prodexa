@@ -32,6 +32,7 @@ describe('Auth (e2e, DB real)', () => {
         password,
         nombre: 'Cuenta Primaria',
         nombreEmpresa: 'Empresa Primaria',
+        aceptaTerminos: true,
       })
       .expect(201);
   });
@@ -42,26 +43,17 @@ describe('Auth (e2e, DB real)', () => {
   });
 
   it('rechaza el registro con un correo ya usado (409)', async () => {
-    const email = uniqueEmail('duplicado');
-    emailsCreados.push(email);
-
+    // Reutiliza primaryEmail (ya creado en beforeAll) en vez de registrar uno
+    // nuevo: cada /auth/register cuenta contra el rate limit de 5/min, y este
+    // archivo ya esta al limite (ver comentario de arriba).
     await request(app.getHttpServer())
       .post('/api/v1/auth/register')
       .send({
-        email,
-        password,
-        nombre: 'Original',
-        nombreEmpresa: 'Empresa Original',
-      })
-      .expect(201);
-
-    await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send({
-        email,
+        email: primaryEmail,
         password,
         nombre: 'Repetido',
         nombreEmpresa: 'Empresa Repetida',
+        aceptaTerminos: true,
       })
       .expect(409);
   });
@@ -74,6 +66,7 @@ describe('Auth (e2e, DB real)', () => {
         password: '123',
         nombre: 'Debil',
         nombreEmpresa: 'Empresa Debil',
+        aceptaTerminos: true,
       })
       .expect(400);
   });
@@ -85,6 +78,20 @@ describe('Auth (e2e, DB real)', () => {
         email: uniqueEmail('sin-empresa'),
         password,
         nombre: 'Sin Empresa',
+        aceptaTerminos: true,
+      })
+      .expect(400);
+  });
+
+  it('rechaza el registro sin aceptar terminos/politica de datos (400)', async () => {
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({
+        email: uniqueEmail('sin-terminos'),
+        password,
+        nombre: 'Sin Terminos',
+        nombreEmpresa: 'Empresa Sin Terminos',
+        aceptaTerminos: false,
       })
       .expect(400);
   });

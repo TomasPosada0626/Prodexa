@@ -6,11 +6,18 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
-import { OrganizationsService } from './organizations.service';
+import { AuthService } from '../auth/auth.service';
+import { StorageService } from '../storage/storage.service';
+import {
+  extraerNombresDeImagenSubida,
+  OrganizationsService,
+} from './organizations.service';
 
 describe('OrganizationsService', () => {
   let service: OrganizationsService;
   const auditService = { log: jest.fn() };
+  const authService = { verifyPassword: jest.fn() };
+  const storageService = { upload: jest.fn(), delete: jest.fn() };
   const ORG_ID = 'org-1';
   const USER_ID = 'user-1';
   const prisma = {
@@ -22,6 +29,11 @@ describe('OrganizationsService', () => {
     },
     organization: {
       update: jest.fn(),
+      findUnique: jest.fn(),
+      delete: jest.fn(),
+    },
+    formulation: {
+      findMany: jest.fn(),
     },
     refreshToken: {
       updateMany: jest.fn(),
@@ -41,12 +53,15 @@ describe('OrganizationsService', () => {
     prisma.$transaction.mockImplementation((ops: unknown[]) =>
       Promise.all(ops as Promise<unknown>[]),
     );
+    storageService.delete.mockResolvedValue(undefined);
 
     const module = await Test.createTestingModule({
       providers: [
         OrganizationsService,
         { provide: PrismaService, useValue: prisma },
         { provide: AuditService, useValue: auditService },
+        { provide: AuthService, useValue: authService },
+        { provide: StorageService, useValue: storageService },
       ],
     }).compile();
 
@@ -350,5 +365,134 @@ describe('OrganizationsService', () => {
         where: { id: 'inv-1' },
       });
     });
+  });
+
+  describe('deleteOrganization', () => {
+    it('propaga el error de contrasena incorrecta sin tocar la base de datos', async () => {
+      authService.verifyPassword.mockRejectedValue(new Error('nope'));
+
+      await expect(
+        service.deleteOrganization(ORG_ID, USER_ID, {
+          password: 'mal',
+          confirmacion: 'Empresa',
+        }),
+      ).rejects.toThrow('nope');
+      expect(prisma.organization.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('lanza NotFoundException si la empresa no existe', async () => {
+      authService.verifyPassword.mockResolvedValue(undefined);
+      prisma.organization.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.deleteOrganization(ORG_ID, USER_ID, {
+          password: 'ok',
+          confirmacion: 'Empresa',
+        }),
+      ).rejects.toThrow(NotFoundException);
+      expect(prisma.organization.delete).not.toHaveBeenCalled();
+    });
+
+    it('lanza BadRequestException si el nombre de confirmacion no coincide', async () => {
+      authService.verifyPassword.mockResolvedValue(undefined);
+      prisma.organization.findUnique.mockResolvedValue({
+        nombre: 'Empresa Real',
+      });
+
+      await expect(
+        service.deleteOrganization(ORG_ID, USER_ID, {
+          password: 'ok',
+          confirmacion: 'nombre equivocado',
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(prisma.organization.delete).not.toHaveBeenCalled();
+    });
+
+    it('elimina la empresa, purga las imagenes subidas encontradas y lo audita', async () => {
+      authService.verifyPassword.mockResolvedValue(undefined);
+      prisma.organization.findUnique.mockResolvedValue({
+        nombre: 'Empresa Real',
+      });
+      prisma.user.count.mockResolvedValue(3);
+      prisma.formulation.findMany.mockResolvedValue([
+        {
+          preparacionHtml:
+            '<img src="/uploads/images/11111111-1111-1111-1111-111111111111.png">',
+        },
+        { preparacionHtml: null },
+      ]);
+      prisma.organization.delete.mockResolvedValue({});
+
+      const result = await service.deleteOrganization(ORG_ID, USER_ID, {
+        password: 'ok',
+        confirmacion: 'Empresa Real',
+      });
+
+      expect(prisma.organization.delete).toHaveBeenCalledWith({
+        where: { id: ORG_ID },
+      });
+      expect(storageService.delete).toHaveBeenCalledWith(
+        '11111111-1111-1111-1111-111111111111.png',
+      );
+      expect(result).toEqual({ nombre: 'Empresa Real', miembrosEliminados: 3 });
+      expect(auditService.log).toHaveBeenCalledWith(
+        'ORGANIZATION_DELETED',
+        expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          metadata: expect.objectContaining({
+            organizacionNombre: 'Empresa Real',
+            miembrosEliminados: 3,
+            archivosPurgados: 1,
+          }),
+        }),
+      );
+    });
+
+    it('no bloquea la eliminacion si purgar un archivo falla (best-effort)', async () => {
+      authService.verifyPassword.mockResolvedValue(undefined);
+      prisma.organization.findUnique.mockResolvedValue({
+        nombre: 'Empresa Real',
+      });
+      prisma.user.count.mockResolvedValue(1);
+      prisma.formulation.findMany.mockResolvedValue([
+        {
+          preparacionHtml:
+            '<img src="/uploads/images/22222222-2222-2222-2222-222222222222.jpg">',
+        },
+      ]);
+      prisma.organization.delete.mockResolvedValue({});
+      storageService.delete.mockRejectedValue(new Error('storage caida'));
+
+      await expect(
+        service.deleteOrganization(ORG_ID, USER_ID, {
+          password: 'ok',
+          confirmacion: 'Empresa Real',
+        }),
+      ).resolves.toEqual({ nombre: 'Empresa Real', miembrosEliminados: 1 });
+    });
+  });
+});
+
+describe('extraerNombresDeImagenSubida', () => {
+  it('retorna [] para HTML vacio o sin imagenes', () => {
+    expect(extraerNombresDeImagenSubida(null)).toEqual([]);
+    expect(extraerNombresDeImagenSubida(undefined)).toEqual([]);
+    expect(extraerNombresDeImagenSubida('<p>sin imagenes</p>')).toEqual([]);
+  });
+
+  it('extrae solo nombres de archivo con forma de imagen subida (UUID + extension conocida)', () => {
+    const html =
+      '<p>texto</p><img src="https://r2.example.com/images/33333333-3333-4333-8333-333333333333.webp"><img src="https://otro-sitio.com/foto.png">';
+
+    expect(extraerNombresDeImagenSubida(html)).toEqual([
+      '33333333-3333-4333-8333-333333333333.webp',
+    ]);
+  });
+
+  it('deduplica nombres repetidos', () => {
+    const nombre = '44444444-4444-4444-4444-444444444444.gif';
+    const html = `<img src="/uploads/images/${nombre}"><img src="/uploads/images/${nombre}">`;
+
+    expect(extraerNombresDeImagenSubida(html)).toEqual([nombre]);
   });
 });

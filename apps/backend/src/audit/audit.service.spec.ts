@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { AuditService } from './audit.service';
 import { AuditEvent } from './audit.types';
 
@@ -17,12 +18,23 @@ describe('AuditService', () => {
       findUnique: jest.fn(),
       update: jest.fn(),
     },
+    user: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+    },
+  };
+  const mailService = {
+    enviarAlertaLoginsFallidos: jest.fn(),
   };
 
   beforeEach(async () => {
     jest.resetAllMocks();
     const module = await Test.createTestingModule({
-      providers: [AuditService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        AuditService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: MailService, useValue: mailService },
+      ],
     }).compile();
 
     service = module.get(AuditService);
@@ -69,6 +81,128 @@ describe('AuditService', () => {
     prisma.auditLog.create.mockRejectedValue(new Error('DB caida'));
 
     await expect(service.log(AuditEvent.LOGOUT)).resolves.toBeUndefined();
+  });
+
+  describe('notificarSiLoginsFallidosRepetidos', () => {
+    function racha(...eventos: AuditEvent[]) {
+      return eventos.map((evento) => ({ evento }));
+    }
+
+    it('avisa a los ADMIN activos cuando la racha llega exactamente al umbral (5 por defecto)', async () => {
+      prisma.auditLog.findMany.mockResolvedValue(
+        racha(
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_FAILED,
+        ),
+      );
+      prisma.user.findUnique.mockResolvedValue({
+        email: 'victima@empresa.test',
+        organizationId: 'org-1',
+      });
+      prisma.user.findMany.mockResolvedValue([
+        { email: 'admin1@empresa.test' },
+        { email: 'admin2@empresa.test' },
+      ]);
+      mailService.enviarAlertaLoginsFallidos.mockResolvedValue(undefined);
+
+      await service.notificarSiLoginsFallidosRepetidos('user-1');
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { organizationId: 'org-1', rol: 'ADMIN', activo: true },
+        }),
+      );
+      expect(mailService.enviarAlertaLoginsFallidos).toHaveBeenCalledTimes(2);
+      expect(mailService.enviarAlertaLoginsFallidos).toHaveBeenCalledWith(
+        'admin1@empresa.test',
+        'victima@empresa.test',
+        5,
+      );
+      expect(mailService.enviarAlertaLoginsFallidos).toHaveBeenCalledWith(
+        'admin2@empresa.test',
+        'victima@empresa.test',
+        5,
+      );
+    });
+
+    it('no avisa si la racha todavia no llega al umbral', async () => {
+      prisma.auditLog.findMany.mockResolvedValue(
+        racha(
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_SUCCESS,
+        ),
+      );
+
+      await service.notificarSiLoginsFallidosRepetidos('user-1');
+
+      expect(prisma.user.findUnique).not.toHaveBeenCalled();
+      expect(mailService.enviarAlertaLoginsFallidos).not.toHaveBeenCalled();
+    });
+
+    it('un LOGIN_SUCCESS corta la racha, aunque haya fallidos mas viejos antes', async () => {
+      prisma.auditLog.findMany.mockResolvedValue(
+        racha(
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_SUCCESS,
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_FAILED,
+        ),
+      );
+
+      await service.notificarSiLoginsFallidosRepetidos('user-1');
+
+      expect(mailService.enviarAlertaLoginsFallidos).not.toHaveBeenCalled();
+    });
+
+    it('no vuelve a avisar en el intento fallido 6, 7, etc. despues de ya haber avisado en el 5', async () => {
+      // 6 fallidos seguidos: la racha completa (6) ya paso el umbral (5) -> no dispara de nuevo.
+      prisma.auditLog.findMany.mockResolvedValue(
+        racha(
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_FAILED,
+        ),
+      );
+
+      await service.notificarSiLoginsFallidosRepetidos('user-1');
+
+      expect(mailService.enviarAlertaLoginsFallidos).not.toHaveBeenCalled();
+    });
+
+    it('no hace nada si el usuario ya no existe', async () => {
+      prisma.auditLog.findMany.mockResolvedValue(
+        racha(
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_FAILED,
+          AuditEvent.LOGIN_FAILED,
+        ),
+      );
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await service.notificarSiLoginsFallidosRepetidos('user-1');
+
+      expect(prisma.user.findMany).not.toHaveBeenCalled();
+      expect(mailService.enviarAlertaLoginsFallidos).not.toHaveBeenCalled();
+    });
+
+    it('nunca lanza si algo falla: el flujo de login no debe interrumpirse', async () => {
+      prisma.auditLog.findMany.mockRejectedValue(new Error('DB caida'));
+
+      await expect(
+        service.notificarSiLoginsFallidosRepetidos('user-1'),
+      ).resolves.toBeUndefined();
+    });
   });
 
   describe('listForOrganization', () => {

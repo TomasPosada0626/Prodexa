@@ -12,6 +12,7 @@ describe('OrganizationsController', () => {
     createInvitation: jest.fn(),
     listPendingInvitations: jest.fn(),
     revokeInvitation: jest.fn(),
+    deleteOrganization: jest.fn(),
   };
   const user = {
     id: 'admin-1',
@@ -83,5 +84,26 @@ describe('OrganizationsController', () => {
   it('revokeInvitation delega con organizationId y el id de la invitacion', async () => {
     await controller.revokeInvitation(user, 'inv-1');
     expect(service.revokeInvitation).toHaveBeenCalledWith('org-1', 'inv-1');
+  });
+
+  it('deleteOrganization delega en el servicio y limpia las cookies de sesion', async () => {
+    service.deleteOrganization.mockResolvedValue({
+      nombre: 'Empresa Real',
+      miembrosEliminados: 3,
+    });
+    const res = { clearCookie: jest.fn() };
+    const dto = { password: 'x', confirmacion: 'Empresa Real' };
+
+    const result = await controller.deleteOrganization(user, dto, res as never);
+
+    expect(service.deleteOrganization).toHaveBeenCalledWith(
+      'org-1',
+      'admin-1',
+      dto,
+    );
+    expect(res.clearCookie).toHaveBeenCalled();
+    expect(result).toEqual({
+      message: 'La empresa "Empresa Real" y todos sus datos fueron eliminados.',
+    });
   });
 });

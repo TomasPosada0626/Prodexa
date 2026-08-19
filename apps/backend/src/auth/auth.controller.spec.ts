@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { AuditService } from '../audit/audit.service';
 import { AuditEvent } from '../audit/audit.types';
 import { REFRESH_TOKEN_COOKIE } from './cookie.util';
+import { LEGAL_POLICY_VERSION } from './legal.constants';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -16,13 +17,17 @@ describe('AuthController', () => {
     me: jest.fn(),
     updateProfile: jest.fn(),
     changePassword: jest.fn(),
+    deleteAccount: jest.fn(),
     forgotPassword: jest.fn(),
     resetPassword: jest.fn(),
     listSessions: jest.fn(),
     revokeSession: jest.fn(),
     findUserIdByEmail: jest.fn(),
   };
-  const auditService = { log: jest.fn() };
+  const auditService = {
+    log: jest.fn(),
+    notificarSiLoginsFallidosRepetidos: jest.fn(),
+  };
   const user = {
     id: 'user-1',
     email: 'a@a.com',
@@ -42,8 +47,23 @@ describe('AuthController', () => {
     return { cookie: jest.fn(), clearCookie: jest.fn() };
   }
 
+  /** login() encadena auditService.log(...).then(...) sin awaitearlo (la respuesta HTTP no
+   * debe esperar al log ni a la alerta) — hay que dejar correr la cola de microtasks antes de
+   * poder verificar que notificarSiLoginsFallidosRepetidos ya se llamo. */
+  function flushMicrotasks() {
+    return new Promise((resolve) => setImmediate(resolve));
+  }
+
   beforeEach(async () => {
     jest.resetAllMocks();
+    // log() se encadena con .then() en el controller (ver login) para poder disparar
+    // notificarSiLoginsFallidosRepetidos solo despues de que el INSERT quede escrito -- el
+    // mock necesita devolver algo con .then real, no undefined, o cualquier login fallido
+    // rompe con un TypeError antes de llegar al assert.
+    auditService.log.mockResolvedValue(undefined);
+    auditService.notificarSiLoginsFallidosRepetidos.mockResolvedValue(
+      undefined,
+    );
     const module = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
@@ -55,16 +75,26 @@ describe('AuthController', () => {
     controller = module.get(AuthController);
   });
 
-  it('register audita REGISTER con el userId creado', async () => {
+  it('register audita REGISTER con el userId creado y la evidencia de autorizacion', async () => {
     authService.register.mockResolvedValue({ id: 'user-1' });
-    const dto = { email: 'a@a.com', password: 'Contrasena123!' };
+    const dto = {
+      email: 'a@a.com',
+      password: 'Contrasena123!',
+      aceptaTerminos: true,
+    };
 
     const result = await controller.register(dto, mockRequest());
 
     expect(result).toEqual({ id: 'user-1' });
     expect(auditService.log).toHaveBeenCalledWith(
       AuditEvent.REGISTER,
-      expect.objectContaining({ userId: 'user-1' }),
+      expect.objectContaining({
+        userId: 'user-1',
+        metadata: {
+          terminosAceptados: true,
+          versionPoliticas: LEGAL_POLICY_VERSION,
+        },
+      }),
     );
   });
 
@@ -109,6 +139,11 @@ describe('AuthController', () => {
         metadata: { email: 'a@a.com' },
       }),
     );
+
+    await flushMicrotasks();
+    expect(
+      auditService.notificarSiLoginsFallidosRepetidos,
+    ).toHaveBeenCalledWith('user-1');
   });
 
   it('login fallido contra un correo que no existe audita LOGIN_FAILED sin userId', async () => {
@@ -130,6 +165,11 @@ describe('AuthController', () => {
         metadata: { email: 'no-existe@a.com' },
       }),
     );
+
+    await flushMicrotasks();
+    expect(
+      auditService.notificarSiLoginsFallidosRepetidos,
+    ).not.toHaveBeenCalled();
   });
 
   it('refresh lanza UnauthorizedException si no hay cookie de refresh', async () => {
@@ -200,6 +240,40 @@ describe('AuthController', () => {
       AuditEvent.CHANGE_PASSWORD,
       expect.objectContaining({ userId: 'user-1' }),
     );
+  });
+
+  it('deleteAccount limpia cookies y audita ACCOUNT_DELETED con los datos previos a anonimizar', async () => {
+    authService.deleteAccount.mockResolvedValue({
+      email: 'antes@a.com',
+      nombre: 'Nombre Anterior',
+      rol: 'MIEMBRO',
+    });
+    const res = mockResponse();
+
+    const result = await controller.deleteAccount(
+      user,
+      { password: 'x' },
+      mockRequest(),
+      res as never,
+    );
+
+    expect(authService.deleteAccount).toHaveBeenCalledWith('user-1', {
+      password: 'x',
+    });
+    expect(res.clearCookie).toHaveBeenCalled();
+    expect(auditService.log).toHaveBeenCalledWith(
+      AuditEvent.ACCOUNT_DELETED,
+      expect.objectContaining({
+        userId: 'user-1',
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        metadata: expect.objectContaining({
+          emailAnterior: 'antes@a.com',
+          nombreAnterior: 'Nombre Anterior',
+          rol: 'MIEMBRO',
+        }),
+      }),
+    );
+    expect(result).toEqual({ message: 'Tu perfil fue eliminado.' });
   });
 
   it('forgotPassword audita PASSWORD_RESET_REQUESTED cuando el correo pertenece a una cuenta real', async () => {

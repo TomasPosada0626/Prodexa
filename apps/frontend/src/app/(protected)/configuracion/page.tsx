@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/auth-context';
-import { ApiError, Session, changePassword, getSessions, revokeSession } from '@/lib/api';
+import { ApiError, Session, changePassword, getMembers, getSessions, revokeSession } from '@/lib/api';
 import { useToast } from '@/context/toast-context';
 import { PasswordRequirements, passwordMeetsRequirements } from '@/components/ui/PasswordRequirements';
 import { Equipo } from '@/components/organizations/equipo';
@@ -438,6 +438,239 @@ function SesionesActivasForm() {
   );
 }
 
+const dangerInputClasses =
+  'rounded-lg border border-red-300 px-3 py-2 dark:border-red-500/30 dark:bg-white/5 dark:text-white dark:placeholder:text-zinc-500';
+
+function EliminarPerfilModal({ onClose }: { onClose: () => void }) {
+  const { deleteAccount } = useAuth();
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setError(null);
+    setSaving(true);
+    try {
+      await deleteAccount(password);
+      // No hay a donde volver: RequireAuth redirige a /login apenas el contexto pierde el usuario.
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'No se pudo eliminar el perfil.');
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-40 grid place-items-center bg-slate-900/40 px-4 dark:bg-black/60"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="eliminar-perfil-title"
+    >
+      <form
+        onSubmit={handleSubmit}
+        className="grid w-full max-w-sm gap-3 rounded-2xl border border-red-200 bg-white p-5 shadow-xl dark:border-red-500/30 dark:bg-[#0b0a16] dark:shadow-black/60"
+      >
+        <h3 id="eliminar-perfil-title" className="text-base font-semibold text-slate-900 dark:text-white">
+          Eliminar mi perfil
+        </h3>
+        <p className="text-sm text-slate-600 dark:text-zinc-400">
+          Se borran tu correo, nombre y contrasena. Tus formulaciones y ordenes de produccion se conservan para la
+          empresa, con el autor mostrado como &quot;Usuario eliminado&quot;. Esto no se puede deshacer.
+        </p>
+        <label className="grid gap-1 text-sm text-slate-700 dark:text-zinc-300">
+          Confirma tu contrasena
+          <input
+            type="password"
+            autoFocus
+            className={dangerInputClasses}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </label>
+        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        <div className="mt-2 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            className="rounded-full border border-slate-300 px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/5"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={saving || !password}
+            className="rounded-full bg-red-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+          >
+            {saving ? 'Eliminando...' : 'Eliminar mi perfil'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function EliminarEmpresaModal({ onClose }: { onClose: () => void }) {
+  const { user, deleteOrganization } = useAuth();
+  const [password, setPassword] = useState('');
+  const [confirmacion, setConfirmacion] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const nombreEmpresa = user?.organizationNombre ?? '';
+  const confirmacionValida = confirmacion === nombreEmpresa;
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setError(null);
+    if (!confirmacionValida) return;
+    setSaving(true);
+    try {
+      await deleteOrganization(password, confirmacion);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'No se pudo eliminar la empresa.');
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-40 grid place-items-center bg-slate-900/40 px-4 dark:bg-black/60"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="eliminar-empresa-title"
+    >
+      <form
+        onSubmit={handleSubmit}
+        className="grid w-full max-w-sm gap-3 rounded-2xl border border-red-200 bg-white p-5 shadow-xl dark:border-red-500/30 dark:bg-[#0b0a16] dark:shadow-black/60"
+      >
+        <h3 id="eliminar-empresa-title" className="text-base font-semibold text-slate-900 dark:text-white">
+          Eliminar la empresa completa
+        </h3>
+        <p className="text-sm text-slate-600 dark:text-zinc-400">
+          Se elimina <strong>{nombreEmpresa}</strong> por completo: todos los usuarios, formulaciones, ordenes de
+          produccion, pagos, proveedores e imagenes subidas. Irreversible.
+        </p>
+        <label className="grid gap-1 text-sm text-slate-700 dark:text-zinc-300">
+          Confirma tu contrasena
+          <input
+            type="password"
+            autoFocus
+            className={dangerInputClasses}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </label>
+        <label className="grid gap-1 text-sm text-slate-700 dark:text-zinc-300">
+          Escribe <strong>{nombreEmpresa}</strong> para confirmar
+          <input
+            type="text"
+            className={dangerInputClasses}
+            value={confirmacion}
+            onChange={(e) => setConfirmacion(e.target.value)}
+            required
+          />
+        </label>
+        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        <div className="mt-2 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            className="rounded-full border border-slate-300 px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/5"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={saving || !password || !confirmacionValida}
+            className="rounded-full bg-red-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+          >
+            {saving ? 'Eliminando...' : 'Eliminar la empresa'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+/**
+ * Si sos el unico miembro activo de tu empresa, "eliminar mi perfil" no aplica: no hay equipo
+ * para el que preservar los datos, y anonimizarte dejaria una empresa fantasma que nadie puede
+ * volver a abrir. Solo se ofrece eliminar la empresa completa (ADMIN).
+ */
+function ZonaDePeligro() {
+  const { user } = useAuth();
+  const [totalMiembros, setTotalMiembros] = useState<number | null>(null);
+  const [modal, setModal] = useState<'perfil' | 'empresa' | null>(null);
+  const esAdmin = user?.rol === 'ADMIN';
+  const esUnicoMiembro = totalMiembros === 1;
+
+  useEffect(() => {
+    let cancelled = false;
+    getMembers()
+      .then((miembros) => {
+        if (!cancelled) setTotalMiembros(miembros.length);
+      })
+      .catch(() => {
+        if (!cancelled) setTotalMiembros(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <div className="grid gap-4 rounded-2xl border border-red-200 bg-red-50/40 p-4 dark:border-red-500/20 dark:bg-red-500/5">
+      <div>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-red-700 dark:text-red-400">
+          Zona de peligro
+        </h3>
+        <p className="mt-1 text-xs text-slate-600 dark:text-zinc-400">
+          Estas acciones son irreversibles y requieren tu contrasena.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {!esUnicoMiembro && (
+          <button
+            type="button"
+            onClick={() => setModal('perfil')}
+            className="rounded-full border border-red-300 px-4 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
+          >
+            Eliminar mi perfil
+          </button>
+        )}
+        {esAdmin && (
+          <button
+            type="button"
+            onClick={() => setModal('empresa')}
+            className="rounded-full bg-red-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-red-700"
+          >
+            Eliminar la empresa completa
+          </button>
+        )}
+      </div>
+
+      {esUnicoMiembro && !esAdmin && (
+        <p className="text-xs text-slate-500 dark:text-zinc-500">
+          Sos el unico miembro de tu empresa. Contacta a soporte para gestionar tu cuenta.
+        </p>
+      )}
+      {esUnicoMiembro && esAdmin && (
+        <p className="text-xs text-slate-500 dark:text-zinc-500">
+          Sos el unico miembro de tu empresa: eliminar tu perfil equivale a eliminar la empresa completa.
+        </p>
+      )}
+
+      {modal === 'perfil' && <EliminarPerfilModal onClose={() => setModal(null)} />}
+      {modal === 'empresa' && <EliminarEmpresaModal onClose={() => setModal(null)} />}
+    </div>
+  );
+}
+
 export default function ConfiguracionPage() {
   return (
     <section className="grid gap-6">
@@ -454,6 +687,8 @@ export default function ConfiguracionPage() {
       </div>
 
       <Equipo />
+
+      <ZonaDePeligro />
     </section>
   );
 }

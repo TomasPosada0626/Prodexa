@@ -19,10 +19,12 @@ import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { AuditService } from '../audit/audit.service';
 import { AuditEvent } from '../audit/audit.types';
+import { LEGAL_POLICY_VERSION } from './legal.constants';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { DeleteAccountDto } from './dto/delete-account.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -58,6 +60,13 @@ export class AuthController {
       userId: user.id,
       ip: req.ip,
       userAgent: req.headers['user-agent'],
+      // Evidencia de autorizacion (Ley 1581 de 2012): la version de las politicas vigentes
+      // en el momento del registro, para poder demostrar que se acepto ESA version si el
+      // texto legal cambia mas adelante.
+      metadata: {
+        terminosAceptados: dto.aceptaTerminos,
+        versionPoliticas: LEGAL_POLICY_VERSION,
+      },
     });
     return user;
   }
@@ -91,11 +100,22 @@ export class AuthController {
       // correo si sea de un miembro real: se busca el userId solo para el log, nunca para la
       // respuesta al cliente (no revela si el correo existe).
       const userId = await this.authService.findUserIdByEmail(dto.email);
-      void this.auditService.log(AuditEvent.LOGIN_FAILED, {
-        ...auditContext,
-        userId,
-        metadata: { email: dto.email },
-      });
+      // .then() en vez de await: la respuesta de login no debe esperar ni al log ni a la
+      // posible alerta por correo. Encadenado (no en paralelo) porque
+      // notificarSiLoginsFallidosRepetidos cuenta la racha leyendo AuditLog de nuevo — tiene
+      // que arrancar despues de que el INSERT de este intento ya haya quedado escrito, o
+      // contaria un intento de menos.
+      void this.auditService
+        .log(AuditEvent.LOGIN_FAILED, {
+          ...auditContext,
+          userId,
+          metadata: { email: dto.email },
+        })
+        .then(() => {
+          if (userId) {
+            void this.auditService.notificarSiLoginsFallidosRepetidos(userId);
+          }
+        });
       throw error;
     }
   }
@@ -155,6 +175,40 @@ export class AuthController {
     @Body() dto: UpdateProfileDto,
   ) {
     return this.authService.updateProfile(user.id, dto);
+  }
+
+  @Delete('me')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @Throttle({
+    default: {
+      limit: () => Number(process.env.AUTH_THROTTLE_LIMIT ?? 5),
+      ttl: 60_000,
+    },
+  })
+  @ApiOperation({
+    summary:
+      'Eliminar (anonimizar) el perfil del usuario autenticado; sus formulaciones y ordenes de produccion se conservan para la empresa',
+  })
+  async deleteAccount(
+    @CurrentUser() user: RequestUser,
+    @Body() dto: DeleteAccountDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const eliminado = await this.authService.deleteAccount(user.id, dto);
+    clearAuthCookies(res);
+    void this.auditService.log(AuditEvent.ACCOUNT_DELETED, {
+      userId: user.id,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      metadata: {
+        emailAnterior: eliminado.email,
+        nombreAnterior: eliminado.nombre,
+        rol: eliminado.rol,
+      },
+    });
+    return { message: 'Tu perfil fue eliminado.' };
   }
 
   @Post('change-password')

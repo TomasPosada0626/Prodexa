@@ -5,6 +5,8 @@ import {
   AuthUser,
   UpdateOrganizationSettingsInput,
   UpdateProfileInput,
+  deleteAccount as deleteAccountRequest,
+  deleteOrganization as deleteOrganizationRequest,
   getMe,
   login as loginRequest,
   logout as logoutRequest,
@@ -17,16 +19,19 @@ interface RegisterOptions {
   nombre?: string;
   nombreEmpresa?: string;
   invitationToken?: string;
+  aceptaTerminos: boolean;
 }
 
 interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, options?: RegisterOptions) => Promise<void>;
+  register: (email: string, password: string, options: RegisterOptions) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (input: UpdateProfileInput) => Promise<void>;
   updateOrganizationSettings: (input: UpdateOrganizationSettingsInput) => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
+  deleteOrganization: (password: string, confirmacion: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -49,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // No llama a setUser: el registro solo crea la cuenta, no inicia sesion.
   // El usuario debe iniciar sesion explicitamente despues.
-  const register = useCallback(async (email: string, password: string, options?: RegisterOptions) => {
+  const register = useCallback(async (email: string, password: string, options: RegisterOptions) => {
     await registerRequest({ email, password, ...options });
   }, []);
 
@@ -70,9 +75,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser((prev) => (prev ? { ...prev, ...settings } : prev));
   }, []);
 
+  // Cookies ya quedan limpias del lado del servidor: setUser(null) es lo que hace que
+  // RequireAuth redirija a /login, mismo mecanismo que logout().
+  const deleteAccount = useCallback(async (password: string) => {
+    await deleteAccountRequest(password);
+    setUser(null);
+  }, []);
+
+  const deleteOrganization = useCallback(async (password: string, confirmacion: string) => {
+    await deleteOrganizationRequest(password, confirmacion);
+    setUser(null);
+  }, []);
+
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, register, logout, updateProfile, updateOrganizationSettings }}
+      value={{
+        user,
+        loading,
+        login,
+        register,
+        logout,
+        updateProfile,
+        updateOrganizationSettings,
+        deleteAccount,
+        deleteOrganization,
+      }}
     >
       {children}
     </AuthContext.Provider>

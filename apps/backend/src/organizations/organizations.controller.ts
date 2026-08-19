@@ -8,17 +8,21 @@ import {
   Param,
   Patch,
   Post,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { clearAuthCookies } from '../auth/cookie.util';
 import type { RequestUser } from '../auth/types';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 import { UpdateOrganizationSettingsDto } from './dto/update-organization-settings.dto';
+import { DeleteOrganizationDto } from './dto/delete-organization.dto';
 import { OrganizationsService } from './organizations.service';
 
 /** Gestionar el equipo (invitar, cambiar roles, remover) es solo para ADMIN/COORDINADOR. */
@@ -115,5 +119,28 @@ export class OrganizationsController {
   @ApiParam({ name: 'id', description: 'Id de la invitacion' })
   revokeInvitation(@CurrentUser() user: RequestUser, @Param('id') id: string) {
     return this.organizationsService.revokeInvitation(user.organizationId, id);
+  }
+
+  @Delete()
+  @Roles('ADMIN')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Eliminar la empresa completa y todos sus datos (irreversible). Solo ADMIN.',
+  })
+  async deleteOrganization(
+    @CurrentUser() user: RequestUser,
+    @Body() dto: DeleteOrganizationDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const resultado = await this.organizationsService.deleteOrganization(
+      user.organizationId,
+      user.id,
+      dto,
+    );
+    clearAuthCookies(res);
+    return {
+      message: `La empresa "${resultado.nombre}" y todos sus datos fueron eliminados.`,
+    };
   }
 }

@@ -17,6 +17,16 @@ import { UPLOADS_DIR, UPLOADS_URL_PREFIX } from './uploads/uploads.constants';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Detras de un proxy/balanceador (Render en produccion), Express calcula req.ip del
+  // socket del proxy, no del cliente real, salvo que se le diga explicitamente en
+  // cuantos saltos de proxy confiar. Sin esto, TODAS las peticiones comparten la misma
+  // IP "vista" por el backend — y como ThrottlerGuard (rate limiting de login/registro/
+  // reset de contrasena) usa req.ip como clave por defecto, un solo atacante satura ese
+  // balde compartido y bloquea el login de cualquier usuario real indefinidamente.
+  // TRUST_PROXY_HOPS (default 1) es la cantidad de proxies de confianza delante del
+  // proceso; Render agrega exactamente uno.
+  app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS ?? 1));
+
   // 'cross-origin' porque el frontend (otro origen) carga estas imagenes en <img>;
   // el default de helmet ('same-origin') las bloquearia.
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));

@@ -32,6 +32,7 @@ function RegistroForm() {
   const [invitationToken, setInvitationToken] = useState(invitationTokenFromUrl ?? '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -57,12 +58,19 @@ function RegistroForm() {
       setError('Ingresa el codigo de invitacion que te compartieron.');
       return;
     }
+    if (!aceptaTerminos) {
+      setError(
+        'Debes aceptar los Terminos y Condiciones y la Politica de Tratamiento de Datos Personales.',
+      );
+      return;
+    }
 
     setSubmitting(true);
     try {
       const nombreCompleto = [nombre.trim(), apellidos.trim()].filter(Boolean).join(' ');
       await register(email, password, {
         nombre: nombreCompleto || undefined,
+        aceptaTerminos,
         ...(modo === 'empresa'
           ? { nombreEmpresa: nombreEmpresa.trim() }
           : { invitationToken: invitationToken.trim() }),
@@ -211,6 +219,36 @@ function RegistroForm() {
               {passwordsMatch ? 'Las contrasenas coinciden' : 'Las contrasenas no coinciden'}
             </span>
           )}
+        </label>
+
+        <label htmlFor="acepta-terminos" className="flex items-start gap-2 text-xs text-zinc-400">
+          <input
+            id="acepta-terminos"
+            type="checkbox"
+            checked={aceptaTerminos}
+            onChange={(e) => setAceptaTerminos(e.target.checked)}
+            required
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-white/5 text-[#8B5CF6] accent-[#8B5CF6] focus:ring-[#8B5CF6]"
+          />
+          <span>
+            Acepto los{' '}
+            <Link
+              href="/legal/terminos"
+              target="_blank"
+              className="font-medium text-[#8B5CF6] hover:underline"
+            >
+              Terminos y Condiciones
+            </Link>{' '}
+            y la{' '}
+            <Link
+              href="/legal/privacidad"
+              target="_blank"
+              className="font-medium text-[#8B5CF6] hover:underline"
+            >
+              Politica de Tratamiento de Datos Personales
+            </Link>
+            .
+          </span>
         </label>
 
         {error && <p className="text-sm text-red-400">{error}</p>}

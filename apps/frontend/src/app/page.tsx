@@ -1,6 +1,7 @@
 import { Navbar } from '@/components/navigation/Navbar';
 import { Hero } from '@/components/hero/Hero';
 import { FeatureList } from '@/components/features/FeatureList';
+import { Footer } from '@/components/layout/Footer';
 
 export default function Home() {
   return (
@@ -10,6 +11,7 @@ export default function Home() {
         <Hero />
         <FeatureList />
       </main>
+      <Footer />
     </div>
   );
 }

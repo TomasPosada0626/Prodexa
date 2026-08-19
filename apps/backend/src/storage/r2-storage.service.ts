@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { StorageService } from './storage.service';
 
 /** Cloudflare R2 es compatible con la API de S3 — un solo PutObjectCommand alcanza,
@@ -42,5 +46,14 @@ export class R2StorageService extends StorageService {
       }),
     );
     return `${process.env.R2_PUBLIC_URL}/${key}`;
+  }
+
+  async delete(filename: string): Promise<void> {
+    await this.client.send(
+      new DeleteObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME,
+        Key: `images/${filename}`,
+      }),
+    );
   }
 }

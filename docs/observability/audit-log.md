@@ -4,7 +4,7 @@
 solo seguridad de cuenta, cubre eventos de negocio también. Endpoint de solo lectura:
 `GET /audit-log`, ADMIN únicamente.
 
-## Los 12 eventos (`AuditEvent`, `apps/backend/src/audit/audit.types.ts`)
+## Los 16 eventos (`AuditEvent`, `apps/backend/src/audit/audit.types.ts`)
 
 | Evento | Cuándo se registra |
 |---|---|
@@ -13,6 +13,8 @@ solo seguridad de cuenta, cubre eventos de negocio también. Endpoint de solo le
 | `LOGOUT` | Cierre de sesión explícito |
 | `REGISTER` | Cuenta nueva creada |
 | `CHANGE_PASSWORD` | Contraseña cambiada |
+| `PASSWORD_RESET_REQUESTED` | Se solicitó un código de recuperación de contraseña |
+| `PASSWORD_RESET_COMPLETED` | La contraseña se restableció con el código de recuperación |
 | `PRODUCTION_ORDER_DELETED` | Un lote de producción fue anulado |
 | `PAGO_DELETED` | Un abono fue eliminado |
 | `MEMBER_ROLE_CHANGED` | El rol de un miembro cambió |
@@ -20,6 +22,8 @@ solo seguridad de cuenta, cubre eventos de negocio también. Endpoint de solo le
 | `INGREDIENT_PRICE_UPDATED` | El precio de un ingrediente se actualizó |
 | `FORMULATION_UPDATED` | Una formulación fue editada |
 | `ORGANIZATION_SETTINGS_UPDATED` | Tarifas o gastos generales de la organización cambiaron |
+| `ACCOUNT_DELETED` | Un usuario eliminó su propio perfil (autoservicio, con contraseña como confirmación) |
+| `ORGANIZATION_DELETED` | Un ADMIN eliminó la empresa completa y todos sus datos |
 
 Cada fila guarda `userId` (nullable), `ip`, `userAgent`, un `metadata` JSON libre
 (forma distinta según el evento — precio anterior/nuevo, rol anterior/nuevo, etc.) y

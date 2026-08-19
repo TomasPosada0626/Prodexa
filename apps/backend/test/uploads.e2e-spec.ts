@@ -31,6 +31,7 @@ describe('Uploads (e2e, DB real): subir imagenes para el editor de formulaciones
         password,
         nombre: 'Uploads Test',
         nombreEmpresa: 'Empresa Uploads Test',
+        aceptaTerminos: true,
       })
       .expect(201);
 

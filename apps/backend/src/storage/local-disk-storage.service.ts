@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync } from 'fs';
-import { writeFile } from 'fs/promises';
+import { rm, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 import {
@@ -34,5 +34,9 @@ export class LocalDiskStorageService extends StorageService {
   async upload(buffer: Buffer, filename: string): Promise<string> {
     await writeFile(join(imagesDir, filename), buffer);
     return `${UPLOADS_URL_PREFIX}/${UPLOADS_IMAGES_SUBDIR}/${filename}`;
+  }
+
+  async delete(filename: string): Promise<void> {
+    await rm(join(imagesDir, filename), { force: true });
   }
 }
