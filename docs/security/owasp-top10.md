@@ -8,6 +8,9 @@ Alcance: `apps/backend` (NestJS + Prisma + PostgreSQL) y `apps/frontend` (Next.j
 Esta es una revision honesta del estado actual, no una checklist marcada de mas.
 Donde algo no esta cubierto, se dice explicitamente y se deja como pendiente.
 
+Esta revision es 100% de codigo. El complemento con trafico real de un scanner
+contra produccion esta en [`docs/security/zap-baseline-scan.md`](zap-baseline-scan.md).
+
 ## A01:2021 — Broken Access Control
 
 **Estado: cubierto para el modelo actual (multi-tenant por organizacion, con RBAC).**

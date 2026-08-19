@@ -55,6 +55,20 @@ la nota general sube de 86 a **~87/100** — calculada como el promedio de los 1
 individuales que ya trae este documento y el README, no un número nuevo inventado.
 Propagado al README en la misma sesión.
 
+**Actualización 2026-08-19 (2):** ítem 1.7 (Seguridad) cerrado — scan OWASP ZAP
+baseline real contra `prodexa-iota.vercel.app` y `prodexa-backend.onrender.com`, 0 FAIL
+en ambos, 4 headers de hardening faltantes en el frontend corregidos y verificados el
+mismo día (`X-Frame-Options`, `X-Content-Type-Options`, `Permissions-Policy`,
+`Referrer-Policy`), resto de hallazgos revisado con evidencia o diferido con razón
+explícita. Detalle en [`docs/security/zap-baseline-scan.md`](../security/zap-baseline-scan.md).
+Seguridad pasa de 90 a **94** — **Fase 1 completa, los 8 ítems hechos.** También se
+cerró 2.1b (Disponibilidad, monitor de uptime UptimeRobot sobre `/health`, cuenta creada
+por el autor), Disponibilidad pasa de 65 a **78**; 2.2 (pase manual con lector de
+pantalla) queda diferido a propósito, no urgente. Con eso la nota general sube de 87 a
+**~88/100** (promedio de los 13 pilares, ver el desglose completo en la sección
+"Pilares que ya están en 90+" y la tabla de Proyección más abajo). Propagado al README
+en la misma sesión.
+
 ## Pausa de sesión — 2026-08-18, retomar desde acá (resuelta 2026-08-19)
 
 La máquina quedó saturada (~10 contenedores de otro proyecto corriendo en paralelo, más
@@ -135,9 +149,9 @@ un solo pilar con un límite estructural que ningún truco gratuito cierra del t
 
 ## Proyección (solo Fases 1 y 2 — lo único activo)
 
-| | Hoy | Después de Fase 1 | Después de Fase 2 (techo sin gastar) |
-|---|:---:|:---:|:---:|
-| Nota general | **87 (B+)** — Legal, Testability, Escalabilidad/Rendimiento, Monitoreabilidad, Compatibilidad, Eficiencia de recursos y Fiabilidad ya hechos; solo 1.7 (Seguridad) queda en Fase 1 | ~87-88 | **~89 (B+ alto)** |
+| | Hoy | Después de Fase 2 (techo sin gastar) |
+|---|:---:|:---:|
+| Nota general | **88 (B+)** — **Fase 1 completa (los 8 ítems)**; en Fase 2, 2.1a y 2.1b hechos, solo 2.2 (pase manual con lector de pantalla) queda diferido a propósito | **~89 (B+ alto)**, cuando se retome 2.2 |
 
 Cifras estimadas por pilar, no una promesa exacta — algunas dependen del resultado real de
 una prueba de carga que todavía no corrió. El objetivo de este documento no es "maquillar"
@@ -154,7 +168,7 @@ autoevaluación.
 | ~~1.4~~ | ~~Compatibilidad~~ | ~~Política de versionado/deprecación de la API documentada + test de snapshot del schema OpenAPI~~ | ~~80 → 88~~ | **Hecho — `docs/api/versioning.md` + `api-schema.e2e-spec.ts` (snapshot real del contrato, falla en CI si cambia sin querer)** |
 | ~~1.5~~ | ~~Eficiencia de recursos~~ | ~~Medir y documentar tamaño real de las imágenes Docker + ajustar el pool de conexiones de Prisma/pg con datos, no con el default sin revisar~~ | ~~84 → 89~~ | **Hecho — pool con `max` explícito (783f672); imagen del backend 1.13GB→896MB con `npm prune --omit=dev` (749MB→540MB de `node_modules`), frontend 391MB sin cambios (ya usa `output: standalone`). Detalle real en [`docs/deployment/docker.md`](../deployment/docker.md)** |
 | ~~1.6~~ | ~~Fiabilidad~~ | ~~Retry con backoff en las operaciones de Prisma que fallan por error transitorio de conexión — el mismo tipo de fallo que causó el incidente #1 de `docs/observability/known-gaps.md`~~ | ~~87 → 90~~ | **Hecho — `PrismaService` reintenta solo lecturas (nunca escrituras) ante P1001/P1002/P2024, backoff exponencial, `executeWithRetry`/`createQueryHandler` con test unitario dedicado + verificado contra Postgres real en la suite de integración** |
-| 1.7 | Seguridad | Correr un scan automatizado (OWASP ZAP baseline) contra el ambiente real y documentar el resultado | 90 → 94 | Reporte nuevo en `docs/security/` |
+| ~~1.7~~ | ~~Seguridad~~ | ~~Correr un scan automatizado (OWASP ZAP baseline) contra el ambiente real y documentar el resultado~~ | ~~90 → 94~~ | **Hecho (2026-08-19) — 0 FAIL en frontend y backend; 4 headers de hardening faltantes en el frontend (X-Frame-Options, X-Content-Type-Options, Permissions-Policy, Referrer-Policy) corregidos y verificados el mismo día; el resto de hallazgos revisado uno por uno (descartado con evidencia o diferido con razón explícita — CSP y COEP). Detalle en [`docs/security/zap-baseline-scan.md`](../security/zap-baseline-scan.md)** |
 | ~~1.8~~ | ~~Disponibilidad de datos~~ | ~~Backup automatizado del Postgres de producción — hallazgo nuevo, no estaba en el alcance original: el plan Free de Render no tiene backups propios y borra la base 30 días después de creada si nadie la sube a un plan pago~~ | — | **Hecho — `.github/workflows/backup-db.yml` (`pg_dump` diario a Cloudflare R2, retención 30 días) + `docs/deployment/backups.md` con el procedimiento de restore. Pendiente de vos: cargar los 5 secrets nuevos en GitHub y confirmar la fecha real de expiración de la base en el dashboard de Render (ver el documento — puede necesitar el ítem 3.1 antes de lo planeado)** |
 
 ## Fase 2 — barato pero externo
@@ -162,8 +176,8 @@ autoevaluación.
 | # | Pilar | Acción | Hoy → meta | Entregable |
 |---|---|---|:---:|---|
 | 2.1a | Disponibilidad | ~~Ping de "keep-warm" cada ~10 min en horario laboral (GitHub Actions programado)~~ | — | **Hecho — `.github/workflows/keep-warm.yml`, lunes a viernes 08:00-18:00 Bogotá** |
-| 2.1b | Disponibilidad | Monitor de uptime gratuito (UptimeRobot / Better Stack) sobre `/health` — necesita una cuenta externa, no algo que se resuelva solo con código | 65 → 78 | Vos — crear la cuenta y apuntarla a `https://prodexa-backend.onrender.com/health`; reduce cold starts en horario de uso real, no elimina el problema de fondo (ver 3.1) |
-| 2.2 | Usabilidad | Pase manual con lector de pantalla (NVDA o VoiceOver) en Login, Registro, Dashboard y Formulaciones — el automatizado (axe-core) no sustituye esto | 82 → 88 | Checklist + issues de lo que encuentre |
+| ~~2.1b~~ | ~~Disponibilidad~~ | ~~Monitor de uptime gratuito (UptimeRobot / Better Stack) sobre `/health`~~ | ~~65 → 78~~ | **Hecho (2026-08-19) — cuenta de UptimeRobot creada por el autor, apuntando a `https://prodexa-backend.onrender.com/health`. Reduce cold starts en horario de uso real; no elimina el problema de fondo (ver 3.1)** |
+| 2.2 | Usabilidad | Pase manual con lector de pantalla (NVDA o VoiceOver) en Login, Registro, Dashboard y Formulaciones — el automatizado (axe-core) no sustituye esto | 82 → 88 | **Diferido a propósito (2026-08-19) — no es bloqueante, se retoma más adelante** |
 
 ## Fase 3 — diferida, no activa (cuesta dinero real)
 
@@ -181,6 +195,7 @@ por fuera del ritmo de esta hoja de ruta (ver 3.2).
 | Pilar | Nota | Nota |
 |---|:---:|---|
 | Mantenibilidad | 93 | El más fuerte del proyecto — mantenerlo así con cada feature nueva es la única "acción". |
+| Seguridad | 94 | Scan OWASP ZAP baseline real (0 FAIL) + revisión de código completa contra OWASP Top 10 — subir más de acá requiere el pentest pago de 3.3. |
 | Portabilidad | 92 | Ya probado en 2 nubes distintas — no hay una brecha real que cerrar. |
 
 ## Lo que NO vamos a perseguir todavía, y por qué
