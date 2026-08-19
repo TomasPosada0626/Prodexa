@@ -15,6 +15,7 @@ jobs:
   ping:
     name: Ping /health
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Pinguear el backend real
         run: |

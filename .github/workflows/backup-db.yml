@@ -15,6 +15,11 @@ jobs:
   backup:
     name: pg_dump -> Cloudflare R2
     runs-on: ubuntu-latest
+    # Sin esto, el default real es 6h. Se agrego el 2026-08-19 tras un colgado real de
+    # 5+ horas en el paso de instalar postgresql-client (flake de red del runner de
+    # GitHub, no del codigo) -- mejor que falle rapido y quede claro en los logs que
+    # hay que reintentar, a que consuma minutos de Actions en silencio.
+    timeout-minutes: 10
     steps:
       - name: Instalar postgresql-client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client

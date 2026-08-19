@@ -10,6 +10,7 @@ jobs:
   backend:
     name: Backend (unit tests + cobertura >= 95%)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -39,6 +40,7 @@ jobs:
   backend-integration:
     name: Backend (integration/e2e contra Postgres real)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:16-alpine
@@ -96,6 +98,7 @@ jobs:
   frontend:
     name: Frontend (typecheck + lint + unit tests)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -119,6 +122,11 @@ jobs:
   frontend-e2e:
     name: Frontend (E2E, Playwright)
     runs-on: ubuntu-latest
+    # Sin esto, el default real es 6h -- exactamente lo que paso el 2026-08-19: un
+    # runner se colgo en "npx playwright install --with-deps chromium" (flake de red
+    # del runner, no del codigo) y el job quedo vivo 6 horas hasta que GitHub lo mato
+    # por el limite maximo, en vez de fallar rapido y avisar.
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16-alpine
