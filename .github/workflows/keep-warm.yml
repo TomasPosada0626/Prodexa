@@ -1,0 +1,26 @@
+name: Keep-warm backend
+
+# Pinguea /health en horario laboral para reducir cuantas veces un cliente piloto
+# real se topa con el cold start del plan gratuito de Render (50+ segundos en la
+# primera peticion tras dormir) -- no lo elimina (eso requiere un plan pago, ver
+# docs/gestion/roadmap-calidad-90.md, Fase 3.1), pero baja cuanta gente lo sufre.
+# Horario: 13:00-23:00 UTC = 08:00-18:00 Bogota (UTC-5, sin horario de verano),
+# lunes a viernes.
+on:
+  schedule:
+    - cron: '*/10 13-23 * * 1-5'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    name: Ping /health
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pinguear el backend real
+        run: |
+          # timeout generoso: si esta dormido, la primera respuesta puede tardar 50+s.
+          # No falla el workflow por un cold start real -- ese es justo el caso que
+          # este ping existe para absorber antes de que le pegue a un usuario real.
+          curl -sS -o /dev/null -w 'status=%{http_code} tiempo=%{time_total}s\n' \
+            --max-time 90 \
+            https://prodexa-backend.onrender.com/health || true

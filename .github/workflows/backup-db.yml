@@ -1,0 +1,61 @@
+name: Backup de la base de datos
+
+# Red de seguridad real, no solo documentacion: el Postgres de produccion esta en el
+# plan Free de Render, que NO incluye backups automaticos y borra la base de datos
+# completa 30 dias despues de creada (14 de gracia para migrar a un plan pago) si
+# nadie la actualiza -- ver docs/deployment/backups.md. Este workflow no depende de
+# esa decision: corre todos los dias, sin importar si el Postgres sigue en Free o
+# se sube a un plan pago con point-in-time recovery propio.
+on:
+  schedule:
+    - cron: '0 7 * * *' # 07:00 UTC = 02:00 Bogota, fuera de horario de uso real
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    name: pg_dump -> Cloudflare R2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Instalar postgresql-client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Dump comprimido de la base real
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          FILENAME="prodexa-$(date -u +%Y-%m-%dT%H-%M-%SZ).sql.gz"
+          echo "FILENAME=$FILENAME" >> "$GITHUB_ENV"
+          pg_dump "$DATABASE_URL" --no-owner --no-privileges | gzip -9 > "$FILENAME"
+          echo "Dump generado: $(du -h "$FILENAME" | cut -f1)"
+
+      - name: Subir a Cloudflare R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_BACKUP_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_BACKUP_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          BUCKET: ${{ secrets.R2_BACKUP_BUCKET_NAME }}
+        run: |
+          set -euo pipefail
+          aws s3 cp "$FILENAME" "s3://$BUCKET/db-backups/$FILENAME" --endpoint-url "$ENDPOINT"
+
+      - name: Borrar backups de mas de 30 dias (retencion, no crecer para siempre)
+        if: always()
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_BACKUP_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_BACKUP_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          BUCKET: ${{ secrets.R2_BACKUP_BUCKET_NAME }}
+        run: |
+          set -euo pipefail
+          CUTOFF="$(date -u -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)"
+          KEYS=$(aws s3api list-objects-v2 --endpoint-url "$ENDPOINT" --bucket "$BUCKET" \
+            --prefix "db-backups/" --query "Contents[?LastModified<'$CUTOFF'].Key" \
+            --output text || true)
+          if [ -n "$KEYS" ] && [ "$KEYS" != "None" ]; then
+            echo "$KEYS" | tr '\t' '\n' | while IFS= read -r key; do
+              [ -n "$key" ] && aws s3 rm "s3://$BUCKET/$key" --endpoint-url "$ENDPOINT"
+            done
+          fi
