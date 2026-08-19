@@ -32,3 +32,6 @@ apps/frontend/blob-report/
 
 # Archivos subidos (imagenes del editor de formulaciones)
 apps/backend/uploads/
+
+# Capturas de pantalla sueltas en la raiz (para mostrar contexto en el chat, no para el repo)
+/image.png
