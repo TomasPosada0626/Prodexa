@@ -9,6 +9,11 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY apps/backend ./
 RUN npx prisma generate --schema prisma/schema.prisma
 RUN npm run build
+# Sin esto, el runtime copiaba node_modules completo (con eslint/jest/typescript/
+# ts-node/prisma-CLI incluidos -- todo lo necesario para compilar, nada de lo
+# necesario para correr `node dist/src/main.js`) -- 749MB de los 1.13GB de la
+# imagen final medidos antes de este cambio (ver docs/deployment/docker.md).
+RUN npm prune --omit=dev
 
 FROM node:22-alpine AS runtime
 WORKDIR /app
