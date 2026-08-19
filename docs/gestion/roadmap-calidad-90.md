@@ -37,7 +37,15 @@ en medio de un ataque de fuerza bruta), fire-and-forget, y con 8 tests nuevos cu
 umbral exacto, el corte por login exitoso, y que nunca tumba el login si algo falla.
 Monitoreabilidad pasa de 78 a **85**.
 
-Con los cuatro ítems ya hechos, la nota de hoy sube de 82 a **~86/100**.
+**Actualización 2026-08-18 (5):** ítem 1.4 (Compatibilidad) también hecho —
+[`docs/api/versioning.md`](../api/versioning.md) fija qué cuenta como cambio compatible
+vs incompatible y qué se haría el día que exista un `v2`, y
+`apps/backend/test/api-schema.e2e-spec.ts` respalda esa política con un test real: genera
+el schema OpenAPI en runtime (el mismo que sirve `/api/docs`) y lo compara contra un
+snapshot committeado — si alguien cambia un DTO o un endpoint sin darse cuenta, CI falla
+con un diff legible del contrato roto. Compatibilidad pasa de 80 a **88**.
+
+Con los cinco ítems ya hechos, la nota de hoy sube de 82 a **~86/100**.
 
 ## Decisión: mientras el proyecto sea portafolio/pre-ingresos, gasto real = US$0
 
@@ -71,7 +79,7 @@ un solo pilar con un límite estructural que ningún truco gratuito cierra del t
 
 | | Hoy | Después de Fase 1 | Después de Fase 2 (techo sin gastar) |
 |---|:---:|:---:|:---:|
-| Nota general | **86 (B+)** — Legal, Testability, Escalabilidad/Rendimiento y Monitoreabilidad ya hechos | ~87 | **~89 (B+ alto)** |
+| Nota general | **86 (B+)** — Legal, Testability, Escalabilidad/Rendimiento, Monitoreabilidad y Compatibilidad ya hechos | ~87 | **~89 (B+ alto)** |
 
 Cifras estimadas por pilar, no una promesa exacta — algunas dependen del resultado real de
 una prueba de carga que todavía no corrió. El objetivo de este documento no es "maquillar"
@@ -85,7 +93,7 @@ autoevaluación.
 | ~~1.1~~ | ~~Testability~~ | ~~Tests para `forecast.ts` y `sugerencias.ts` (0% de cobertura) + `coverageThreshold` real en `apps/frontend/vitest.config.ts`~~ | ~~85 → 92~~ | **Hecho — 16 tests nuevos, cobertura de `src/lib/` 40.7%→93.8% statements, gate real agregado** |
 | ~~1.2~~ | ~~Escalabilidad / Rendimiento~~ | ~~Script de carga (autocannon) contra el backend real, corrido de verdad, con resultados publicados~~ | ~~72 / 73 → 85 / 85~~ | **Hecho — `docs/testing/load-testing.md`: 720 req/s, 0 errores a 5x concurrencia, cuello de botella real encontrado (pool de conexiones sin `max`)** |
 | ~~1.3~~ | ~~Monitoreabilidad~~ | ~~Alerta proactiva (correo al ADMIN) tras N logins fallidos seguidos~~ | ~~78 → 85~~ | **Hecho — `AuditService.notificarSiLoginsFallidosRepetidos()`, 8 tests nuevos, resuelve el pendiente de `docs/security/owasp-top10.md` A09** |
-| 1.4 | Compatibilidad | Política de versionado/deprecación de la API documentada + test de snapshot del schema OpenAPI (evita romper el contrato sin darse cuenta) | 80 → 88 | `docs/api/versioning.md` + test en CI |
+| ~~1.4~~ | ~~Compatibilidad~~ | ~~Política de versionado/deprecación de la API documentada + test de snapshot del schema OpenAPI~~ | ~~80 → 88~~ | **Hecho — `docs/api/versioning.md` + `api-schema.e2e-spec.ts` (snapshot real del contrato, falla en CI si cambia sin querer)** |
 | 1.5 | Eficiencia de recursos | Medir y documentar tamaño real de las imágenes Docker + ajustar el pool de conexiones de Prisma/pg con datos, no con el default sin revisar | 84 → 89 | `docs/deployment/` actualizado con números reales |
 | 1.6 | Fiabilidad | Retry con backoff en las operaciones de Prisma que fallan por error transitorio de conexión — el mismo tipo de fallo que causó el incidente #1 de `docs/observability/known-gaps.md` | 87 → 90 | Código + test dedicado |
 | 1.7 | Seguridad | Correr un scan automatizado (OWASP ZAP baseline) contra el ambiente real y documentar el resultado | 90 → 94 | Reporte nuevo en `docs/security/` |
@@ -121,7 +129,7 @@ Mismo criterio que ya usa el proyecto en [`docs/observability/overview.md`](../o
 
 - **Prometheus/Grafana / métricas técnicas.** Sin tráfico real que monitorear es infraestructura especulativa. Con la alerta proactiva de logins fallidos ya resuelta (1.3), Monitoreabilidad quedó en 85 — subir más de ahí sí requeriría este stack. Se revisa cuando haya usuarios reales usando la plataforma a diario.
 - **Múltiples instancias / balanceo de carga.** No tiene sentido decidirlo antes de saber si una sola instancia aguanta la carga real — por eso 1.2 va primero, no después.
-- **Certificación de compatibilidad hacia consumidores externos de la API.** Hoy no existen integradores externos. Documentar una política de versionado (1.4) es lo máximo que se puede hacer sin ellos; el techo real de Compatibilidad (~88) sube solo cuando exista al menos un consumidor real poniendo el contrato a prueba.
+- **Certificación de compatibilidad hacia consumidores externos de la API.** Hoy no existen integradores externos. La política de versionado + el test de snapshot (1.4, ya hecho) es lo máximo que se puede verificar sin ellos; Compatibilidad quedó en 88 — subir más de ahí requiere al menos un consumidor real poniendo el contrato a prueba.
 
 ## Seguimiento
 
