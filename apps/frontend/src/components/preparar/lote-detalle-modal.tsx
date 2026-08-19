@@ -170,7 +170,7 @@ export function LoteDetalleModal({ orden, formulacion, onClose, onOrdenActualiza
             <h3 id="lote-detalle-title" className="text-base font-semibold text-slate-900 dark:text-white">
               Lote {orden.numeroLote}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-zinc-500">
+            <p className="text-xs text-slate-500 dark:text-zinc-400">
               {formulacion?.nombreProducto ?? 'Formulacion'} · {formatKg(Number(orden.cantidadObjetivoKg))} kg ·{' '}
               {new Date(orden.createdAt).toLocaleDateString()}
             </p>
@@ -192,7 +192,7 @@ export function LoteDetalleModal({ orden, formulacion, onClose, onOrdenActualiza
                 <dt className="text-sm text-slate-600 dark:text-zinc-400">{fila.label}</dt>
                 <dd className="text-sm font-semibold text-slate-900 dark:text-white">{fila.valor}</dd>
               </div>
-              {fila.nota && <p className="text-[11px] text-slate-500 dark:text-zinc-500">{fila.nota}</p>}
+              {fila.nota && <p className="text-[11px] text-slate-500 dark:text-zinc-400">{fila.nota}</p>}
             </div>
           ))}
           <div className="border-b border-slate-100 py-1.5 dark:border-white/5">
@@ -223,7 +223,7 @@ export function LoteDetalleModal({ orden, formulacion, onClose, onOrdenActualiza
 
         <div className="mt-5 border-t border-slate-100 pt-4 dark:border-white/10">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
               Cobros de este lote
             </h4>
             <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
@@ -241,9 +241,9 @@ export function LoteDetalleModal({ orden, formulacion, onClose, onOrdenActualiza
           )}
 
           {pagos === null ? (
-            <p className="mt-2 text-xs text-slate-500 dark:text-zinc-500">Cargando abonos...</p>
+            <p className="mt-2 text-xs text-slate-500 dark:text-zinc-400">Cargando abonos...</p>
           ) : pagos.length === 0 ? (
-            <p className="mt-2 text-xs text-slate-500 dark:text-zinc-500">
+            <p className="mt-2 text-xs text-slate-500 dark:text-zinc-400">
               Aun no has registrado ningun abono para este lote.
             </p>
           ) : (
@@ -307,7 +307,7 @@ export function LoteDetalleModal({ orden, formulacion, onClose, onOrdenActualiza
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60 ${
                     confirmarExceso
                       ? 'bg-amber-600 hover:bg-amber-700'
-                      : 'bg-sky-700 dark:bg-[#8B5CF6]'
+                      : 'bg-sky-700 dark:bg-[#7c3aed]'
                   }`}
                 >
                   {guardandoAbono ? 'Guardando...' : confirmarExceso ? 'Confirmar de todas formas' : 'Agregar abono'}

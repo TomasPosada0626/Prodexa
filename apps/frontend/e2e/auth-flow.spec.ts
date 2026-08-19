@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { expectSinViolacionesAccesibilidad } from './a11y';
 
 function uniqueEmail(): string {
   return `e2e-${Date.now()}-${Math.floor(Math.random() * 100000)}@prodexa.test`;
@@ -15,15 +16,18 @@ test.describe('Flujo de autenticacion y formulaciones', () => {
       await page.goto('/');
       await expect(page.getByRole('banner').getByRole('link', { name: 'Iniciar sesion' })).toBeVisible();
       await expect(page.getByRole('banner').getByRole('link', { name: 'Empezar gratis' })).toBeVisible();
+      await expectSinViolacionesAccesibilidad(page, 'landing publica (/)');
     });
 
     await test.step('2. Una ruta protegida sin sesion redirige a /login', async () => {
       await page.goto('/formulaciones');
       await expect(page).toHaveURL(/\/login$/);
+      await expectSinViolacionesAccesibilidad(page, '/login');
     });
 
     await test.step('3. El registro crea la cuenta y redirige a /login (sin iniciar sesion)', async () => {
       await page.goto('/registro');
+      await expectSinViolacionesAccesibilidad(page, '/registro');
       await page.getByLabel('Nombre', { exact: true }).fill('Usuario');
       await page.getByLabel('Apellidos').fill('E2E');
       await page.getByLabel('Correo').fill(email);
@@ -44,10 +48,18 @@ test.describe('Flujo de autenticacion y formulaciones', () => {
       await expect(page).toHaveURL(/\/dashboard$/);
       await expect(page.getByRole('link', { name: 'Formulaciones', exact: true })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Usuario E2E' })).toBeVisible();
+      await expectSinViolacionesAccesibilidad(page, '/dashboard (modo por defecto)');
+
+      // El app shell tiene toggle real de claro/oscuro (a diferencia de landing/login/
+      // registro, que son siempre oscuros por diseno, ver DESIGN.md) -- se verifica el
+      // otro modo tambien, no solo el que carga por defecto.
+      await page.getByRole('switch', { name: /Cambiar a modo/ }).click();
+      await expectSinViolacionesAccesibilidad(page, '/dashboard (modo alternado)');
     });
 
     await test.step('4. Crear una formulacion la muestra en la lista sin recargar', async () => {
       await page.goto('/formulaciones');
+      await expectSinViolacionesAccesibilidad(page, '/formulaciones');
 
       await page.getByLabel('Nombre del producto').fill('Formulacion E2E');
       await page.getByLabel('Cantidad base (kg)').fill('1');

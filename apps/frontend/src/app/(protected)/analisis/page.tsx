@@ -281,7 +281,7 @@ function AnalisisDetalle({ formulacion, todasLasFormulaciones }: AnalisisDetalle
             <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
               Tasa de rechazo en calidad
             </h3>
-            <span className="text-xs text-slate-500 dark:text-zinc-500">
+            <span className="text-xs text-slate-500 dark:text-zinc-400">
               {rechazo.rechazados} de {rechazo.finalizados} lote{rechazo.finalizados === 1 ? '' : 's'} finalizado
               {rechazo.finalizados === 1 ? '' : 's'}
             </span>
@@ -356,25 +356,25 @@ function AnalisisDetalle({ formulacion, todasLasFormulaciones }: AnalisisDetalle
                 ` (${proyeccionMensual.variacionVolumenPorcentaje > 0 ? '+' : ''}${proyeccionMensual.variacionVolumenPorcentaje.toFixed(0)}%)`}
             </span>
           </div>
-          <p className="mt-1 text-xs text-slate-500 dark:text-zinc-500">
+          <p className="mt-1 text-xs text-slate-500 dark:text-zinc-400">
             Promedio movil de los ultimos {proyeccionMensual.mesesBase} meses completos de este producto — si sigue
             la tendencia actual, el proximo mes deberia producir/vender aproximadamente:
           </p>
           <div className="mt-3 grid gap-4 sm:grid-cols-3">
             <div>
-              <p className="text-xs text-slate-500 dark:text-zinc-500">Kg a producir</p>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">Kg a producir</p>
               <p className="mt-0.5 text-xl font-bold text-slate-900 dark:text-white">
                 {formatKg(proyeccionMensual.kgProyectado)} kg
               </p>
             </div>
             <div>
-              <p className="text-xs text-slate-500 dark:text-zinc-500">Facturacion esperada</p>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">Facturacion esperada</p>
               <p className="mt-0.5 text-xl font-bold text-slate-900 dark:text-white">
                 {formatCosto(proyeccionMensual.ingresoProyectado)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-slate-500 dark:text-zinc-500">Ganancia esperada</p>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">Ganancia esperada</p>
               <p
                 className={`mt-0.5 text-xl font-bold ${proyeccionMensual.utilidadProyectada < 0 ? 'text-red-700 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'}`}
               >
@@ -392,7 +392,7 @@ function AnalisisDetalle({ formulacion, todasLasFormulaciones }: AnalisisDetalle
           </h3>
           <table className="mt-3 w-full min-w-160 text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-500">
+              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-400">
                 <th className="py-2">Lote</th>
                 <th className="py-2">Fecha</th>
                 <th className="py-2">Cantidad</th>
@@ -468,7 +468,7 @@ function AnalisisDetalle({ formulacion, todasLasFormulaciones }: AnalisisDetalle
           <div className="mt-3 overflow-x-auto">
             <table className="w-full min-w-120 text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-500">
+                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-400">
                   <th className="py-2">Ingrediente</th>
                   <th className="py-2">Costo anterior</th>
                   <th className="py-2">Costo actual</th>

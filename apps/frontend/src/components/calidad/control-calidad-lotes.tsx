@@ -111,7 +111,7 @@ export function ControlCalidadLotes({ formulaciones }: Props) {
       </div>
 
       {enCalidad.length === 0 ? (
-        <p className="text-sm text-slate-500 dark:text-zinc-500">
+        <p className="text-sm text-slate-500 dark:text-zinc-400">
           No hay lotes esperando revision de calidad. Marca un lote como &quot;En calidad&quot; desde Preparar cuando
           termine de producirse.
         </p>
@@ -119,7 +119,7 @@ export function ControlCalidadLotes({ formulaciones }: Props) {
         <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
           <table className="w-full min-w-160 text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-500">
+              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-400">
                 <th className="py-2">Lote</th>
                 <th className="py-2">Formulacion</th>
                 <th className="py-2">Registrado</th>
@@ -209,12 +209,12 @@ export function ControlCalidadLotes({ formulaciones }: Props) {
 
       {rechazadosRecientes.length > 0 && (
         <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
-          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">
+          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
             Rechazados recientes
           </h4>
           <table className="w-full min-w-160 text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-500">
+              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-400">
                 <th className="py-2">Lote</th>
                 <th className="py-2">Formulacion</th>
                 <th className="py-2">Fecha</th>

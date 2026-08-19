@@ -72,7 +72,7 @@ function MargenImpuestoCard({ formulacion, onSaved }: MargenImpuestoCardProps) {
 
   return (
     <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
         Margen e impuesto de esta formulacion
       </p>
       <div className="grid grid-cols-2 gap-3">
@@ -99,7 +99,7 @@ function MargenImpuestoCard({ formulacion, onSaved }: MargenImpuestoCardProps) {
           />
         </label>
       </div>
-      <p className="text-xs text-slate-500 dark:text-zinc-500">
+      <p className="text-xs text-slate-500 dark:text-zinc-400">
         El impuesto es el IVA legal (19%) y aplica igual para todas las formulaciones, no se ajusta por producto.
         Solo el margen es editable aqui.
       </p>
@@ -298,7 +298,7 @@ export function CostosForm({ formulaciones, onFormulationUpdated }: Props) {
                 </select>
               </div>
               {envasesEstimados !== null && (
-                <p className="text-xs text-slate-500 dark:text-zinc-500">
+                <p className="text-xs text-slate-500 dark:text-zinc-400">
                   ≈ {envasesEstimados.toFixed(1)} envase{envasesEstimados === 1 ? '' : 's'} de {tamanoPresentacion}{' '}
                   {unidadPresentacion}
                 </p>
@@ -307,7 +307,7 @@ export function CostosForm({ formulaciones, onFormulationUpdated }: Props) {
           </div>
 
           <div className="grid gap-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
               Costos operativos a considerar (opcional, para el analisis teorico)
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -390,7 +390,7 @@ export function CostosForm({ formulaciones, onFormulationUpdated }: Props) {
                 estimado de produccion (edita la formulacion para agregarlo).
               </p>
             )}
-            <p className="-mt-1 text-xs text-slate-500 dark:text-zinc-500">
+            <p className="-mt-1 text-xs text-slate-500 dark:text-zinc-400">
               Estos valores no se guardan: solo se usan para que el &quot;Precio de venta sugerido&quot; y la
               &quot;Utilidad esperada&quot; de este analisis cubran el costo total (ingredientes + operativos), no
               solo ingredientes. El &quot;Costo de produccion&quot; que se muestra abajo sigue siendo solo
@@ -428,7 +428,7 @@ export function CostosForm({ formulaciones, onFormulationUpdated }: Props) {
           <button
             type="submit"
             disabled={loading}
-            className="w-fit rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:opacity-60 dark:bg-[#8B5CF6] dark:hover:bg-[#7c3aed]"
+            className="w-fit rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:opacity-60 dark:bg-[#7c3aed] dark:hover:bg-[#6d28d9]"
           >
             {loading ? 'Calculando...' : 'Analizar'}
           </button>
@@ -436,9 +436,9 @@ export function CostosForm({ formulaciones, onFormulationUpdated }: Props) {
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">Resultado</h3>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">Resultado</h3>
         {!resultado && (
-          <p className="mt-3 text-slate-500 dark:text-zinc-500">Completa el formulario y analiza para ver el resultado.</p>
+          <p className="mt-3 text-slate-500 dark:text-zinc-400">Completa el formulario y analiza para ver el resultado.</p>
         )}
         {resultado && (
           <dl className="mt-3 grid gap-2">
@@ -474,7 +474,7 @@ export function CostosForm({ formulaciones, onFormulationUpdated }: Props) {
           </dl>
         )}
         {resultado && (
-          <p className="mt-3 text-xs text-slate-500 dark:text-zinc-500">
+          <p className="mt-3 text-xs text-slate-500 dark:text-zinc-400">
             El IVA (19%) se aplica sobre el precio de venta sugerido y se refleja en &quot;Precio con IVA&quot;. El
             descuento que activaste arriba se aplica despues, sobre ese precio con IVA, y se refleja en &quot;Precio
             final con descuento&quot; (si no marcaste descuento, es igual al precio con IVA).
@@ -485,11 +485,11 @@ export function CostosForm({ formulaciones, onFormulationUpdated }: Props) {
             <button
               type="button"
               onClick={handleRegistrarComoOrden}
-              className="mt-4 w-fit rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 dark:bg-[#8B5CF6] dark:hover:bg-[#7c3aed]"
+              className="mt-4 w-fit rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 dark:bg-[#7c3aed] dark:hover:bg-[#6d28d9]"
             >
               Registrar como orden de produccion
             </button>
-            <p className="mt-2 text-xs text-slate-500 dark:text-zinc-500">
+            <p className="mt-2 text-xs text-slate-500 dark:text-zinc-400">
               Te lleva a Preparar con estos mismos datos ya cargados, listos para confirmar el lote.
             </p>
           </>

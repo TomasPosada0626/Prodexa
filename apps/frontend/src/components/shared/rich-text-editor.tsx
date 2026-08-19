@@ -109,7 +109,7 @@ function ToolbarButton({
       aria-pressed={active}
       className={`grid h-7 w-7 place-items-center rounded-md text-sm font-semibold transition ${
         active
-          ? 'bg-sky-700 text-white dark:bg-[#8B5CF6]'
+          ? 'bg-sky-700 text-white dark:bg-[#7c3aed]'
           : 'text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-white/5'
       }`}
     >

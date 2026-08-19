@@ -44,7 +44,7 @@ export function RentabilidadResumen({ formulaciones }: Props) {
   return (
     <div className="grid gap-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
           Costo de produccion vs. precio de venta
         </h3>
         <div className="mt-4">
@@ -64,7 +64,7 @@ export function RentabilidadResumen({ formulaciones }: Props) {
 
       <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
           Rentabilidad por lote base de cada formulacion
         </h3>
         <button
@@ -77,7 +77,7 @@ export function RentabilidadResumen({ formulaciones }: Props) {
       </div>
       <table className="mt-3 w-full min-w-160 text-left text-sm">
         <thead>
-          <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-500">
+          <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-400">
             <th className="py-2">Formulacion</th>
             <th className="py-2">Lote base</th>
             <th className="py-2">Costo produccion</th>

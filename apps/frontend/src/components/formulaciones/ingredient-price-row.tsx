@@ -103,7 +103,7 @@ export function IngredientPriceRow({ formulationId, ingrediente, onUpdated }: Pr
             <button
               type="button"
               onClick={handleToggleHistory}
-              className="text-slate-400 underline-offset-2 hover:underline dark:text-zinc-500"
+              className="text-slate-400 underline-offset-2 hover:underline dark:text-zinc-400"
             >
               Historial
             </button>
@@ -147,12 +147,12 @@ export function IngredientPriceRow({ formulationId, ingrediente, onUpdated }: Pr
                   type="button"
                   onClick={handleSavePrice}
                   disabled={saving || !proveedor.trim()}
-                  className="rounded-full bg-sky-700 px-3 py-1 text-xs font-semibold text-white hover:bg-sky-800 disabled:opacity-60 dark:bg-[#8B5CF6] dark:hover:bg-[#7c3aed]"
+                  className="rounded-full bg-sky-700 px-3 py-1 text-xs font-semibold text-white hover:bg-sky-800 disabled:opacity-60 dark:bg-[#7c3aed] dark:hover:bg-[#6d28d9]"
                 >
                   {saving ? 'Guardando...' : 'Guardar'}
                 </button>
               </div>
-              <p className="mt-1.5 text-[11px] text-slate-500 dark:text-zinc-500">
+              <p className="mt-1.5 text-[11px] text-slate-500 dark:text-zinc-400">
                 El proveedor es obligatorio para poder comparar precios despues. Si no tienes uno definido (ej.
                 insumo producido internamente), escribe <span className="font-mono">NA</span>.
               </p>
@@ -165,12 +165,12 @@ export function IngredientPriceRow({ formulationId, ingrediente, onUpdated }: Pr
         <tr>
           <td colSpan={6} className="pb-2">
             <div className="rounded-md border border-slate-200 bg-slate-50 p-2 dark:border-white/10 dark:bg-white/3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                 Historial de precios · {ingrediente.nombre}
               </p>
-              {loadingHistory && <p className="mt-1.5 text-xs text-slate-500 dark:text-zinc-500">Cargando historial...</p>}
+              {loadingHistory && <p className="mt-1.5 text-xs text-slate-500 dark:text-zinc-400">Cargando historial...</p>}
               {!loadingHistory && historial?.length === 0 && (
-                <p className="mt-1.5 text-xs text-slate-500 dark:text-zinc-500">
+                <p className="mt-1.5 text-xs text-slate-500 dark:text-zinc-400">
                   Sin cambios de precio registrados todavia.
                 </p>
               )}
@@ -188,7 +188,7 @@ export function IngredientPriceRow({ formulationId, ingrediente, onUpdated }: Pr
                     ))}
                   </ul>
                   {totalPaginasHistorial > 1 && (
-                    <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500 dark:text-zinc-500">
+                    <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500 dark:text-zinc-400">
                       <button
                         type="button"
                         onClick={() => setPaginaHistorial((p) => Math.max(0, p - 1))}

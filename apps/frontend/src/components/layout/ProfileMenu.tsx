@@ -61,7 +61,7 @@ export function ProfileMenu() {
         </div>
         <span className="hidden text-sm font-medium text-slate-700 sm:inline dark:text-zinc-200">{displayName}</span>
         <ChevronDown
-          className={clsx('h-4 w-4 text-slate-400 transition-transform dark:text-zinc-500', open && 'rotate-180')}
+          className={clsx('h-4 w-4 text-slate-400 transition-transform dark:text-zinc-400', open && 'rotate-180')}
           aria-hidden
         />
       </button>
@@ -73,7 +73,7 @@ export function ProfileMenu() {
         >
           <div className="border-b border-slate-100 px-3 py-2.5 dark:border-white/10">
             <p className="truncate text-sm font-semibold text-slate-800 dark:text-zinc-100">{displayName}</p>
-            <p className="truncate text-xs text-slate-500 dark:text-zinc-500">{user?.email}</p>
+            <p className="truncate text-xs text-slate-500 dark:text-zinc-400">{user?.email}</p>
           </div>
 
           <div className="py-1">

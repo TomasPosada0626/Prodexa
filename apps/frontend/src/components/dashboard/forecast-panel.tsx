@@ -29,12 +29,12 @@ export function ForecastPanel({ proyeccion, proyeccionMensual }: Props) {
       </h3>
 
       {proyeccion === null ? (
-        <p className="mt-3 text-sm text-slate-500 dark:text-zinc-500">
+        <p className="mt-3 text-sm text-slate-500 dark:text-zinc-400">
           Registra al menos 2 semanas completas de lotes producidos para ver una proyeccion.
         </p>
       ) : (
         <>
-          <p className="mt-1 text-xs text-slate-500 dark:text-zinc-500">
+          <p className="mt-1 text-xs text-slate-500 dark:text-zinc-400">
             Promedio de las ultimas {proyeccion.semanasBase} semanas completas ·{' '}
             <span className={`font-medium ${TENDENCIA_INFO[proyeccion.tendencia].className}`}>
               {TENDENCIA_INFO[proyeccion.tendencia].label}
@@ -42,19 +42,19 @@ export function ForecastPanel({ proyeccion, proyeccionMensual }: Props) {
           </p>
           <div className="mt-3 grid gap-4 sm:grid-cols-3">
             <div>
-              <p className="text-xs text-slate-500 dark:text-zinc-500">Kg a producir</p>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">Kg a producir</p>
               <p className="mt-0.5 text-xl font-bold text-slate-900 dark:text-white">
                 {formatKg(proyeccion.kgProyectado)} kg
               </p>
             </div>
             <div>
-              <p className="text-xs text-slate-500 dark:text-zinc-500">Ingreso esperado</p>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">Ingreso esperado</p>
               <p className="mt-0.5 text-xl font-bold text-slate-900 dark:text-white">
                 {formatCosto(proyeccion.ingresoProyectado)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-slate-500 dark:text-zinc-500">Utilidad esperada</p>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">Utilidad esperada</p>
               <p
                 className={`mt-0.5 text-xl font-bold ${proyeccion.utilidadProyectada < 0 ? 'text-red-700 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'}`}
               >
@@ -71,12 +71,12 @@ export function ForecastPanel({ proyeccion, proyeccionMensual }: Props) {
             Proyeccion del proximo mes
           </p>
           {proyeccionMensual === null ? (
-            <p className="mt-2 text-sm text-slate-500 dark:text-zinc-500">
+            <p className="mt-2 text-sm text-slate-500 dark:text-zinc-400">
               Registra al menos 2 meses completos de lotes producidos para ver una proyeccion mensual.
             </p>
           ) : (
             <>
-              <p className="mt-1 text-xs text-slate-500 dark:text-zinc-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-zinc-400">
                 Promedio de los ultimos {proyeccionMensual.mesesBase} meses completos ·{' '}
                 <span className={`font-medium ${TENDENCIA_VOLUMEN_INFO[proyeccionMensual.tendenciaVolumen].className}`}>
                   {TENDENCIA_VOLUMEN_INFO[proyeccionMensual.tendenciaVolumen].label}
@@ -91,19 +91,19 @@ export function ForecastPanel({ proyeccion, proyeccionMensual }: Props) {
               </p>
               <div className="mt-3 grid gap-4 sm:grid-cols-3">
                 <div>
-                  <p className="text-xs text-slate-500 dark:text-zinc-500">Kg a producir</p>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400">Kg a producir</p>
                   <p className="mt-0.5 text-xl font-bold text-slate-900 dark:text-white">
                     {formatKg(proyeccionMensual.kgProyectado)} kg
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 dark:text-zinc-500">Facturacion esperada</p>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400">Facturacion esperada</p>
                   <p className="mt-0.5 text-xl font-bold text-slate-900 dark:text-white">
                     {formatCosto(proyeccionMensual.ingresoProyectado)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 dark:text-zinc-500">Ganancia esperada</p>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400">Ganancia esperada</p>
                   <p
                     className={`mt-0.5 text-xl font-bold ${proyeccionMensual.utilidadProyectada < 0 ? 'text-red-700 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'}`}
                   >

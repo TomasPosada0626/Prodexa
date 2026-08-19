@@ -51,7 +51,7 @@ export function ConfirmDialog({
             onClick={onConfirm}
             disabled={loading}
             className={`rounded-full px-4 py-1.5 text-sm font-semibold text-white disabled:opacity-60 ${
-              danger ? 'bg-red-600 hover:bg-red-700' : 'bg-sky-700 hover:bg-sky-800 dark:bg-[#8B5CF6] dark:hover:bg-[#7c3aed]'
+              danger ? 'bg-red-600 hover:bg-red-700' : 'bg-sky-700 hover:bg-sky-800 dark:bg-[#7c3aed] dark:hover:bg-[#6d28d9]'
             }`}
           >
             {loading ? 'Procesando...' : confirmLabel}

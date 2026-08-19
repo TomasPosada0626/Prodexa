@@ -35,7 +35,7 @@ export function CapacidadPanel({ capacidad }: Props) {
         <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
           Capacidad utilizada (mes actual)
         </h3>
-        <p className="mt-3 text-sm text-slate-500 dark:text-zinc-500">
+        <p className="mt-3 text-sm text-slate-500 dark:text-zinc-400">
           Configura tu capacidad de produccion mensual (kg) en Configuracion para ver este indicador.
         </p>
       </div>
@@ -56,7 +56,7 @@ export function CapacidadPanel({ capacidad }: Props) {
         </span>
       </div>
       <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-        {formatKg(kgProducidosMes)} kg <span className="text-sm font-normal text-slate-500 dark:text-zinc-500">de {formatKg(capacidadMensualKg)} kg</span>
+        {formatKg(kgProducidosMes)} kg <span className="text-sm font-normal text-slate-500 dark:text-zinc-400">de {formatKg(capacidadMensualKg)} kg</span>
       </p>
       <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
         <div
@@ -64,7 +64,7 @@ export function CapacidadPanel({ capacidad }: Props) {
           style={{ width: `${anchoBarra}%` }}
         />
       </div>
-      <p className="mt-2 text-xs text-slate-500 dark:text-zinc-500">{mensaje}</p>
+      <p className="mt-2 text-xs text-slate-500 dark:text-zinc-400">{mensaje}</p>
     </div>
   );
 }

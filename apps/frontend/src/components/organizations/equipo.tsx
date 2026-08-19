@@ -107,7 +107,7 @@ function MiembroRow({
             Remover
           </button>
         )}
-        {esUnoMismo && <span className="text-xs text-slate-400 dark:text-zinc-500">Tu cuenta</span>}
+        {esUnoMismo && <span className="text-xs text-slate-400 dark:text-zinc-400">Tu cuenta</span>}
       </td>
 
       <ConfirmDialog
@@ -174,7 +174,7 @@ function InvitarForm({ onCreated }: { onCreated: () => void }) {
           type="button"
           onClick={handleCrear}
           disabled={creating}
-          className="rounded-full bg-sky-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-60 dark:bg-[#8B5CF6] dark:hover:bg-[#7c3aed]"
+          className="rounded-full bg-sky-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-60 dark:bg-[#7c3aed] dark:hover:bg-[#6d28d9]"
         >
           {creating ? 'Generando...' : 'Generar invitacion'}
         </button>
@@ -235,7 +235,7 @@ function InvitacionesPendientes({
   }
 
   if (invitaciones.length === 0) {
-    return <p className="text-sm text-slate-500 dark:text-zinc-500">No hay invitaciones vigentes.</p>;
+    return <p className="text-sm text-slate-500 dark:text-zinc-400">No hay invitaciones vigentes.</p>;
   }
 
   return (
@@ -296,7 +296,7 @@ export function Equipo() {
         <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
           Mi equipo · {user?.organizationNombre}
         </h3>
-        <p className="mt-1 text-xs text-slate-500 dark:text-zinc-500">
+        <p className="mt-1 text-xs text-slate-500 dark:text-zinc-400">
           Administradores y coordinadores pueden crear y editar formulaciones. Los miembros solo pueden verlas.
         </p>
       </div>
@@ -314,7 +314,7 @@ export function Equipo() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-100 text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-500">
+              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-400">
                 <th className="py-1.5 pr-2 font-medium">Nombre</th>
                 <th className="py-1.5 pr-2 font-medium">Correo</th>
                 <th className="py-1.5 pr-2 font-medium">Rol</th>

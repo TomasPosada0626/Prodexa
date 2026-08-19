@@ -265,7 +265,7 @@ export default function CalidadPage() {
           <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
             <table className="w-full min-w-170 text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-500">
+                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-400">
                   <th className="py-2">Formulacion</th>
                   <th className="py-2">Registro sanitario</th>
                   <th className="py-2">Vencimiento</th>

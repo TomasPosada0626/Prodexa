@@ -16,7 +16,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="grid min-h-[40vh] place-items-center text-sm text-slate-500">Cargando sesion...</div>
+      <div className="grid min-h-[40vh] place-items-center text-sm text-slate-500 dark:text-zinc-400">Cargando sesion...</div>
     );
   }
 

@@ -290,7 +290,7 @@ function HistorialProduccion({ formulationId, formulacion }: HistorialProduccion
   if (ordenes === null) return null;
   if (ordenes.length === 0) {
     return (
-      <p className="text-xs text-slate-500 dark:text-zinc-500">Aun no has registrado ordenes de produccion para esta formulacion.</p>
+      <p className="text-xs text-slate-500 dark:text-zinc-400">Aun no has registrado ordenes de produccion para esta formulacion.</p>
     );
   }
 
@@ -299,7 +299,7 @@ function HistorialProduccion({ formulationId, formulacion }: HistorialProduccion
       <div className="overflow-x-auto">
         <table className="w-full min-w-220 text-left text-xs text-slate-600 dark:text-zinc-400">
           <thead>
-            <tr className="border-b border-slate-200 uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-500">
+            <tr className="border-b border-slate-200 uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-400">
               <th className="py-1.5 pr-2 font-medium">Fecha</th>
               <th className="py-1.5 pr-2 font-medium">Lote</th>
               <th className="py-1.5 pr-2 font-medium">Cantidad</th>
@@ -603,7 +603,7 @@ function HistorialProduccion({ formulationId, formulacion }: HistorialProduccion
                           type="button"
                           onClick={() => void guardarEdicion(orden.id)}
                           disabled={guardandoEdicion}
-                          className="rounded-full bg-sky-700 px-3 py-1 text-xs font-semibold text-white disabled:opacity-60 dark:bg-[#8B5CF6]"
+                          className="rounded-full bg-sky-700 px-3 py-1 text-xs font-semibold text-white disabled:opacity-60 dark:bg-[#7c3aed]"
                         >
                           {guardandoEdicion ? 'Guardando...' : 'Guardar'}
                         </button>
@@ -1009,7 +1009,7 @@ export function PrepararForm({ formulaciones, initial }: Props) {
             </select>
           </div>
           {envasesEstimados !== null && (
-            <p className="text-xs text-slate-500 dark:text-zinc-500">
+            <p className="text-xs text-slate-500 dark:text-zinc-400">
               ≈ {envasesEstimados.toFixed(1)} envase{envasesEstimados === 1 ? '' : 's'} de {tamanoPresentacion}{' '}
               {unidadPresentacion}
             </p>
@@ -1043,13 +1043,13 @@ export function PrepararForm({ formulaciones, initial }: Props) {
               />
             </label>
             {formulacion?.vidaUtilDias && !fechaVencimiento && (
-              <p className="-mt-2 text-xs text-slate-500 dark:text-zinc-500">
+              <p className="-mt-2 text-xs text-slate-500 dark:text-zinc-400">
                 Si la dejas vacia, se calcula sola con la vida util de esta formulacion ({formulacion.vidaUtilDias}{' '}
                 dias).
               </p>
             )}
 
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
               Costos operativos reales de este lote
             </p>
             <div className="grid gap-2">
@@ -1106,7 +1106,7 @@ export function PrepararForm({ formulaciones, initial }: Props) {
                   value={esMaquila ? 'No aplica (la asume el maquilador)' : formatCosto(costoEnergiaAuto)}
                 />
               </label>
-              <p className="-mt-1 text-[11px] text-slate-500 dark:text-zinc-500">
+              <p className="-mt-1 text-[11px] text-slate-500 dark:text-zinc-400">
                 Si lo mandaste a maquilar con un tercero, ingresa lo que te cobro. Si no, la mano de obra y la
                 energia se calculan solas a partir del tiempo estimado de produccion de la formulacion (
                 {formulacion?.tiempoProduccionHoras
@@ -1151,13 +1151,13 @@ export function PrepararForm({ formulaciones, initial }: Props) {
                   onChange={(e) => setCostoEmpaque(e.target.value)}
                 />
               </label>
-              <p className="-mt-1 text-[11px] text-slate-500 dark:text-zinc-500">
+              <p className="-mt-1 text-[11px] text-slate-500 dark:text-zinc-400">
                 {empaqueEtiquetaBloqueados
                   ? 'No aplica: ya esta incluido en el costo de maquila.'
                   : 'Incluye el envase completo (frasco/bolsa/caja con su tapa) y cualquier otro material de empaque de una sola unidad. La etiqueta se cuenta aparte, abajo.'}
               </p>
               {!empaqueEtiquetaBloqueados && Number(costoEmpaque) > 0 && (
-                <p className="-mt-1 text-xs text-slate-500 dark:text-zinc-500">
+                <p className="-mt-1 text-xs text-slate-500 dark:text-zinc-400">
                   {envasesEstimados !== null
                     ? `Total empaque: ${formatCosto(Number(costoEmpaque) * envasesEstimados)} (${envasesEstimados.toFixed(1)} envases)`
                     : 'Ingresa el tamano de presentacion arriba para calcular el total.'}
@@ -1177,7 +1177,7 @@ export function PrepararForm({ formulaciones, initial }: Props) {
                 />
               </label>
               {!empaqueEtiquetaBloqueados && Number(costoEtiqueta) > 0 && (
-                <p className="-mt-1 text-xs text-slate-500 dark:text-zinc-500">
+                <p className="-mt-1 text-xs text-slate-500 dark:text-zinc-400">
                   {envasesEstimados !== null
                     ? `Total etiqueta: ${formatCosto(Number(costoEtiqueta) * envasesEstimados)} (${envasesEstimados.toFixed(1)} envases)`
                     : 'Ingresa el tamano de presentacion arriba para calcular el total.'}
@@ -1209,14 +1209,14 @@ export function PrepararForm({ formulaciones, initial }: Props) {
                   onChange={(e) => setCostoMermas(e.target.value)}
                 />
               </label>
-              <p className="-mt-1 text-xs text-slate-500 dark:text-zinc-500">
+              <p className="-mt-1 text-xs text-slate-500 dark:text-zinc-400">
                 {esMaquila
                   ? 'No aplica: la merma durante el procesamiento es responsabilidad del maquilador.'
                   : `Perdida o evaporacion de materia prima durante la produccion, como % del costo de ingredientes de este lote${Number(costoMermas) > 0 ? ` (${formatCosto((Number(costoMermas) / 100) * costoTotalEscalado)})` : ''}.`}
               </p>
             </div>
 
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
               Venta real
             </p>
             <label className="grid gap-1">
@@ -1279,19 +1279,19 @@ export function PrepararForm({ formulaciones, initial }: Props) {
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">Cantidades</h3>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">Cantidades</h3>
 
         {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
         {!error && filas.length === 0 && (
-          <p className="mt-3 text-slate-500 dark:text-zinc-500">Ingresa una cantidad objetivo mayor a cero.</p>
+          <p className="mt-3 text-slate-500 dark:text-zinc-400">Ingresa una cantidad objetivo mayor a cero.</p>
         )}
 
         {filas.length > 0 && (
           <div className="mt-3 overflow-x-auto">
             <table className="w-full min-w-105 text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-500">
+                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-400">
                   <th className="py-2">Ingrediente</th>
                   <th className="py-2">%</th>
                   <th className="py-2">Gramos</th>
@@ -1327,13 +1327,13 @@ export function PrepararForm({ formulaciones, initial }: Props) {
               type="button"
               onClick={handleGuardarOrden}
               disabled={guardandoOrden}
-              className="mt-4 w-fit rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:opacity-60 dark:bg-[#8B5CF6] dark:hover:bg-[#7c3aed]"
+              className="mt-4 w-fit rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:opacity-60 dark:bg-[#7c3aed] dark:hover:bg-[#6d28d9]"
             >
               {guardandoOrden ? 'Guardando...' : 'Guardar orden de produccion'}
             </button>
 
             <div className="mt-4 border-t border-slate-100 pt-3 dark:border-white/10">
-              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">
+              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                 Ultimas ordenes de esta formulacion
               </h4>
               <HistorialProduccion

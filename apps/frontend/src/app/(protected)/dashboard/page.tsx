@@ -548,7 +548,7 @@ export default function DashboardPage() {
                   className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 dark:border-white/5 dark:bg-white/3"
                 >
                   <span className="flex items-center gap-2 text-sm font-medium text-slate-800 dark:text-zinc-200">
-                    <span className="grid h-6 w-6 place-items-center rounded-full bg-sky-700 text-xs font-bold text-white dark:bg-[#8B5CF6]">
+                    <span className="grid h-6 w-6 place-items-center rounded-full bg-sky-700 text-xs font-bold text-white dark:bg-[#7c3aed]">
                       {index + 1}
                     </span>
                     {formulacion.nombreProducto}

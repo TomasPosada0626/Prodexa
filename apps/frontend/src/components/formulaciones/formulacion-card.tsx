@@ -176,7 +176,7 @@ export function FormulacionCard({ formulacion, onDeleted, onUpdated }: Props) {
         <div className="overflow-x-auto">
           <table className="w-full min-w-120 text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-500">
+              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-400">
                 <th className="py-1.5 pr-2 font-medium">Ingrediente</th>
                 <th className="py-1.5 pr-2 font-medium">% en formula</th>
                 <th className="py-1.5 pr-2 font-medium">Cantidad</th>

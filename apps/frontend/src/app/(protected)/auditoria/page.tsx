@@ -271,7 +271,7 @@ export default function AuditoriaPage() {
 
             <table className="mt-3 w-full min-w-160 text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-500">
+                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-400">
                   <th className="py-2">Fecha</th>
                   <th className="py-2">Usuario</th>
                   <th className="py-2">Evento</th>
@@ -305,7 +305,7 @@ export default function AuditoriaPage() {
                         '—'
                       ) : evento.revisadoAt ? (
                         <span
-                          className="text-xs text-slate-500 dark:text-zinc-500"
+                          className="text-xs text-slate-500 dark:text-zinc-400"
                           title={new Date(evento.revisadoAt).toLocaleString()}
                         >
                           Revisado

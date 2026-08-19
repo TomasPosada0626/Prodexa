@@ -74,14 +74,14 @@ function PerfilForm() {
           />
         </label>
       </div>
-      <p className="-mt-2 text-xs text-slate-500 dark:text-zinc-500">
+      <p className="-mt-2 text-xs text-slate-500 dark:text-zinc-400">
         El IVA es una tasa legal fija (19%) y no es configurable por cuenta. El margen por defecto solo aplica a
         formulaciones que crees despues de guardarlo; las existentes no cambian.
       </p>
       <button
         type="submit"
         disabled={saving}
-        className="w-fit rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:opacity-60 dark:bg-[#8B5CF6] dark:hover:bg-[#7c3aed]"
+        className="w-fit rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:opacity-60 dark:bg-[#7c3aed] dark:hover:bg-[#6d28d9]"
       >
         {saving ? 'Guardando...' : 'Guardar perfil'}
       </button>
@@ -195,7 +195,7 @@ function TarifasOrganizacionForm() {
           cobraran), sin importar el tiempo estimado de cada formulacion.
         </p>
       )}
-      <p className="-mt-2 text-xs text-slate-500 dark:text-zinc-500">
+      <p className="-mt-2 text-xs text-slate-500 dark:text-zinc-400">
         Se usan en Produccion para calcular automaticamente la mano de obra propia y la energia de cada lote,
         multiplicadas por el tiempo estimado de produccion de cada formulacion. Son de toda la empresa (no de tu
         usuario), para que el mismo producto cueste lo mismo sin importar quien registre el lote
@@ -223,7 +223,7 @@ function TarifasOrganizacionForm() {
         </div>
       </div>
       {mesesBase > 0 ? (
-        <p className="-mt-2 text-xs text-slate-500 dark:text-zinc-500">
+        <p className="-mt-2 text-xs text-slate-500 dark:text-zinc-400">
           Calculada con el promedio de tus ultimos {mesesBase} mes{mesesBase === 1 ? '' : 'es'} completo
           {mesesBase === 1 ? '' : 's'} de produccion real — ya no se escribe a mano, se ajusta sola cuando produces
           mas o menos.
@@ -234,7 +234,7 @@ function TarifasOrganizacionForm() {
           de lotes registrados). Mientras tanto, el gasto general no se prorratea y queda en $0 por kg.
         </p>
       )}
-      <p className="-mt-2 text-xs text-slate-500 dark:text-zinc-500">
+      <p className="-mt-2 text-xs text-slate-500 dark:text-zinc-400">
         Arriendo, nomina administrativa, software, contabilidad, etc. — gastos que existen sin importar cuanto se
         produzca. Se reparten entre tus lotes segun cuantos kg produces al mes
         {tarifaGastoGeneralPorKg > 0 && ` (hoy equivale a $${Math.round(tarifaGastoGeneralPorKg).toLocaleString('en-US')} por kg)`}, y se
@@ -244,7 +244,7 @@ function TarifasOrganizacionForm() {
         <button
           type="submit"
           disabled={saving}
-          className="w-fit rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:opacity-60 dark:bg-[#8B5CF6] dark:hover:bg-[#7c3aed]"
+          className="w-fit rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:opacity-60 dark:bg-[#7c3aed] dark:hover:bg-[#6d28d9]"
         >
           {saving ? 'Guardando...' : 'Guardar tarifas'}
         </button>
@@ -336,7 +336,7 @@ function CambiarContrasenaForm() {
       <button
         type="submit"
         disabled={saving}
-        className="w-fit rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:opacity-60 dark:bg-[#8B5CF6] dark:hover:bg-[#7c3aed]"
+        className="w-fit rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:opacity-60 dark:bg-[#7c3aed] dark:hover:bg-[#6d28d9]"
       >
         {saving ? 'Guardando...' : 'Cambiar contrasena'}
       </button>
@@ -384,15 +384,15 @@ function SesionesActivasForm() {
       <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
         Sesiones activas
       </h3>
-      <p className="-mt-2 text-xs text-slate-500 dark:text-zinc-500">
+      <p className="-mt-2 text-xs text-slate-500 dark:text-zinc-400">
         Cierra las sesiones que no reconozcas — cada una es un dispositivo o navegador donde tu cuenta sigue con la
         sesion iniciada.
       </p>
 
-      {sesiones === null && <p className="text-sm text-slate-500 dark:text-zinc-500">Cargando...</p>}
+      {sesiones === null && <p className="text-sm text-slate-500 dark:text-zinc-400">Cargando...</p>}
 
       {sesiones !== null && sesiones.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-zinc-500">No hay sesiones activas.</p>
+        <p className="text-sm text-slate-500 dark:text-zinc-400">No hay sesiones activas.</p>
       )}
 
       {sesiones !== null && sesiones.length > 0 && (
@@ -412,12 +412,12 @@ function SesionesActivasForm() {
                   )}
                 </p>
                 <p
-                  className="max-w-xs truncate text-xs text-slate-500 dark:text-zinc-500"
+                  className="max-w-xs truncate text-xs text-slate-500 dark:text-zinc-400"
                   title={sesion.userAgent ?? undefined}
                 >
                   {sesion.userAgent ?? 'Dispositivo desconocido'}
                 </p>
-                <p className="text-xs text-slate-500 dark:text-zinc-500">
+                <p className="text-xs text-slate-500 dark:text-zinc-400">
                   Iniciada el {new Date(sesion.createdAt).toLocaleString()} · expira el{' '}
                   {new Date(sesion.expiresAt).toLocaleDateString()}
                 </p>
@@ -655,12 +655,12 @@ function ZonaDePeligro() {
       </div>
 
       {esUnicoMiembro && !esAdmin && (
-        <p className="text-xs text-slate-500 dark:text-zinc-500">
+        <p className="text-xs text-slate-500 dark:text-zinc-400">
           Sos el unico miembro de tu empresa. Contacta a soporte para gestionar tu cuenta.
         </p>
       )}
       {esUnicoMiembro && esAdmin && (
-        <p className="text-xs text-slate-500 dark:text-zinc-500">
+        <p className="text-xs text-slate-500 dark:text-zinc-400">
           Sos el unico miembro de tu empresa: eliminar tu perfil equivale a eliminar la empresa completa.
         </p>
       )}

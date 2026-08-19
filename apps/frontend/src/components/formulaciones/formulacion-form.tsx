@@ -270,7 +270,7 @@ export function FormulacionForm({ formulacion, onSaved, onCancel }: Props) {
           cobraran). Complétalo si quieres que esos costos se incluyan en el precio y la utilidad.
         </p>
       )}
-      <p className="-mt-2 text-xs text-slate-500 dark:text-zinc-500">
+      <p className="-mt-2 text-xs text-slate-500 dark:text-zinc-400">
         Con ese nombre se guardara la formulacion. La categoria y el registro sanitario son opcionales, pero se
         recomienda agregarlos. La cantidad base es el lote en kg con el que se estandarizo esta formula; en
         Produccion podras recalcularla para cualquier lote que necesites (1, 2, 3, 10 kg, etc.). La vida util se
@@ -283,7 +283,7 @@ export function FormulacionForm({ formulacion, onSaved, onCancel }: Props) {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-semibold text-slate-800 dark:text-zinc-200">Ingredientes</p>
           <div className="flex items-center gap-3">
-            <span className="font-mono text-xs text-slate-500 dark:text-zinc-500">
+            <span className="font-mono text-xs text-slate-500 dark:text-zinc-400">
               Suma de porcentajes: {sumaPorcentajes.toFixed(2)}%
             </span>
             <button
@@ -396,7 +396,7 @@ export function FormulacionForm({ formulacion, onSaved, onCancel }: Props) {
         <button
           type="submit"
           disabled={submitting}
-          className="w-fit rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:opacity-60 dark:bg-[#8B5CF6] dark:hover:bg-[#7c3aed]"
+          className="w-fit rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:opacity-60 dark:bg-[#7c3aed] dark:hover:bg-[#6d28d9]"
         >
           {submitting ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Crear formulacion'}
         </button>

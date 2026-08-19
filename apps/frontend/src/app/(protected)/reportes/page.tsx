@@ -339,7 +339,7 @@ export default function ReportesPage() {
                   <button
                     type="button"
                     onClick={handleExportPdfFinanciero}
-                    className="flex items-center gap-1.5 rounded-full bg-sky-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-800 dark:bg-[#8B5CF6] dark:hover:bg-[#7c3aed]"
+                    className="flex items-center gap-1.5 rounded-full bg-sky-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-800 dark:bg-[#7c3aed] dark:hover:bg-[#6d28d9]"
                   >
                     <FileDown className="h-3.5 w-3.5" aria-hidden />
                     Exportar PDF
@@ -457,12 +457,12 @@ export default function ReportesPage() {
                         Exportar CSV
                       </button>
                     </div>
-                    <p className="mt-1 text-xs text-slate-500 dark:text-zinc-500">
+                    <p className="mt-1 text-xs text-slate-500 dark:text-zinc-400">
                       Ordenado del mas urgente al menos urgente, para saber a quien cobrarle primero.
                     </p>
                     <table className="mt-3 w-full min-w-140 text-left text-sm">
                       <thead>
-                        <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-500">
+                        <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-400">
                           <th className="py-2">Lote</th>
                           <th className="py-2">Formulacion</th>
                           <th className="py-2">Fecha del lote</th>
@@ -535,7 +535,7 @@ export default function ReportesPage() {
                     </h4>
                     <table className="mt-3 w-full min-w-160 text-left text-sm">
                       <thead>
-                        <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-500">
+                        <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-400">
                           <th className="py-2">Formulacion</th>
                           <th className="py-2">Lotes</th>
                           <th className="py-2">Kg producidos</th>
@@ -580,7 +580,7 @@ export default function ReportesPage() {
                     </div>
                     <table className="mt-3 w-full min-w-180 text-left text-sm">
                       <thead>
-                        <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-500">
+                        <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-400">
                           <th className="py-2">Lote</th>
                           <th className="py-2">Formulacion</th>
                           <th className="py-2">Fecha</th>

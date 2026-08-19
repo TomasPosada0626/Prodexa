@@ -119,7 +119,7 @@ export function VariacionSemanalCostos({ formulaciones }: Props) {
 
   if (puntos.length < 2) {
     return (
-      <p className="text-sm text-slate-500 dark:text-zinc-500">
+      <p className="text-sm text-slate-500 dark:text-zinc-400">
         Aun no hay suficiente historial de ediciones para ver la variacion semanal del costo.
       </p>
     );

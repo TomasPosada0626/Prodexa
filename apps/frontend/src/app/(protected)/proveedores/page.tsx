@@ -253,7 +253,7 @@ export default function ProveedoresPage() {
           <button
             type="submit"
             disabled={creando || !nuevoNombre.trim()}
-            className="rounded-full bg-sky-700 px-4 py-1.5 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-60 dark:bg-[#8B5CF6] dark:hover:bg-[#7c3aed]"
+            className="rounded-full bg-sky-700 px-4 py-1.5 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-60 dark:bg-[#7c3aed] dark:hover:bg-[#6d28d9]"
           >
             {creando ? 'Creando...' : 'Crear proveedor'}
           </button>
@@ -323,7 +323,7 @@ export default function ProveedoresPage() {
           )}
 
           {ingredientes.length === 0 ? (
-            <p className="text-sm text-slate-500 dark:text-zinc-500">
+            <p className="text-sm text-slate-500 dark:text-zinc-400">
               Esta formulacion aun no tiene ningun ingrediente con proveedor cotizado.
             </p>
           ) : (
@@ -349,14 +349,14 @@ export default function ProveedoresPage() {
               </div>
 
               {comparacion.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500 dark:text-zinc-500">
+                <p className="mt-3 text-sm text-slate-500 dark:text-zinc-400">
                   Ningun proveedor tiene un precio registrado para este ingrediente.
                 </p>
               ) : (
                 <div className="mt-4 overflow-x-auto">
                   <table className="w-full min-w-120 text-left text-sm">
                     <thead>
-                      <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-500">
+                      <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-400">
                         <th className="py-2">Proveedor</th>
                         <th className="py-2">Precio por kg</th>
                         <th className="py-2">Ultima cotizacion</th>
@@ -399,7 +399,7 @@ export default function ProveedoresPage() {
             </h3>
             <table className="w-full min-w-140 text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-500">
+                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-zinc-400">
                   <th className="py-2">Proveedor</th>
                   <th className="py-2">Ingredientes cotizados</th>
                   <th className="py-2">Precio promedio/kg</th>
@@ -425,7 +425,7 @@ export default function ProveedoresPage() {
                             type="button"
                             onClick={() => void guardarEdicion(p.id)}
                             disabled={guardandoEdicion}
-                            className="rounded-full bg-sky-700 px-3 py-1 text-xs font-semibold text-white disabled:opacity-60 dark:bg-[#8B5CF6]"
+                            className="rounded-full bg-sky-700 px-3 py-1 text-xs font-semibold text-white disabled:opacity-60 dark:bg-[#7c3aed]"
                           >
                             {guardandoEdicion ? 'Guardando...' : 'Guardar'}
                           </button>
@@ -476,7 +476,7 @@ export default function ProveedoresPage() {
               </tbody>
             </table>
             {proveedoresHuerfanos > 0 && (
-              <p className="mt-3 text-xs text-slate-500 dark:text-zinc-500">
+              <p className="mt-3 text-xs text-slate-500 dark:text-zinc-400">
                 {proveedoresHuerfanos} proveedor{proveedoresHuerfanos === 1 ? '' : 'es'} sin ninguna cotizacion
                 vigente (0 en la tabla) — probablemente porque el ingrediente o la formulacion que lo usaba se editó
                 o eliminó despues. El proveedor se conserva para no perder el nombre, pero no cuenta para ninguna
