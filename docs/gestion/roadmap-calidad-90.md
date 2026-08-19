@@ -47,6 +47,46 @@ con un diff legible del contrato roto. Compatibilidad pasa de 80 a **88**.
 
 Con los cinco ítems ya hechos, la nota de hoy sube de 82 a **~86/100**.
 
+## Pausa de sesión — 2026-08-18, retomar desde acá
+
+La máquina quedó saturada (~10 contenedores de otro proyecto corriendo en paralelo, más
+todo lo de hoy) y el build de Docker del ítem 1.5 falló por timeout de red
+(`ECONNRESET` en `npm ci`, no un error de código) tras 52 minutos. Se cierra la terminal
+para liberar recursos. Estado exacto para retomar sin perder contexto:
+
+- **1.1, 1.2, 1.3, 1.4 y el ítem legal (3.2): hechos, committeados y pusheados.** Nota de
+  hoy real en `main`: ~86/100.
+- **1.5 (Eficiencia de recursos), a medio hacer:**
+  - ✅ **Ya escrito, typecheckeado, con test unitario verde, pero NO committeado todavía**
+    (working tree local): `apps/backend/src/prisma/prisma.service.ts` — agrega `max`
+    explícito al pool de `pg`/Prisma (`DATABASE_POOL_MAX`, default 20, ver el comentario
+    en el código para el razonamiento) — y `apps/backend/.env.example` documentando la
+    variable nueva.
+  - ⚠️ Se intentó comparar el pool nuevo (20) contra el default viejo (~10) con
+    `apps/backend/scripts/load-test.mjs` a 100 conexiones: el resultado fue **inconcluyente**
+    por el ruido del propio hardware compartido (dos corridas seguidas dieron 528 req/s
+    /188ms y luego 332 req/s/295ms bajo las mismas condiciones — varianza mayor que
+    cualquier efecto real del pool). No vale la pena repetir esta comparación en esta
+    máquina; si se quiere un número confiable, correrla contra el ambiente real de Render
+    o una máquina sin otras cargas.
+  - ❌ **Pendiente:** medir el tamaño real de las imágenes Docker (`docker build -f
+    apps/backend/Dockerfile -t prodexa-backend:size-check .` y lo mismo para frontend,
+    ambos desde la raíz del repo) y documentar los números en `docs/deployment/docker.md`.
+    Reintentar cuando la máquina esté descargada — es la única parte de 1.5 que sigue sin
+    evidencia real.
+  - Al terminar 1.5: actualizar este archivo (marcar 1.5 con `~~tachado~~` como 1.1-1.4),
+    el README (fila "Eficiencia de recursos", 84→89), el badge/conteo de tests si aplica, y
+    republicar el scorecard (artifact `https://claude.ai/code/artifact/2db5d67e-c364-4336-a7cd-f7c4a35b6cca`).
+- **1.6 (Fiabilidad) y 1.7 (Seguridad): no arrancados.** 1.6 es retry con backoff en
+  operaciones de Prisma (no necesita Docker, se puede hacer aunque la máquina siga
+  cargada). 1.7 es el scan de OWASP ZAP contra el ambiente real — evaluar si correrlo
+  local o esperar a que el 1.5 este cerrado.
+- **Antes de seguir:** `git status` para confirmar que los dos archivos de arriba siguen
+  sin commitear, correr `npx tsc --noEmit` y los tests de `prisma.service.spec.ts` una vez
+  más por las dudas, y limpiar imágenes Docker huérfanas de los intentos fallidos
+  (`docker images | grep size-check`, `docker rmi` lo que haya quedado a medias) antes de
+  reintentar el build.
+
 ## Decisión: mientras el proyecto sea portafolio/pre-ingresos, gasto real = US$0
 
 Confirmado 2026-08-18: no se gasta dinero para subir esta nota. Eso saca del alcance
