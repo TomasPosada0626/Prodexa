@@ -57,11 +57,10 @@ para liberar recursos. Estado exacto para retomar sin perder contexto:
 - **1.1, 1.2, 1.3, 1.4 y el ítem legal (3.2): hechos, committeados y pusheados.** Nota de
   hoy real en `main`: ~86/100.
 - **1.5 (Eficiencia de recursos), a medio hacer:**
-  - ✅ **Ya escrito, typecheckeado, con test unitario verde, pero NO committeado todavía**
-    (working tree local): `apps/backend/src/prisma/prisma.service.ts` — agrega `max`
-    explícito al pool de `pg`/Prisma (`DATABASE_POOL_MAX`, default 20, ver el comentario
-    en el código para el razonamiento) — y `apps/backend/.env.example` documentando la
-    variable nueva.
+  - ✅ **Committeado y pusheado** (2026-08-18, commit `783f672`):
+    `apps/backend/src/prisma/prisma.service.ts` — agrega `max` explícito al pool de
+    `pg`/Prisma (`DATABASE_POOL_MAX`, default 20, ver el comentario en el código para el
+    razonamiento) — y `apps/backend/.env.example` documentando la variable nueva.
   - ⚠️ Se intentó comparar el pool nuevo (20) contra el default viejo (~10) con
     `apps/backend/scripts/load-test.mjs` a 100 conexiones: el resultado fue **inconcluyente**
     por el ruido del propio hardware compartido (dos corridas seguidas dieron 528 req/s
@@ -69,23 +68,33 @@ para liberar recursos. Estado exacto para retomar sin perder contexto:
     cualquier efecto real del pool). No vale la pena repetir esta comparación en esta
     máquina; si se quiere un número confiable, correrla contra el ambiente real de Render
     o una máquina sin otras cargas.
-  - ❌ **Pendiente:** medir el tamaño real de las imágenes Docker (`docker build -f
+  - ❌ **Sigue pendiente:** medir el tamaño real de las imágenes Docker (`docker build -f
     apps/backend/Dockerfile -t prodexa-backend:size-check .` y lo mismo para frontend,
     ambos desde la raíz del repo) y documentar los números en `docs/deployment/docker.md`.
     Reintentar cuando la máquina esté descargada — es la única parte de 1.5 que sigue sin
-    evidencia real.
+    evidencia real, y el único motivo de que 1.5 no esté tachado todavía.
   - Al terminar 1.5: actualizar este archivo (marcar 1.5 con `~~tachado~~` como 1.1-1.4),
     el README (fila "Eficiencia de recursos", 84→89), el badge/conteo de tests si aplica, y
     republicar el scorecard (artifact `https://claude.ai/code/artifact/2db5d67e-c364-4336-a7cd-f7c4a35b6cca`).
-- **1.6 (Fiabilidad) y 1.7 (Seguridad): no arrancados.** 1.6 es retry con backoff en
-  operaciones de Prisma (no necesita Docker, se puede hacer aunque la máquina siga
-  cargada). 1.7 es el scan de OWASP ZAP contra el ambiente real — evaluar si correrlo
-  local o esperar a que el 1.5 este cerrado.
-- **Antes de seguir:** `git status` para confirmar que los dos archivos de arriba siguen
-  sin commitear, correr `npx tsc --noEmit` y los tests de `prisma.service.spec.ts` una vez
-  más por las dudas, y limpiar imágenes Docker huérfanas de los intentos fallidos
-  (`docker images | grep size-check`, `docker rmi` lo que haya quedado a medias) antes de
-  reintentar el build.
+
+**Actualización 2026-08-18 (6):** al retomar la sesión, `npm audit --omit=dev` (CI de
+Seguridad) llevaba varios pushes en rojo — `@prisma/config` (dependencia de `prisma`) trae
+`deepmerge-ts@7.1.5`, con un stack exhaustion conocido
+([GHSA-ggr8-5vv4-36mx](https://github.com/advisories/GHSA-ggr8-5vv4-36mx)) y Prisma no
+tiene todavía un 7.x estable que lo arregle. Corregido con un `overrides` en
+`apps/backend/package.json` forzando `deepmerge-ts@^8.0.0` (verificado: `prisma generate`,
+build y los 286 tests siguen igual) — commit `47e91c3`. De paso, `prisma` (el CLI, solo se
+usa en el build) pasó de `dependencies` a `devDependencies`. Aparte, el bump de
+`eslint@10` en frontend (PR de Dependabot #19, mergeada esta sesión) rompió el lint real —
+`eslint-config-next` sigue empaquetando `eslint-plugin-react@7.37.x`, incompatible con la
+API de contexto nueva de ESLint 10 (`TypeError: contextOrFilename.getFilename is not a
+function`); revertido a `eslint@^9` hasta que Next.js publique soporte real (commit
+`044f355`). Ninguno de los dos es parte de 1.5-1.7, pero ambos dejaban el CI real en rojo,
+así que se resolvieron antes de seguir.
+- **1.6 (Fiabilidad): retry con backoff en operaciones de Prisma que fallan por error
+  transitorio de conexión — en progreso ahora, no necesita Docker.**
+- **1.7 (Seguridad): no arrancado.** El scan de OWASP ZAP contra el ambiente real — evaluar
+  si correrlo local o esperar a que el 1.5 esté cerrado.
 
 ## Decisión: mientras el proyecto sea portafolio/pre-ingresos, gasto real = US$0
 
@@ -135,14 +144,16 @@ autoevaluación.
 | ~~1.3~~ | ~~Monitoreabilidad~~ | ~~Alerta proactiva (correo al ADMIN) tras N logins fallidos seguidos~~ | ~~78 → 85~~ | **Hecho — `AuditService.notificarSiLoginsFallidosRepetidos()`, 8 tests nuevos, resuelve el pendiente de `docs/security/owasp-top10.md` A09** |
 | ~~1.4~~ | ~~Compatibilidad~~ | ~~Política de versionado/deprecación de la API documentada + test de snapshot del schema OpenAPI~~ | ~~80 → 88~~ | **Hecho — `docs/api/versioning.md` + `api-schema.e2e-spec.ts` (snapshot real del contrato, falla en CI si cambia sin querer)** |
 | 1.5 | Eficiencia de recursos | Medir y documentar tamaño real de las imágenes Docker + ajustar el pool de conexiones de Prisma/pg con datos, no con el default sin revisar | 84 → 89 | `docs/deployment/` actualizado con números reales |
-| 1.6 | Fiabilidad | Retry con backoff en las operaciones de Prisma que fallan por error transitorio de conexión — el mismo tipo de fallo que causó el incidente #1 de `docs/observability/known-gaps.md` | 87 → 90 | Código + test dedicado |
+| ~~1.6~~ | ~~Fiabilidad~~ | ~~Retry con backoff en las operaciones de Prisma que fallan por error transitorio de conexión — el mismo tipo de fallo que causó el incidente #1 de `docs/observability/known-gaps.md`~~ | ~~87 → 90~~ | **Hecho — `PrismaService` reintenta solo lecturas (nunca escrituras) ante P1001/P1002/P2024, backoff exponencial, `executeWithRetry`/`createQueryHandler` con test unitario dedicado + verificado contra Postgres real en la suite de integración** |
 | 1.7 | Seguridad | Correr un scan automatizado (OWASP ZAP baseline) contra el ambiente real y documentar el resultado | 90 → 94 | Reporte nuevo en `docs/security/` |
+| ~~1.8~~ | ~~Disponibilidad de datos~~ | ~~Backup automatizado del Postgres de producción — hallazgo nuevo, no estaba en el alcance original: el plan Free de Render no tiene backups propios y borra la base 30 días después de creada si nadie la sube a un plan pago~~ | — | **Hecho — `.github/workflows/backup-db.yml` (`pg_dump` diario a Cloudflare R2, retención 30 días) + `docs/deployment/backups.md` con el procedimiento de restore. Pendiente de vos: cargar los 5 secrets nuevos en GitHub y confirmar la fecha real de expiración de la base en el dashboard de Render (ver el documento — puede necesitar el ítem 3.1 antes de lo planeado)** |
 
 ## Fase 2 — barato pero externo
 
 | # | Pilar | Acción | Hoy → meta | Entregable |
 |---|---|---|:---:|---|
-| 2.1 | Disponibilidad | Monitor de uptime gratuito (UptimeRobot / Better Stack) sobre `/health` + un ping de "keep-warm" cada ~10 min en horario laboral (GitHub Actions programado) | 65 → 78 | Reduce cold starts en horario de uso real; no elimina el problema de fondo (ver 3.1) |
+| 2.1a | Disponibilidad | ~~Ping de "keep-warm" cada ~10 min en horario laboral (GitHub Actions programado)~~ | — | **Hecho — `.github/workflows/keep-warm.yml`, lunes a viernes 08:00-18:00 Bogotá** |
+| 2.1b | Disponibilidad | Monitor de uptime gratuito (UptimeRobot / Better Stack) sobre `/health` — necesita una cuenta externa, no algo que se resuelva solo con código | 65 → 78 | Vos — crear la cuenta y apuntarla a `https://prodexa-backend.onrender.com/health`; reduce cold starts en horario de uso real, no elimina el problema de fondo (ver 3.1) |
 | 2.2 | Usabilidad | Pase manual con lector de pantalla (NVDA o VoiceOver) en Login, Registro, Dashboard y Formulaciones — el automatizado (axe-core) no sustituye esto | 82 → 88 | Checklist + issues de lo que encuentre |
 
 ## Fase 3 — diferida, no activa (cuesta dinero real)

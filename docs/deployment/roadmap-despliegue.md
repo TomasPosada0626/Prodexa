@@ -113,6 +113,22 @@ compitiendo por los mismos 512MB) es la vía estándar para esto. No se confirm�
 si el plan Free actual lo habilita — hay que probarlo directo en el dashboard de Render
 antes de asumirlo.
 
+**Checklist para el próximo deploy que agregue una migración** (mientras el paso
+siga siendo manual — el objetivo es que sea imposible olvidarlo, no solo documentarlo):
+
+1. ¿Este PR agrega o modifica algo en `apps/backend/prisma/migrations/`? Si no, seguí
+   normal — este checklist no aplica.
+2. Antes de dar el deploy por terminado, correr desde la máquina local:
+   ```
+   DATABASE_URL="<external-url-de-render>" npx prisma migrate status
+   ```
+   para confirmar qué migraciones están pendientes contra la base real (no asumir).
+3. Si hay pendientes, aplicarlas: `DATABASE_URL="<external-url-de-render>" npx prisma
+   migrate deploy`.
+4. Verificar un endpoint real que toque la tabla/columna nueva (no solo `/health` —
+   ese incidente pasó justo porque `/health` no toca Postgres y quedó verde mientras
+   `/audit-log` ya estaba en 500).
+
 ## Limitaciones reales del plan gratuito (documentadas, no escondidas)
 
 - **Cold start del backend**: el Web Service gratuito de Render se duerme tras
