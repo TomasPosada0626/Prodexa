@@ -22,7 +22,7 @@
     "@tiptap/react": "^3.29.2",
     "@tiptap/starter-kit": "^3.29.2",
     "clsx": "^2.1.1",
-    "framer-motion": "^12.42.2",
+    "framer-motion": "^13.1.0",
     "isomorphic-dompurify": "^3.22.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
