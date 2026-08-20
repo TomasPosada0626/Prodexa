@@ -58,7 +58,7 @@ function DeltaBadge({ delta }: { delta: number | null }) {
   const positivo = delta >= 0;
   return (
     <span
-      className={`ml-2 inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-semibold ${
+      className={`ml-2 inline-flex items-center rounded-full px-1.5 py-0.5 font-mono text-xs font-semibold ${
         positivo
           ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
           : 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400'
@@ -285,7 +285,7 @@ export default function DashboardPage() {
     <section className="grid gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Hola, {primerNombre}</h2>
+          <h2 className="font-heading text-2xl font-bold text-slate-900 dark:text-white">Hola, {primerNombre}</h2>
           <p className="mt-1 text-slate-600 dark:text-zinc-400">Un vistazo rapido a tus formulaciones y su rentabilidad.</p>
         </div>
 
@@ -373,7 +373,7 @@ export default function DashboardPage() {
 
       {!loading && !error && totalAlertas > 0 && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+          <h3 className="font-heading text-sm font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
             {totalAlertas} alerta{totalAlertas === 1 ? '' : 's'} que requiere{totalAlertas === 1 ? '' : 'n'} atencion
           </h3>
           <ul className="mt-2 grid gap-1 text-sm text-amber-700 dark:text-amber-400">
@@ -404,7 +404,7 @@ export default function DashboardPage() {
 
       {!loading && !error && lotesEnCalidad.length > 0 && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+          <h3 className="font-heading text-sm font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
             {lotesEnCalidad.length} lote{lotesEnCalidad.length === 1 ? '' : 's'} esperando revision de calidad
           </h3>
           <ul className="mt-2 grid gap-1 text-sm text-amber-700 dark:text-amber-400">
@@ -422,7 +422,7 @@ export default function DashboardPage() {
 
       {!loading && !error && user?.rol === 'ADMIN' && loginsFallidos && loginsFallidos.length > 0 && (
         <div className="rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-500/30 dark:bg-red-500/10">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-red-800 dark:text-red-300">
+          <h3 className="font-heading text-sm font-semibold uppercase tracking-wide text-red-800 dark:text-red-300">
             Alertas de seguridad: intentos de inicio de sesion fallidos
           </h3>
           <ul className="mt-2 grid gap-1 text-sm text-red-700 dark:text-red-400">
@@ -447,21 +447,21 @@ export default function DashboardPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/3 dark:shadow-none">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">Formulaciones</p>
-              <p className="mt-1 flex items-center text-3xl font-bold text-slate-900 dark:text-white">
+              <p className="mt-1 flex items-center font-mono text-3xl font-bold text-slate-900 dark:text-white">
                 {totalFormulaciones}
                 <DeltaBadge delta={deltaFormulaciones} />
               </p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/3 dark:shadow-none">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">Margen promedio</p>
-              <p className="mt-1 flex items-center text-3xl font-bold text-slate-900 dark:text-white">
+              <p className="mt-1 flex items-center font-mono text-3xl font-bold text-slate-900 dark:text-white">
                 {margenPromedio.toFixed(1)}%
                 <DeltaBadge delta={deltaMargen} />
               </p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/3 dark:shadow-none">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">Utilidad total (lote base)</p>
-              <p className="mt-1 flex items-center text-3xl font-bold text-emerald-700 dark:text-emerald-400">
+              <p className="mt-1 flex items-center font-mono text-3xl font-bold text-emerald-700 dark:text-emerald-400">
                 {formatCosto(utilidadTotal)}
                 <DeltaBadge delta={deltaUtilidad} />
               </p>
@@ -470,32 +470,32 @@ export default function DashboardPage() {
 
           {produccionReal.lotes > 0 && (
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/30 dark:bg-emerald-500/10">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-300">
+              <h3 className="font-heading text-sm font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-300">
                 Produccion real del periodo (lo que de verdad se produjo y vendio)
               </h3>
               <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
                   <p className="text-xs text-emerald-700 dark:text-emerald-400">Lotes producidos</p>
-                  <p className="mt-0.5 text-xl font-bold text-emerald-900 dark:text-emerald-200">
+                  <p className="mt-0.5 font-mono text-xl font-bold text-emerald-900 dark:text-emerald-200">
                     {produccionReal.lotes}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-emerald-700 dark:text-emerald-400">Ingresos cobrados</p>
-                  <p className="mt-0.5 text-xl font-bold text-emerald-900 dark:text-emerald-200">
+                  <p className="mt-0.5 font-mono text-xl font-bold text-emerald-900 dark:text-emerald-200">
                     {formatCosto(produccionReal.ingresoCobrado)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-emerald-700 dark:text-emerald-400">Pendiente de cobro</p>
-                  <p className="mt-0.5 text-xl font-bold text-emerald-900 dark:text-emerald-200">
+                  <p className="mt-0.5 font-mono text-xl font-bold text-emerald-900 dark:text-emerald-200">
                     {formatCosto(produccionReal.pendienteCobro)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-emerald-700 dark:text-emerald-400">Utilidad real</p>
                   <p
-                    className={`mt-0.5 text-xl font-bold ${produccionReal.utilidadReal < 0 ? 'text-red-700 dark:text-red-400' : 'text-emerald-900 dark:text-emerald-200'}`}
+                    className={`mt-0.5 font-mono text-xl font-bold ${produccionReal.utilidadReal < 0 ? 'text-red-700 dark:text-red-400' : 'text-emerald-900 dark:text-emerald-200'}`}
                   >
                     {formatCosto(produccionReal.utilidadReal)}
                   </p>
@@ -510,7 +510,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+            <h3 className="font-heading text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
               Margen por formulacion
             </h3>
             <div className="mt-4">
@@ -520,7 +520,7 @@ export default function DashboardPage() {
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+              <h3 className="font-heading text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                 Costo promedio por categoria
               </h3>
               <div className="mt-4">
@@ -528,7 +528,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+              <h3 className="font-heading text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                 Variacion semanal del costo
               </h3>
               <div className="mt-4">
@@ -540,7 +540,7 @@ export default function DashboardPage() {
           <SugerenciasPanel sugerencias={sugerencias} />
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">Top 3 mas rentables</h3>
+            <h3 className="font-heading text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">Top 3 mas rentables</h3>
             <ol className="mt-3 grid gap-2">
               {topRentables.map(({ formulacion, resultado }, index) => (
                 <li
@@ -553,7 +553,7 @@ export default function DashboardPage() {
                     </span>
                     {formulacion.nombreProducto}
                   </span>
-                  <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                  <span className="font-mono text-sm font-semibold text-emerald-700 dark:text-emerald-400">
                     {formatCosto(resultado?.utilidadEstimada ?? 0)}
                   </span>
                 </li>

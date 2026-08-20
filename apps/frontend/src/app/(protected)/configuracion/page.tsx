@@ -40,7 +40,7 @@ function PerfilForm() {
       onSubmit={handleSubmit}
       className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3"
     >
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+      <h3 className="font-heading text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
         Perfil y preferencias
       </h3>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -172,7 +172,7 @@ function TarifasOrganizacionForm() {
       onSubmit={handleSubmit}
       className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3"
     >
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+      <h3 className="font-heading text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
         Tarifas de produccion de la empresa
       </h3>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -202,7 +202,7 @@ function TarifasOrganizacionForm() {
         {!puedeEditar && ' — solo un administrador o coordinador puede cambiarlas'}.
       </p>
 
-      <h3 className="mt-2 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+      <h3 className="font-heading mt-2 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
         Gastos generales de la empresa
       </h3>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -293,7 +293,7 @@ function CambiarContrasenaForm() {
       onSubmit={handleSubmit}
       className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3"
     >
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+      <h3 className="font-heading text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
         Cambiar contrasena
       </h3>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -381,7 +381,7 @@ function SesionesActivasForm() {
 
   return (
     <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+      <h3 className="font-heading text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
         Sesiones activas
       </h3>
       <p className="-mt-2 text-xs text-slate-500 dark:text-zinc-400">
@@ -471,7 +471,7 @@ function EliminarPerfilModal({ onClose }: { onClose: () => void }) {
         onSubmit={handleSubmit}
         className="grid w-full max-w-sm gap-3 rounded-2xl border border-red-200 bg-white p-5 shadow-xl dark:border-red-500/30 dark:bg-[#0b0a16] dark:shadow-black/60"
       >
-        <h3 id="eliminar-perfil-title" className="text-base font-semibold text-slate-900 dark:text-white">
+        <h3 id="eliminar-perfil-title" className="font-heading text-base font-semibold text-slate-900 dark:text-white">
           Eliminar mi perfil
         </h3>
         <p className="text-sm text-slate-600 dark:text-zinc-400">
@@ -545,7 +545,7 @@ function EliminarEmpresaModal({ onClose }: { onClose: () => void }) {
         onSubmit={handleSubmit}
         className="grid w-full max-w-sm gap-3 rounded-2xl border border-red-200 bg-white p-5 shadow-xl dark:border-red-500/30 dark:bg-[#0b0a16] dark:shadow-black/60"
       >
-        <h3 id="eliminar-empresa-title" className="text-base font-semibold text-slate-900 dark:text-white">
+        <h3 id="eliminar-empresa-title" className="font-heading text-base font-semibold text-slate-900 dark:text-white">
           Eliminar la empresa completa
         </h3>
         <p className="text-sm text-slate-600 dark:text-zinc-400">
@@ -625,7 +625,7 @@ function ZonaDePeligro() {
   return (
     <div className="grid gap-4 rounded-2xl border border-red-200 bg-red-50/40 p-4 dark:border-red-500/20 dark:bg-red-500/5">
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-red-700 dark:text-red-400">
+        <h3 className="font-heading text-sm font-semibold uppercase tracking-wide text-red-700 dark:text-red-400">
           Zona de peligro
         </h3>
         <p className="mt-1 text-xs text-slate-600 dark:text-zinc-400">
@@ -675,7 +675,7 @@ export default function ConfiguracionPage() {
   return (
     <section className="grid gap-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Configuracion</h2>
+        <h2 className="font-heading text-2xl font-bold text-slate-900 dark:text-white">Configuracion</h2>
         <p className="mt-1 text-slate-600 dark:text-zinc-400">Administra tu perfil y la seguridad de tu cuenta.</p>
       </div>
 

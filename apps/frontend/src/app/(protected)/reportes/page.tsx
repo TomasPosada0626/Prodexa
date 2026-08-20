@@ -269,7 +269,7 @@ export default function ReportesPage() {
     <section className="grid gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Reportes</h2>
+          <h2 className="font-heading text-2xl font-bold text-slate-900 dark:text-white">Reportes</h2>
           <p className="mt-1 text-slate-600 dark:text-zinc-400">
             Reporte financiero con las ganancias y gastos reales de lo que ya produjiste.
           </p>
@@ -324,7 +324,7 @@ export default function ReportesPage() {
         <>
           <div>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+              <h3 className="font-heading text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                 Reporte financiero real (ordenes de produccion registradas)
               </h3>
               {filasFinancieras.length > 0 && (
@@ -374,13 +374,13 @@ export default function ReportesPage() {
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                       Lotes producidos
                     </p>
-                    <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{totales.lotes}</p>
+                    <p className="mt-1 font-mono text-2xl font-bold text-slate-900 dark:text-white">{totales.lotes}</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/3 dark:shadow-none">
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                       Gastos (costo real)
                     </p>
-                    <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+                    <p className="mt-1 font-mono text-2xl font-bold text-slate-900 dark:text-white">
                       {formatCosto(totales.costoReal)}
                     </p>
                   </div>
@@ -388,7 +388,7 @@ export default function ReportesPage() {
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                       Ingresos (ventas)
                     </p>
-                    <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+                    <p className="mt-1 font-mono text-2xl font-bold text-slate-900 dark:text-white">
                       {formatCosto(totales.ingresoReal)}
                     </p>
                   </div>
@@ -409,7 +409,7 @@ export default function ReportesPage() {
                       {totales.utilidadReal < 0 ? 'Perdidas (utilidad real)' : 'Ganancias (utilidad real)'}
                     </p>
                     <p
-                      className={`mt-1 text-2xl font-bold ${totales.utilidadReal < 0 ? 'text-red-800 dark:text-red-300' : 'text-emerald-800 dark:text-emerald-300'}`}
+                      className={`mt-1 font-mono text-2xl font-bold ${totales.utilidadReal < 0 ? 'text-red-800 dark:text-red-300' : 'text-emerald-800 dark:text-emerald-300'}`}
                     >
                       {formatCosto(totales.utilidadReal)}
                     </p>
@@ -421,7 +421,7 @@ export default function ReportesPage() {
                     <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
                       Cobrado
                     </p>
-                    <p className="mt-1 text-2xl font-bold text-emerald-800 dark:text-emerald-300">
+                    <p className="mt-1 font-mono text-2xl font-bold text-emerald-800 dark:text-emerald-300">
                       {formatCosto(cobrado)}
                     </p>
                   </div>
@@ -429,7 +429,7 @@ export default function ReportesPage() {
                     <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
                       Pendiente de cobro
                     </p>
-                    <p className="mt-1 text-2xl font-bold text-amber-800 dark:text-amber-300">
+                    <p className="mt-1 font-mono text-2xl font-bold text-amber-800 dark:text-amber-300">
                       {formatCosto(pendienteCobro)}
                     </p>
                   </div>
@@ -437,7 +437,7 @@ export default function ReportesPage() {
                     <p className="text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-400">
                       Cartera vencida (+30 dias)
                     </p>
-                    <p className="mt-1 text-2xl font-bold text-red-800 dark:text-red-300">
+                    <p className="mt-1 font-mono text-2xl font-bold text-red-800 dark:text-red-300">
                       {formatCosto(carteraVencida)}
                     </p>
                   </div>
@@ -446,7 +446,7 @@ export default function ReportesPage() {
                 {carteraPorCobrar.length > 0 && (
                   <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+                      <h4 className="font-heading text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                         Cartera por cobrar (lotes con saldo pendiente)
                       </h4>
                       <button
@@ -487,7 +487,7 @@ export default function ReportesPage() {
                             <td className={`py-2 ${NIVEL_CARTERA_CLASSNAME[nivelCartera(diasPendiente(orden))]}`}>
                               {diasPendiente(orden)} dias
                             </td>
-                            <td className="py-2 font-medium text-slate-900 dark:text-white">
+                            <td className="py-2 font-mono font-medium text-slate-900 dark:text-white">
                               {formatCosto(montoPendienteDeOrden(orden))}
                             </td>
                           </tr>
@@ -504,7 +504,7 @@ export default function ReportesPage() {
                   </div>
                   {utilidadPorSemana.length >= 2 && (
                     <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
-                      <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+                      <h4 className="font-heading text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                         Utilidad real por semana
                       </h4>
                       <div className="mt-4">
@@ -517,7 +517,7 @@ export default function ReportesPage() {
                     </div>
                   )}
                   <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
-                    <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+                    <h4 className="font-heading text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                       Donde estan las ganancias (utilidad real por formulacion)
                     </h4>
                     <div className="mt-4">
@@ -530,7 +530,7 @@ export default function ReportesPage() {
                   </div>
 
                   <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
-                    <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+                    <h4 className="font-heading text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                       Detalle por formulacion
                     </h4>
                     <table className="mt-3 w-full min-w-160 text-left text-sm">
@@ -549,14 +549,14 @@ export default function ReportesPage() {
                         {filasFinancieras.map((fila) => (
                           <tr key={fila.formulacionId} className="border-b border-slate-100 dark:border-white/5">
                             <td className="py-2 font-medium text-slate-800 dark:text-zinc-200">{fila.nombre}</td>
-                            <td className="py-2 text-slate-600 dark:text-zinc-400">{fila.lotes}</td>
-                            <td className="py-2 text-slate-600 dark:text-zinc-400">{formatKg(fila.kgProducidos)} kg</td>
-                            <td className="py-2 text-slate-600 dark:text-zinc-400">{formatCosto(fila.costoReal)}</td>
-                            <td className="py-2 text-slate-600 dark:text-zinc-400">{formatCosto(fila.ingresoReal)}</td>
-                            <td className={`py-2 font-medium ${utilidadClassName(fila.utilidadReal)}`}>
+                            <td className="py-2 font-mono text-slate-600 dark:text-zinc-400">{fila.lotes}</td>
+                            <td className="py-2 font-mono text-slate-600 dark:text-zinc-400">{formatKg(fila.kgProducidos)} kg</td>
+                            <td className="py-2 font-mono text-slate-600 dark:text-zinc-400">{formatCosto(fila.costoReal)}</td>
+                            <td className="py-2 font-mono text-slate-600 dark:text-zinc-400">{formatCosto(fila.ingresoReal)}</td>
+                            <td className={`py-2 font-mono font-medium ${utilidadClassName(fila.utilidadReal)}`}>
                               {formatCosto(fila.utilidadReal)}
                             </td>
-                            <td className="py-2 text-slate-600 dark:text-zinc-400">
+                            <td className="py-2 font-mono text-slate-600 dark:text-zinc-400">
                               {fila.margenPorcentaje.toFixed(1)}%
                             </td>
                           </tr>
@@ -567,7 +567,7 @@ export default function ReportesPage() {
 
                   <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+                      <h4 className="font-heading text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                         Detalle por lote
                       </h4>
                       <button
@@ -607,11 +607,11 @@ export default function ReportesPage() {
                             <td className="py-2 text-slate-600 dark:text-zinc-400">
                               {orden.fechaVencimiento ? new Date(orden.fechaVencimiento).toLocaleDateString() : '—'}
                             </td>
-                            <td className="py-2 text-slate-600 dark:text-zinc-400">{formatCosto(costoRealTotal(orden))}</td>
-                            <td className="py-2 text-slate-600 dark:text-zinc-400">
+                            <td className="py-2 font-mono text-slate-600 dark:text-zinc-400">{formatCosto(costoRealTotal(orden))}</td>
+                            <td className="py-2 font-mono text-slate-600 dark:text-zinc-400">
                               {formatCosto(ingresoRealDeOrden(orden))}
                             </td>
-                            <td className={`py-2 font-medium ${utilidadClassName(ingresoRealDeOrden(orden) - costoRealTotal(orden))}`}>
+                            <td className={`py-2 font-mono font-medium ${utilidadClassName(ingresoRealDeOrden(orden) - costoRealTotal(orden))}`}>
                               {formatCosto(ingresoRealDeOrden(orden) - costoRealTotal(orden))}
                             </td>
                             <td className="py-2 text-slate-600 dark:text-zinc-400">

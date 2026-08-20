@@ -69,6 +69,31 @@ pantalla) queda diferido a propósito, no urgente. Con eso la nota general sube 
 "Pilares que ya están en 90+" y la tabla de Proyección más abajo). Propagado al README
 en la misma sesión.
 
+**Actualización 2026-08-20:** una auditoría independiente (código real, no la
+autoevaluación de este documento como fuente) confirmó los 88/100 y encontró una sola
+inconsistencia real en más de 40 afirmaciones verificadas: `secret-scan` y
+`dependency-audit` en `.github/workflows/security.yml` seguían sin `timeout-minutes`
+pese a que el commit `69a9e19` decía haberlo agregado "a todos los jobs" — corregido
+(2 líneas). De paso se cerraron los dos hallazgos de "Medio" impacto que la propia
+auditoría listaba como abiertos:
+
+- **CSP del hallazgo 1.7** (ver [`zap-baseline-scan.md`](../security/zap-baseline-scan.md#corregido-2026-08-20-con-verificación-manual-real))
+  — ya no queda como diferido; solo COEP sigue diferido a propósito (fila 1.7 de la
+  tabla de Fase 1 actualizada más abajo). Seguridad se mantiene en **94**: la nota ya
+  contaba la CSP como pendiente sin bloquear el número, así que cerrarla no lo sube más
+  — subir de ahí requiere el pentest pago de 3.3.
+- **Pase de jerarquía tipográfica en las pantallas interiores** (Dashboard,
+  Formulaciones, Configuración, Auditoría, Reportes) — la deuda que el propio
+  `DESIGN.md` ya reconocía (ver "Known debt" ahí) quedó resuelta: `font-heading` en
+  cada encabezado y `font-mono` en cifras (KPIs, precios, porcentajes, tablas),
+  siguiendo la misma convención que ya usaban `/` y `/login`. No se toca el número de
+  Usabilidad (82) en este documento — el gap que sí tiene un ítem numerado y una meta
+  explícita (2.2, pase manual con lector de pantalla) sigue diferido a propósito.
+
+Los dos hallazgos de "Alto costo" que quedaban (cold start del plan gratuito de Render,
+pentest profesional) ya estaban identificados en Fase 3 y siguen diferidos por la misma
+razón de siempre: no gastar dinero real todavía.
+
 ## Pausa de sesión — 2026-08-18, retomar desde acá (resuelta 2026-08-19)
 
 La máquina quedó saturada (~10 contenedores de otro proyecto corriendo en paralelo, más
@@ -168,7 +193,7 @@ autoevaluación.
 | ~~1.4~~ | ~~Compatibilidad~~ | ~~Política de versionado/deprecación de la API documentada + test de snapshot del schema OpenAPI~~ | ~~80 → 88~~ | **Hecho — `docs/api/versioning.md` + `api-schema.e2e-spec.ts` (snapshot real del contrato, falla en CI si cambia sin querer)** |
 | ~~1.5~~ | ~~Eficiencia de recursos~~ | ~~Medir y documentar tamaño real de las imágenes Docker + ajustar el pool de conexiones de Prisma/pg con datos, no con el default sin revisar~~ | ~~84 → 89~~ | **Hecho — pool con `max` explícito (783f672); imagen del backend 1.13GB→896MB con `npm prune --omit=dev` (749MB→540MB de `node_modules`), frontend 391MB sin cambios (ya usa `output: standalone`). Detalle real en [`docs/deployment/docker.md`](../deployment/docker.md)** |
 | ~~1.6~~ | ~~Fiabilidad~~ | ~~Retry con backoff en las operaciones de Prisma que fallan por error transitorio de conexión — el mismo tipo de fallo que causó el incidente #1 de `docs/observability/known-gaps.md`~~ | ~~87 → 90~~ | **Hecho — `PrismaService` reintenta solo lecturas (nunca escrituras) ante P1001/P1002/P2024, backoff exponencial, `executeWithRetry`/`createQueryHandler` con test unitario dedicado + verificado contra Postgres real en la suite de integración** |
-| ~~1.7~~ | ~~Seguridad~~ | ~~Correr un scan automatizado (OWASP ZAP baseline) contra el ambiente real y documentar el resultado~~ | ~~90 → 94~~ | **Hecho (2026-08-19) — 0 FAIL en frontend y backend; 4 headers de hardening faltantes en el frontend (X-Frame-Options, X-Content-Type-Options, Permissions-Policy, Referrer-Policy) corregidos y verificados el mismo día; el resto de hallazgos revisado uno por uno (descartado con evidencia o diferido con razón explícita — CSP y COEP). Detalle en [`docs/security/zap-baseline-scan.md`](../security/zap-baseline-scan.md)** |
+| ~~1.7~~ | ~~Seguridad~~ | ~~Correr un scan automatizado (OWASP ZAP baseline) contra el ambiente real y documentar el resultado~~ | ~~90 → 94~~ | **Hecho (2026-08-19, CSP cerrada el 2026-08-20) — 0 FAIL en frontend y backend; 4 headers de hardening faltantes en el frontend (X-Frame-Options, X-Content-Type-Options, Permissions-Policy, Referrer-Policy) corregidos el mismo día; CSP agregada después en modo Report-Only, verificada a mano contra los flujos reales y pasada a enforcing; el resto revisado uno por uno (descartado con evidencia o diferido con razón explícita — solo COEP sigue diferido). Detalle en [`docs/security/zap-baseline-scan.md`](../security/zap-baseline-scan.md)** |
 | ~~1.8~~ | ~~Disponibilidad de datos~~ | ~~Backup automatizado del Postgres de producción — hallazgo nuevo, no estaba en el alcance original: el plan Free de Render no tiene backups propios y borra la base 30 días después de creada si nadie la sube a un plan pago~~ | — | **Hecho — `.github/workflows/backup-db.yml` (`pg_dump` diario a Cloudflare R2, retención 30 días) + `docs/deployment/backups.md` con el procedimiento de restore. Pendiente de vos: cargar los 5 secrets nuevos en GitHub y confirmar la fecha real de expiración de la base en el dashboard de Render (ver el documento — puede necesitar el ítem 3.1 antes de lo planeado)** |
 
 ## Fase 2 — barato pero externo

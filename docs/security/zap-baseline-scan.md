@@ -91,16 +91,29 @@ presentes en la respuesta real:
   propia, produciendo un 404 que no existe si se navega la URL real. Confirmado
   manualmente. Sin acción.
 
-### Diferidos a propósito, con la razón explícita (no un olvido)
+### Corregido (2026-08-20, con verificación manual real)
 
 - **Content Security Policy (CSP) Header Not Set [10038]** — no se improvisó una
-  CSP a ciegas contra producción real con pilotos activos: una directiva mal
-  ajustada (`connect-src` sin el origin del backend o de Sentry, `img-src` sin el
-  host real de las imágenes subidas) rompe silenciosamente cosas como el envío de
-  formularios, la carga de imágenes de formulaciones o el reporte de errores a
-  Sentry, y solo se detecta probando cada flujo real en el navegador. Queda como
-  siguiente paso, con verificación manual en el navegador antes de deployar, no
-  como algo resuelto hoy.
+  CSP a ciegas contra producción real con pilotos activos. Se agregó primero en
+  modo `Content-Security-Policy-Report-Only` (`apps/frontend/next.config.ts`) y se
+  verificó en el navegador contra los flujos reales que el hallazgo original
+  advertía que podían romperse en silencio: registro, login, dashboard, crear una
+  formulación, el editor de texto enriquecido (incluye el botón de subir imagen),
+  configuración, auditoría y reportes — 0 violaciones reportadas en consola.
+  Sentry no necesitó una excepción en `connect-src`: se agregó `tunnelRoute`
+  (`/monitoring`) para que sus eventos viajen same-origin en vez de al dominio de
+  ingest. Al pasar de Report-Only a enforcing sí apareció un hallazgo real: React
+  en modo desarrollo necesita `eval()` para Fast Refresh (bloqueado por
+  `script-src` sin `unsafe-eval`) — resuelto permitiendo `'unsafe-eval'` solo
+  cuando `NODE_ENV !== 'production'` (React mismo documenta que nunca usa `eval()`
+  en producción, así que el build real no lo necesita ni lo tiene). Verificado con
+  `next build` + `next start` local que la CSP de producción no incluye
+  `unsafe-eval`. `img-src`/`connect-src` derivan el origin del backend de
+  `NEXT_PUBLIC_API_URL` (la misma variable que ya usa `src/lib/api.ts`) en vez de
+  hardcodear el dominio.
+
+### Diferido a propósito, con la razón explícita (no un olvido)
+
 - **Cross-Origin-Embedder-Policy Header Missing or Invalid [90004]** — COEP existe
   para habilitar aislamiento de origen cruzado (necesario para `SharedArrayBuffer`
   y APIs relacionadas). Prodexa no usa ninguna de esas APIs; activarlo sin
@@ -124,8 +137,11 @@ presentes en la respuesta real:
 ## Qué significa esto para la nota
 
 Cero FAIL en ambos targets, y los 4 hallazgos con impacto real ya corregidos y
-verificados el mismo día — no quedó "sin arrancar" como decía la hoja de ruta. Los
-6 hallazgos restantes están revisados individualmente con una razón explícita cada
-uno (descartado con evidencia, o diferido con criterio), no una lista ignorada.
+verificados el mismo día — no quedó "sin arrancar" como decía la hoja de ruta.
 Seguridad sube de 90 a **94** en
 [`roadmap-calidad-90.md`](../gestion/roadmap-calidad-90.md).
+
+**Actualización 2026-08-20:** de los 6 hallazgos restantes, el de CSP (el único con
+un plan de acción concreto pendiente) ya se cerró — ver "Corregido" arriba. Quedan
+3 descartados con evidencia y 2 diferidos con razón explícita (COEP y el pentest
+profesional de 3.3), ninguno bloqueante.

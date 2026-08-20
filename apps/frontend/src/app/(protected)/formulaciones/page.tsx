@@ -33,7 +33,7 @@ export default function FormulacionesPage() {
   return (
     <section className="grid gap-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Formulaciones</h2>
+        <h2 className="font-heading text-2xl font-bold text-slate-900 dark:text-white">Formulaciones</h2>
         <p className="mt-1 text-slate-600 dark:text-zinc-400">
           Crea formulaciones con su lista de ingredientes y preparacion.
         </p>
@@ -45,19 +45,19 @@ export default function FormulacionesPage() {
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
               Formulaciones
             </p>
-            <p className="mt-1 text-3xl font-bold text-slate-900 dark:text-white">{formulaciones.length}</p>
+            <p className="mt-1 font-mono text-3xl font-bold text-slate-900 dark:text-white">{formulaciones.length}</p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/3 dark:shadow-none">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
               Categorias distintas
             </p>
-            <p className="mt-1 text-3xl font-bold text-slate-900 dark:text-white">{totalCategorias}</p>
+            <p className="mt-1 font-mono text-3xl font-bold text-slate-900 dark:text-white">{totalCategorias}</p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/3 dark:shadow-none">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
               Margen promedio
             </p>
-            <p className="mt-1 text-3xl font-bold text-slate-900 dark:text-white">
+            <p className="mt-1 font-mono text-3xl font-bold text-slate-900 dark:text-white">
               {margenPromedio.toFixed(1)}%{' '}
               <span className="text-sm font-normal text-slate-500 dark:text-zinc-400">
                 · {totalIngredientes} ingredientes en total
@@ -80,7 +80,7 @@ export default function FormulacionesPage() {
 
       <div className="grid gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-zinc-200">
+          <h3 className="font-heading text-lg font-semibold text-slate-800 dark:text-zinc-200">
             Formulaciones registradas ({formulacionesFiltradas.length}
             {termino ? ` de ${formulaciones.length}` : ''})
           </h3>

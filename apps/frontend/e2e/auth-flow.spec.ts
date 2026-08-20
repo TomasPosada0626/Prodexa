@@ -72,6 +72,19 @@ test.describe('Flujo de autenticacion y formulaciones', () => {
       await expect(page.getByRole('status')).toContainText('creada correctamente');
     });
 
+    await test.step('4b. Configuracion, Auditoria y Reportes no tienen violaciones de accesibilidad', async () => {
+      await page.goto('/configuracion');
+      await expectSinViolacionesAccesibilidad(page, '/configuracion');
+
+      await page.goto('/auditoria');
+      await expectSinViolacionesAccesibilidad(page, '/auditoria');
+
+      await page.goto('/reportes');
+      await expectSinViolacionesAccesibilidad(page, '/reportes');
+
+      await page.goto('/formulaciones');
+    });
+
     await test.step('5. La sesion y los datos persisten tras recargar', async () => {
       await page.reload();
       await expect(page).toHaveURL(/\/formulaciones$/);

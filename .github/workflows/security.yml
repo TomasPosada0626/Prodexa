@@ -14,6 +14,7 @@ jobs:
   secret-scan:
     name: Escaneo de secretos (gitleaks)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,6 +27,7 @@ jobs:
   dependency-audit:
     name: Auditoria de dependencias (npm audit)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       matrix:
         app: [backend, frontend]

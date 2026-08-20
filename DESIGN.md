@@ -44,4 +44,4 @@ Spanish (es-CO). Direct, specific to real product mechanics — names real modul
 
 ## Known debt / not yet extended
 
-Typography tokens cascade app-wide already (confirmed on `/`, `/login`). The **interior app screens** (Dashboard, Formulaciones, Configuración, Auditoría, Reportes) have not had a composition/hierarchy pass under the new type system — only inherited the font swap automatically. That review is a separate, later pass by design (scope decision made 2026-08-14), not an oversight.
+Typography tokens cascade app-wide (confirmed on `/`, `/login`, and — as of 2026-08-20 — the **interior app screens** too: Dashboard, Formulaciones, Configuración, Auditoría, Reportes now apply `font-heading` to every heading and `font-mono` to KPI/price/percentage/table numerals, matching the hand-applied convention used on `/` and `/login`). Reportes' `h4` subsections were also resized (`text-xs` vs the parent `h3`'s `text-sm`) so nested headings are visually, not just semantically, subordinate.
