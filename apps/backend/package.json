@@ -26,7 +26,7 @@
     "load-test": "node scripts/load-test.mjs"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1111.0",
+    "@aws-sdk/client-s3": "^3.1123.0",
     "@nestjs/common": "^11.2.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.2.1",
@@ -35,9 +35,9 @@
     "@nestjs/platform-express": "^11.2.1",
     "@nestjs/swagger": "^11.4.6",
     "@nestjs/throttler": "^6.5.0",
-    "@prisma/adapter-pg": "^7.9.1",
-    "@prisma/client": "^7.9.1",
-    "@sentry/nestjs": "^10.70.0",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "@sentry/nestjs": "^10.73.0",
     "argon2": "^0.45.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
@@ -48,7 +48,7 @@
     "pg": "^8.23.0",
     "pino-http": "^11.0.0",
     "reflect-metadata": "^0.2.2",
-    "resend": "^6.20.0",
+    "resend": "^6.25.0",
     "rxjs": "^7.8.1"
   },
   "overrides": {
@@ -69,9 +69,9 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/multer": "^2.2.0",
-    "@types/node": "^26.1.2",
+    "@types/node": "^26.4.0",
     "@types/passport-jwt": "^4.0.1",
-    "@types/pg": "^8.21.0",
+    "@types/pg": "^8.23.1",
     "@types/supertest": "^7.0.0",
     "autocannon": "^8.0.0",
     "eslint": "^9.18.0",
@@ -79,9 +79,9 @@
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^17.11.0",
     "istanbul-badges-readme": "^1.9.0",
-    "jest": "^30.0.0",
+    "jest": "^30.5.0",
     "prettier": "^3.4.2",
-    "prisma": "^7.8.0",
+    "prisma": "^7.10.0",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
@@ -89,7 +89,7 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.67.0"
+    "typescript-eslint": "^8.69.0"
   },
   "jest": {
     "moduleFileExtensions": [
